@@ -19,10 +19,7 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-There has been a major change to the initial approach that was proposed to Implement RBAC's in ADO. To ensure that we adhere to the principle of least privilege 
-and align with security best practices, we have introduced a new security group, “Limited Project Administrators” (LPAs), which will replace 
-traditional Project Administrators roles with tailored permissions.
-LPAs is a custom security group that will accommodate the need for certain administrative capabilities without compromising security standards.
+
 
 
 
