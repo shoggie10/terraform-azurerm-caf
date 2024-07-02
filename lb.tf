@@ -19,8 +19,12 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
+We currently have quite a few projects (those with project_admins_enabled set to true in the SaaS / Azure DevOps in Gitlab) that still have users with project administrator access. This was done as an exception to our standards. We need to implement less-permissive roles for these projects with these exceptions.
+From my understanding, the built-in “Build Administrator” and “Release Administrator” roles should be permissive enough for our project teams use cases.
+The Terraform module I’ve developed for these projects has flags to enable those roles in each project. However, in order for those flags to work properly, project-specific AD groups (and associated acces work entitlements) for Build/Release admins will need to be created prior to swapping those flags.
+Need to identify what capabilities are needed for each project that has the exception (again, those with project_admins_enabled set to true) and respond accordingly.
 
-s
+
 
 artifact feeds also use this RBAC role permission but with different, and more, roles.
 
