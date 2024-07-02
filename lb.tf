@@ -20,10 +20,7 @@ output "lb" {
 }
 ==========||========================
 
-so you have two different access mechanisms in ADO. one is a traditional ACL with granular permissions (repos, pipelines, iterations, area paths) where you can grant Create Branch vs Create Tag. 
-Agent pools, service connections, environments, variable groups, and secure files use a more RBAC role based permission system where they have Reader, User, and Administrator roles. 
-those roles come with specific permissions that we cant granuarly change like we can for the other batch of resoruces
-azuredevops_securityrole_assignments is the RBAC role based permission assignment
+s
 
 artifact feeds also use this RBAC role permission but with different, and more, roles.
 
