@@ -19,7 +19,17 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-
+Functionality	PA	LPA	Cloud	Comments/Justifications
+Manage Wiki	x	x		Vital for project documentation and knowledge sharing.
+Create Repositories	x	x	x	Essential for initiating and maintaining code bases.
+Create Branches	x	x	x	Necessary for version control and feature development.
+Manage Builds	x		x	PA and Cloud manage and configure build pipelines.
+Deploy Applications	x		x	Critical for releasing applications into production.
+User Management	x			PA handles adding/removing users and managing roles.
+Edit Build Policies	x			PA manages build validation and branch policies.
+Access Control	x	x		LPA needs limited access for specific administrative tasks.
+Service Connections	x		x	Manage connections to external and cloud services.
+Security Settings	x	x		Adjust security settings relevant to project scope.
 ========
 artifact feeds also use this RBAC role permission but with different, and more, roles.
 
