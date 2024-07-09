@@ -19,35 +19,7 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-Team Configuration
-Create child nodes
-Delete this node
-Edit this node
-View permissions for this node
 
-Dashboards
-Delete dashboard
-Edit dashboard
-Manage permissions
-
-Wiki (Wiki Security)
-Advanced Security: manage and dismiss alerts
-Advanced Security: manage settings
-Advanced Security: view alerts
-Bypass policies when completing pull requests
-Bypass policies when pushing
-Contribute
-Contribute to pull requests
-Create branch
-Create tag
-Delete or disable repository
-Edit policies
-Force push (rewrite history, delete branches and tags)
-Manage notes
-Manage permissions
-Read
-Remove others' locks
-Rename repository
 ========
 artifact feeds also use this RBAC role permission but with different, and more, roles.
 
