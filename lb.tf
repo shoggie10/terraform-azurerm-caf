@@ -19,7 +19,32 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-
+Functionality	PA	LPA	Cloud	Comments/Justifications
+General Project				
+Delete team project	X			Critical control reserved for PAs.
+Edit project-level information	X	X		Essential for project configuration.
+Manage project properties	X			PA handles crucial settings.
+Rename team project	X			High-level control, limited to PAs.
+Suppress notifications for work item updates		X	X	Needed to manage team notifications.
+Update project visibility	X			Visibility settings controlled by PAs.
+View project-level information	X	X	X	Basic access for oversight.
+Boards				
+Bypass rules on work item updates	X			PA can bypass for critical updates.
+Change process of team project	X	X		Process changes require admin input.
+Create tag definition		X	X	Useful for all teams to organize items.
+Delete and restore work items	X	X		Control over item lifecycle is crucial.
+Move work items out of this project		X	X	Operational flexibility for LPAs and Cloud.
+Permanently delete work items	X			Only PAs have this level of control.
+Analytics				
+Delete shared Analytics views	X			PA manages overall analytic configurations.
+Edit shared Analytics views	X	X		Necessary for maintaining relevant views.
+View analytics	X	X	X	Access needed for all to perform analysis.
+Test Plans				
+Create test runs		X	X	Essential for QA and operational testing.
+Delete test runs		X	X	Control to manage test artifacts.
+Manage test configurations	X	X		Key settings managed by admins.
+Manage test environments	X	X		Critical to ensure proper test setup.
+View test runs		X	X	Allows monitoring of testing progress.
 ========
 artifact feeds also use this RBAC role permission but with different, and more, roles.
 
