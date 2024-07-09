@@ -19,30 +19,7 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-Delete team project
-Edit project-level information
-Manage project properties
-Rename team project
-Suppress notifications for work item updates
-Update project visibility
-View project-level information
-Boards
-Bypass rules on work item updates
-Change process of team project.
-Create tag definition
-Delete and restore work items
-Move work items out of this project
-Permanently delete work items
-Analytics
-Delete shared Analytics views
-Edit shared Analytics views
-View analytics
-Test Plans
-Create test runs
-Delete test runs
-Manage test configurations
-Manage test environments
-View test runs
+
 ========
 artifact feeds also use this RBAC role permission but with different, and more, roles.
 
