@@ -19,32 +19,7 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-Functionality	PA	LPA	Cloud	Comments/Justifications
-General Project				
-Delete team project	X			Essential to manage project lifecycle control.
-Edit project-level information	X	X		Essential for project configuration.
-Manage project properties	X			Critical for setting key project properties.
-Rename team project	X			Necessary for maintaining project identity standards.
-Suppress notifications for work item updates		X	X	Useful for managing communication.
-Update project visibility	X			Important for controlling external visibility.
-View project-level information	X	X	X	Basic necessity for all roles.
-Boards				
-Bypass rules on work item updates	X			Enables urgent modifications when needed.
-Change process of team project	X	X		Critical for adapting project methodologies.
-Create tag definition		X	X	Useful for organizing and categorizing items.
-Delete and restore work items	X	X		Important for managing work item lifecycles.
-Move work items out of this project		X	X	Enables organizational flexibility of work items.
-Permanently delete work items	X			Necessary for final disposition of data.
-Analytics				
-Delete shared Analytics views	X			Critical for maintaining data integrity.
-Edit shared Analytics views	X	X		Essential for keeping analytics relevant.
-View analytics	X	X	X	Necessary for data-driven insights.
-Test Plans				
-Create test runs		X	X	Vital for test execution and management.
-Delete test runs		X	X	Useful for cleaning up obsolete tests.
-Manage test configurations	X	X		Essential for setting test standards.
-Manage test environments	X	X		Necessary for proper test setup and maintenance.
-View test runs		X	X	Basic requirement for monitoring testing progress.
+
 ========
 artifact feeds also use this RBAC role permission but with different, and more, roles.
 
