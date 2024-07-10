@@ -19,35 +19,7 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-Functionality	PA	LPA	Cloud	Comments/Justifications
-Team Configuration				
-Create child nodes		X	X	Allows hierarchical organization of teams.
-Delete this node	X			Critical for maintaining team structure.
-Edit this node	X	X		Essential for updating team details.
-View permissions for this node	X	X	X	Basic oversight of access rights.
-Dashboards				
-Delete dashboard	X			PA ensures control over dashboard lifecycle.
-Edit dashboard		X	X	Allows customization and updates to dashboards.
-Manage permissions	X			PA controls access to dashboard settings.
-Wiki (Wiki Security)				
-Advanced Security: manage and dismiss alerts	X	X		Critical for handling security incidents.
-Advanced Security: manage settings	X			Reserved for PAs to maintain security configurations.
-Advanced Security: view alerts		X	X	Necessary for monitoring potential threats.
-Repository and Branch Policies				
-Bypass policies when completing pull requests	X			PA can override policies in critical situations.
-Bypass policies when pushing	X			PA can push changes without policy restrictions.
-Contribute		X	X	Essential for regular contributions to projects.
-Contribute to pull requests		X	X	Allows participation in code reviews.
-Create branch		X	X	Enables expansion and version control.
-Create tag		X	X	Useful for marking significant versions.
-Delete or disable repository	X			PA controls critical data and code storage.
-Edit policies	X	X		Essential for setting project policies.
-Force push (rewrite history, delete branches and tags)	X			High-level control for project history management.
-Manage notes		X	X	Useful for adding context to code changes.
-Manage permissions	X			PA manages access to ensure security.
-Read		X	X	Basic access to view repository contents.
-Remove others' locks		X		Allows resolving conflicts in code access.
-Rename repository	X			Important for aligning repository names with project goals.
+
 ========
 artifact feeds also use this RBAC role permission but with different, and more, roles.
 
