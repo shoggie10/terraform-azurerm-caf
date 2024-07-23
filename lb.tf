@@ -19,56 +19,7 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-PIPELINES
-Build Pipelines
-Administer build permissions
-Delete build pipeline
-Delete builds
-Destroy builds
-Edit build pipeline
-Edit build quality
-Edit queue build configuration
-Manage build qualities
-Manage build queue
-Override check-in validation by build
-Queue builds
-Retain indefinitely
-Stop builds
-Update build information
-View build pipeline
-View builds
-Release Pipelines
-Administer release permissions
-Create releases
-Delete release pipeline
-Delete release stage
-Delete releases
-Edit release pipeline
-Edit release stage
-Manage deployments
-Manage release approvers
-Manage releases
-View release pipeline
-View releases
-Environments
-Administrator
-Creator
-User
-Reader
-Library
-Administrator
-Creator
-User
-Reader
-Task Groups
-Administer task group permissions
-Delete task group
-Edit task group
-Deployment Groups
-Administrator
-Creator
-User
-Reader
+
 ========
 artifact feeds also use this RBAC role permission but with different, and more, roles.
 
