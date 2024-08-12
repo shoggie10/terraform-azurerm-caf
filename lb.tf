@@ -19,6 +19,220 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
+Project-level Permiss+A1:A205ions
+General
+Delete team project
+Edit project-level information
+Manage project properties
+Rename team project
+Suppress notifications for work item updates
+Update project visibility
+View project-level information
+Boards
+Bypass rules on work item updates
+Change process of team project.
+Create tag definition
+Delete and restore work items
+Move work items out of this project
+Permanently delete work items
+Analytics
+Delete shared Analytics views
+Edit shared Analytics views
+View analytics
+Test Plans
+Create test runs
+Delete test runs
+Manage test configurations
+Manage test environments
+View test runs
+Project-level Permissions
+Advanced Security: manage and dismiss alerts
+Advanced Security: manage settings
+Advanced Security: view alerts
+Bypass policies when completing pull requests
+Bypass policies when pushing
+Contribute
+Contribute to pull requests
+Create branch
+Create repository
+Create tag
+Delete or disable repository
+Edit policies
+Force push (rewrite history, delete branches and tags)
+Manage notes
+Manage permissions
+Read
+Remove others' locks
+Rename repository
+
+
+
+
+
+Object-level Permissions
+Team Configuration
+Create child nodes
+Delete this node
+Edit this node
+View permissions for this node
+
+
+Dashboards
+Delete dashboard
+Edit dashboard
+Manage permissions
+
+
+
+
+
+
+Wiki (Wiki Security)
+Advanced Security: manage and dismiss alerts
+Advanced Security: manage settings
+Advanced Security: view alerts
+Bypass policies when completing pull requests
+Bypass policies when pushing
+Contribute
+Contribute to pull requests
+Create branch
+Create tag
+Delete or disable repository
+Edit policies
+Force push (rewrite history, delete branches and tags)
+Manage notes
+Manage permissions
+Read
+Remove others' locks
+Rename repository
+
+
+Boards
+Work Items
+Backlogs
+Sprints
+Queries
+Delivery Plans
+Analytics views
+Portfolio plans (Beta)
+
+
+Area
+Create child nodes
+Delete this node
+Edit this node
+Edit work item comments in this node
+Edit work items in this node
+Manage test plans
+Manage test suites
+View permissions for this node
+View work items in this node
+Iteration
+Create child nodes
+Delete this node
+Edit this node
+View permissions for this node
+
+Delivery Plans
+Delete
+Edit
+Manage
+View
+REPOS (Wiki Security)
+Bypass policies when completing pull requests
+Bypass policies when pushing
+Contribute
+Contribute to pull requests
+Create branch
+Create repository
+Create tag
+Delete or disable repository
+Edit policies
+Force push (rewrite history, delete branches and tags)
+Manage notes
+Manage permissions
+Read
+Remove others' locks
+Rename repository
+Bracnhes
+Bypass policies when completing pull requests
+Bypass policies when pushing
+Contribute
+Edit policies
+Force push (rewrite history, delete branches and tags)
+Manage permissions
+Remove others' locks
+
+
+PIPELINES
+Build Pipelines
+Administer build permissions
+Delete build pipeline
+Delete builds
+Destroy builds
+Edit build pipeline
+Edit build quality
+Edit queue build configuration
+Manage build qualities
+Manage build queue
+Override check-in validation by build
+Queue builds
+Retain indefinitely
+Stop builds
+Update build information
+View build pipeline
+View builds
+Release Pipelines
+Administer release permissions
+Create releases
+Delete release pipeline
+Delete release stage
+Delete releases
+Edit release pipeline
+Edit release stage
+Manage deployments
+Manage release approvers
+Manage releases
+View release pipeline
+View releases
+Environments
+Administrator
+Creator
+User
+Reader
+Library
+Administrator
+Creator
+User
+Reader
+Task Groups
+Administer task group permissions
+Delete task group
+Edit task group
+Deployment Groups
+Administrator
+Creator
+User
+Reader
+Agent pool
+Administrator
+Creator
+User
+Reader
+Service Connection
+Administrator
+Creator
+User
+Reader
+
+
+
+Artifacts
+
+
+
+Test Plans
+
 
 
 
