@@ -19,219 +19,138 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-Project-level Permiss+A1:A205ions
-General
-Delete team project
-Edit project-level information
-Manage project properties
-Rename team project
-Suppress notifications for work item updates
-Update project visibility
-View project-level information
-Boards
-Bypass rules on work item updates
-Change process of team project.
-Create tag definition
-Delete and restore work items
-Move work items out of this project
-Permanently delete work items
-Analytics
-Delete shared Analytics views
-Edit shared Analytics views
-View analytics
-Test Plans
-Create test runs
-Delete test runs
-Manage test configurations
-Manage test environments
-View test runs
-Project-level Permissions
-Advanced Security: manage and dismiss alerts
-Advanced Security: manage settings
-Advanced Security: view alerts
-Bypass policies when completing pull requests
-Bypass policies when pushing
-Contribute
-Contribute to pull requests
-Create branch
-Create repository
-Create tag
-Delete or disable repository
-Edit policies
-Force push (rewrite history, delete branches and tags)
-Manage notes
-Manage permissions
-Read
-Remove others' locks
-Rename repository
+Boards			
+Work Items			Allows managing items relevant to project tasks.
+Backlogs			Essential for prioritizing and planning tasks.
+Sprints			Key for organizing iterations and deadlines.
+Queries			Enables data retrieval and status tracking.
+Delivery Plans			Critical for overseeing project timelines.
+Analytics views			Provides insights into project metrics.
+Portfolio plans (Beta)			High-level strategic planning and alignment.
+			
+Area			
+Create child nodes			Enables detailed project structuring.
+Delete this node			Necessary for maintaining a clean structure.
+Edit this node			Allows updates to reflect current project states.
+Edit work item comments in this node			Enables collaboration and communication on tasks.
+Edit work items in this node			Critical for task updates and tracking.
+Manage test plans			Important for overseeing testing strategies.
+Manage test suites			Crucial for detailed test management.
+View permissions for this node			Ensures proper access control and visibility.
+View work items in this node			Allows monitoring of tasks and progress.
+			
+Iteration			
+Create child nodes			Supports detailed iteration planning.
+Delete this node			Helps in restructuring or cleaning up iterations.
+Edit this node			Necessary for adapting iteration details.
+View permissions for this node			Essential for managing access to iteration details.
+			
+Delivery Plans			
+Delete			Allows high-level control over plan lifecycle.
+Edit			Necessary for making timely adjustments.
+Manage			Central to coordinating and overseeing plans.
+View			Enables team-wide visibility and planning.
+			
+REPOS (Wiki Security)			
+Bypass policies when completing pull requests			Allows critical changes to bypass standard checks.
+Bypass policies when pushing			Enables urgent updates without usual restrictions.
+Contribute			Fundamental for ongoing project contributions.
+Contribute to pull requests			Supports collaborative code review and integration.
+Create branch			Essential for version control.
+Create repository			Critical for new project initialization.
+Create tag			Useful for marking significant milestones.
+Delete or disable repository			Important for managing repository lifecycle.
+Edit policies			Crucial for setting governance on repository use.
+Force push (rewrite history, delete branches and tags)			Allows rewriting history in critical scenarios.
+Manage notes			Useful for documenting important decisions.
+Manage permissions			Controls access to sensitive information.
+Read			Basic access for team members to view contents.
+Remove others' locks			Helps resolve access conflicts within the team.
+Rename repository			Necessary for aligning repository names with project themes.
+			
+Bracnhes			
+Bypass policies when completing pull requests			Allows critical changes to proceed without delays.
+Bypass policies when pushing			Permits urgent updates to bypass standard controls.
+Contribute			Essential for regular contributions to the codebase.
+Edit policies			Vital for setting and adjusting branch governance.
+Force push (rewrite history, delete branches and tags)			Grants ability to alter history in critical scenarios.
+Manage permissions			Controls who can modify access settings for branches.
+Remove others' locks			Facilitates resolution of access conflicts on branches.
+			
+			
+PIPELINES			
+Build Pipelines			
+Administer build permissions			
+Delete build pipeline			
+Delete builds			
+Destroy builds			
+Edit build pipeline			
+Edit build quality			
+Edit queue build configuration			
+Manage build qualities			
+Manage build queue			
+Override check-in validation by build			
+Queue builds			
+Retain indefinitely			
+Stop builds			
+Update build information			
+View build pipeline			
+View builds			
+Release Pipelines			
+Administer release permissions			
+Create releases			
+Delete release pipeline			
+Delete release stage			
+Delete releases			
+Edit release pipeline			
+Edit release stage			
+Manage deployments			
+Manage release approvers			
+Manage releases			
+View release pipeline			
+View releases			
+Environments			
+Administrator			Full control over environment configurations.
+Creator			Can create new environments within defined scope.
+User			Access to use and interact within environments.
+Reader			View-only access for oversight and reporting.
+Library			
+Administrator			Manages library settings and permissions.
+Creator			Can add new resources to the library.
+User			General access to use resources.
+Reader			Read-only access to view library contents.
+Task Groups			
+Administer task group permissions			Controls who can modify task group permissions.
+Delete task group			Necessary for managing lifecycle of task groups.
+Edit task group			Allows modifications to adapt to project needs.
+Deployment Groups			
+Administrator			Manages overall settings and access control.
+Creator			Can set up new deployment groups within scope.
+User			General access for deployments and operations.
+Reader			View-only access for oversight and monitoring.
+Agent pool			
+Administrator			Full control over agent configurations.
+Creator			Can add new agents or modify existing setups.
+User			Access to use agents for operations.
+Reader			Read-only access for monitoring and reporting.
+Service Connection			
+Administrator			Oversees service connections and security.
+Creator			Can establish new service connections.
+User			Access to utilize service connections in operations.
+Reader			View-only access to inspect service configurations.
+			
+			
+			
+Artifacts			
+Read Artifacts			Basic access for team members to view artifacts.
+Manage Artifacts			Required for publishing or managing lifecycle.
+Promote Artifacts			Allows moving artifacts through various stages.
+Test Plans			
+View Test Plans			Essential for oversight on testing procedures.
+Create Test Plans			Allows adding new test plans aligned with features.
+Manage Test Plans			Necessary for maintaining or adjusting test plans.
+Run Test Plans			Required for executing planned test cases.
 
-
-
-
-
-Object-level Permissions
-Team Configuration
-Create child nodes
-Delete this node
-Edit this node
-View permissions for this node
-
-
-Dashboards
-Delete dashboard
-Edit dashboard
-Manage permissions
-
-
-
-
-
-
-Wiki (Wiki Security)
-Advanced Security: manage and dismiss alerts
-Advanced Security: manage settings
-Advanced Security: view alerts
-Bypass policies when completing pull requests
-Bypass policies when pushing
-Contribute
-Contribute to pull requests
-Create branch
-Create tag
-Delete or disable repository
-Edit policies
-Force push (rewrite history, delete branches and tags)
-Manage notes
-Manage permissions
-Read
-Remove others' locks
-Rename repository
-
-
-Boards
-Work Items
-Backlogs
-Sprints
-Queries
-Delivery Plans
-Analytics views
-Portfolio plans (Beta)
-
-
-Area
-Create child nodes
-Delete this node
-Edit this node
-Edit work item comments in this node
-Edit work items in this node
-Manage test plans
-Manage test suites
-View permissions for this node
-View work items in this node
-Iteration
-Create child nodes
-Delete this node
-Edit this node
-View permissions for this node
-
-Delivery Plans
-Delete
-Edit
-Manage
-View
-REPOS (Wiki Security)
-Bypass policies when completing pull requests
-Bypass policies when pushing
-Contribute
-Contribute to pull requests
-Create branch
-Create repository
-Create tag
-Delete or disable repository
-Edit policies
-Force push (rewrite history, delete branches and tags)
-Manage notes
-Manage permissions
-Read
-Remove others' locks
-Rename repository
-Bracnhes
-Bypass policies when completing pull requests
-Bypass policies when pushing
-Contribute
-Edit policies
-Force push (rewrite history, delete branches and tags)
-Manage permissions
-Remove others' locks
-
-
-PIPELINES
-Build Pipelines
-Administer build permissions
-Delete build pipeline
-Delete builds
-Destroy builds
-Edit build pipeline
-Edit build quality
-Edit queue build configuration
-Manage build qualities
-Manage build queue
-Override check-in validation by build
-Queue builds
-Retain indefinitely
-Stop builds
-Update build information
-View build pipeline
-View builds
-Release Pipelines
-Administer release permissions
-Create releases
-Delete release pipeline
-Delete release stage
-Delete releases
-Edit release pipeline
-Edit release stage
-Manage deployments
-Manage release approvers
-Manage releases
-View release pipeline
-View releases
-Environments
-Administrator
-Creator
-User
-Reader
-Library
-Administrator
-Creator
-User
-Reader
-Task Groups
-Administer task group permissions
-Delete task group
-Edit task group
-Deployment Groups
-Administrator
-Creator
-User
-Reader
-Agent pool
-Administrator
-Creator
-User
-Reader
-Service Connection
-Administrator
-Creator
-User
-Reader
-
-
-
-Artifacts
-
-
-
-Test Plans
 
 
 
