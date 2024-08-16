@@ -19,54 +19,6 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-This is a complete refactor of the Azure DevOps Project module. Terraform tests have been added to this module. The example still needs some TLC.
-
-The following resources were moved out of the `main.tf` file and into their own files for readability purposes:
-
-* Branch Policies
-* Git Repositories
-* Groups
-* Teams
-* Wiki
-
-The following resources are now supported for provisioning by this module:
-
-* Environments
-* Fine-grained permissions
-* RBAC Permissions
-* Pipelines
-* Pipeline Folders
-* Pipeline Authorizations
-* Service Connections
-  * AzureRM
-  * Nuget
-  * AWS
-
-The following new functionality has been added to this module:
-
-* Automatic provisioning of Environments based on pipelines and declared `deployment_environments`.
-* Automatic permission upon creation of Service Connections for Limited Project Admin
-* Automatic pipeline authorization upon creation for Environments, Repositories, and Service Connections
-* Creation of permissions for Limited Project Admin across the project for the following resource types
-  * Area Path
-  * Pipeline Folders
-  * Git Repos
-  * Iteration Paths
-  * Project-Level
-  * ServiceHooks
-  * Environments
-  * Variable Group/Secure Files
-  * Artifacts
-  * Test Plans
-  * Feed
-
-Note: 
-
-1. Classic (Designer) Release pipelines are not supported by the terraform provider and are completely omitted from the provider.
-2. Azure Artifact Feeds (for things like Maven, Nuget, NPM packages) has been omitted by-design due to other tooling in the BOKF portfolio covering that functionality.
-3. Service Connection types not specified above must still be created manually in the ADO UI by the Cloud Team. LPA does not have Create permission for Service Connections.
-
-
 
 
 ========
