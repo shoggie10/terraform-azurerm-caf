@@ -19,32 +19,6 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-Here’s how you can incorporate these additional updates into your PowerPoint presentation:
-
-Slide 5: Key Changes Implemented (Updated)
-Custom Security Roles: Introduction of more limited project administrator roles (LPAs).
-Team/Wiki Permissions:
-LPAs are Team Administrators but cannot create teams or remove members from a team/manage permissions.
-Workaround: Automating Terraform with ServiceNow for SNW Requests; after cloud team approval, resources are automatically created.
-Repository Permissions:
-LPAs cannot create, rename, delete Repos, or manage Repo permissions.
-Boards, Pipelines, and Other Permissions:
-Boards: Full or All permissions granted.
-Build Pipelines & Release Pipelines: Full or All permissions granted.
-Library, Task Groups, Deployment Group, Artifacts, Test Plans: Full or All permissions granted.
-Agent Pools: Managed by the cloud team per Azure Documentation.
-Service Connections: LPAs cannot create but can submit SNW Requests for automated creation.
-Slide 7: Custom Security Roles and Exceptions (Updated)
-Limited Project Administrator (LPA) Role Specifics:
-Detailed permissions breakdown for LPAs across different ADO areas (Teams, Repos, Pipelines, etc.).
-Workaround for Denied Permissions: Automation through Terraform and ServiceNow, allowing LPAs to submit SNW Requests for necessary resources, pending cloud team approval.
-Exceptions Process: Outline sessions dedicated to discussing exception lists and processes for handling special cases.
-Slide 9: Next Steps and Action Items (Updated)
-Exception List/Process Sessions: Schedule sessions to discuss the exception list and process in detail.
-Automation Rollout: Implement and monitor the automation of Terraform with ServiceNow for LPA SNW Requests.
-This update ensures that the presentation covers all the changes you're making in ADO, providing a clear and comprehensive overview to your audience. Let me know if you need further adjustments or details for any of the slides!
-
-
 
 
 
