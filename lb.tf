@@ -19,8 +19,9 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-I’m excited to have picked up work for Q4 that will help drive our cloud strategy within Azure. While I haven’t been directly involved in other aspects of the compute strategy goal for 2024, I remain fully committed to contributing to our broader cloud initiatives and supporting our strategic goals wherever needed.
+I haven't been directly assigned to support vulnerabilities, I take proactive measures to ensure that any new code or infrastructure I build is done efficiently, considering both security and cost optimization.
 
+During on-call support, I’ve also addressed issues related to ensuring that the development team uses authorized versions of kubectl artifacts available in JFrog, rather than versions they select independently. This helps maintain consistency, compliance, and security within our development environment.
 
 
 
