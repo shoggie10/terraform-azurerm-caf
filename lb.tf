@@ -20,10 +20,7 @@ output "lb" {
 }
 ==========||========================
 
-Initially, I dedicated time to supporting the payments project by familiarizing myself with the technical environment, including our use of Ansible, Kafka, and Confluent. I attended all related meetings to understand the requirements and contribute effectively before the project was reassigned to a new teammate.
-
-Since then, I have focused my efforts on delivering an ADO audit and enhancing our permissions for project admins to ensure compliance and security across our Azure DevOps environment. These activities align with our broader security and compliance objectives, which I consider critical to our team’s success.
-
+While I have not been directly involved in the invoicing process, my focus has been on supporting related initiatives, including ensuring proper tagging of resources and providing suggestions to optimize our Azure architecture. My efforts have been aimed at driving efficiency across our Azure platform and enhancing the overall resource management process, contributing to areas beyond invoicing where my skills can add value.
 
 
 
