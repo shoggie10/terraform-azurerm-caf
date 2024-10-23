@@ -19,8 +19,7 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-I am committed to supporting work assignments from any tool that is provided. I have proactively picked up tasks from the Jira Strategy backlog and moved them forward, ensuring that I contribute effectively regardless of the tool or approach we use. I am comfortable navigating across platforms, and I am always ready to adapt to the evolving needs of the team.
-
+I’m excited to have picked up work for Q4 that will help drive our cloud strategy within Azure. While I haven’t been directly involved in other aspects of the compute strategy goal for 2024, I remain fully committed to contributing to our broader cloud initiatives and supporting our strategic goals wherever needed.
 
 
 
