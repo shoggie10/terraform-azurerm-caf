@@ -19,9 +19,12 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-I am fully supportive of the shift toward the enablement model and am eager to be part of this evolving process. While the RACI effort has been streamlined, I am always excited to contribute wherever needed and stay engaged with the changes as they are communicated to the team.
+I am committed to supporting work assignments from any tool that is provided. I have proactively picked up tasks from the Jira Strategy backlog and moved them forward, ensuring that I contribute effectively regardless of the tool or approach we use. I am comfortable navigating across platforms, and I am always ready to adapt to the evolving needs of the team.
 
-I understand that the migration of articles into ServiceNow (SNW) has not yet begun, and I am prepared to assist when this process starts. I remain enthusiastic about being involved in these initiatives and supporting the team’s success.
+
+
+
+
 
 =============================||=================================================
 
