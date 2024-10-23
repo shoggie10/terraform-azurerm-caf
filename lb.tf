@@ -20,13 +20,6 @@ output "lb" {
 }
 ==========||========================
 
-I'm actively working on my development plan and appreciate our regular meetings to discuss my performance and growth. I’m also aware of the available training programs and make a point of leveraging relevant opportunities.
-
-Regarding the Azure DevOps (ADO) project admin changes, I have not only created comprehensive documentation but have also worked extensively to ensure that the new role structures and permissions are clearly understood by everyone involved. This has included updating permissions to align with our goal of maintaining compliance and security, and developing a Limited Project Administrator (LPA) role with specific permissions for various ADO components. Additionally, I've been involved in automating processes to manage exceptions, such as integrating ServiceNow requests for smoother resource access.
-
-I am scheduled to present in a "lunch and learn" session in Q4 and also have presentations planned covering topics such as Confluent Kafka, Databricks, and Azure Blob Storage, focusing on how these technologies integrate with our current cloud strategy.
-
-
 
 =============================||=================================================
 
