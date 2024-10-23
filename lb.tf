@@ -19,7 +19,9 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
+I am fully supportive of the shift toward the enablement model and am eager to be part of this evolving process. While the RACI effort has been streamlined, I am always excited to contribute wherever needed and stay engaged with the changes as they are communicated to the team.
 
+I understand that the migration of articles into ServiceNow (SNW) has not yet begun, and I am prepared to assist when this process starts. I remain enthusiastic about being involved in these initiatives and supporting the team’s success.
 
 =============================||=================================================
 
