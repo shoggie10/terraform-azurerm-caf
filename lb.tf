@@ -20,7 +20,9 @@ output "lb" {
 }
 ==========||========================
 
+Initially, I dedicated time to supporting the payments project by familiarizing myself with the technical environment, including our use of Ansible, Kafka, and Confluent. I attended all related meetings to understand the requirements and contribute effectively before the project was reassigned to a new teammate.
 
+Since then, I have focused my efforts on delivering an ADO audit and enhancing our permissions for project admins to ensure compliance and security across our Azure DevOps environment. These activities align with our broader security and compliance objectives, which I consider critical to our team’s success.
 
 
 
