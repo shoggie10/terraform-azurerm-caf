@@ -19,12 +19,7 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-Consistently achieving results, even under tough circumstances.
-An employee who is skilled in this competency exhibits the following behavior:
-1. Has a strong bottom-line orientation.
-2. Has a track record of exceeding goals successfully.
-3. Persists in accomplishing objectives despite obstacles and setbacks.
-4. Pushes self and helps others achieve results.
+
 
 
 
