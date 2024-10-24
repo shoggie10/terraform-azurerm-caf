@@ -19,10 +19,12 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-I haven't been directly assigned to support vulnerabilities, I take proactive measures to ensure that any new code or infrastructure I build is done efficiently, considering both security and cost optimization.
-
-During on-call support, I’ve also addressed issues related to ensuring that the development team uses authorized versions of kubectl artifacts available in JFrog, rather than versions they select independently. This helps maintain consistency, compliance, and security within our development environment.
-
+Consistently achieving results, even under tough circumstances.
+An employee who is skilled in this competency exhibits the following behavior:
+1. Has a strong bottom-line orientation.
+2. Has a track record of exceeding goals successfully.
+3. Persists in accomplishing objectives despite obstacles and setbacks.
+4. Pushes self and helps others achieve results.
 
 
 
