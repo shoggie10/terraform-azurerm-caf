@@ -19,8 +19,9 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-Next, save the following configuration to a file called docker-
-compose.yml:
+Next, save the following configuration to a file called 
+
+docker-compose.yml:
 ---
 version: '2'
 services:
@@ -51,7 +52,62 @@ PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
 KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
+---
+### command to start a local Kafka cluster
+docker-compose up
 
+### log in to the container that has Kafka installed
+docker-compose exec kafka bash
+
+---
+### Create a Topic named users
+kafka-topics \
+--bootstrap-server localhost:9092 \
+--create \
+--topic users \
+--partitions 4 \
+--replication-factor 1
+
+### Print a Description of the Topic
+kafka-topics \
+--bootstrap-server localhost:9092 \
+--describe \
+--topic users
+
+### produce some data using the built-in kafka-console-producer script
+kafka-console-producer \
+--bootstrap-server localhost:9092 \
+--property key.separator=, \
+--property parse.key=true \
+--topic users
+
+### The previous command will drop you in an interactive prompt. From here, we can input several key-value pairs to produce to the userstopic. 
+### When you are finished, press Control-C on your keyboard to exit the prompt:
+
+>1,mitch
+>2,elyse
+>3,isabelle
+>4,sammy
+
+### After producing the data to our topic, we can use the kafka-console-consumer script to read the data. The following command shows how:
+kafka-console-consumer \
+--bootstrap-server localhost:9092 \
+--topic users \
+--from-beginning
+
+### By default, the kafka-console-consumer will only print the message value. But as we learned earlier, events actually contain more 
+### information, including a key, a timestamp, and headers. Let’s pass in some additional properties to the console consumer so that we can see the timestamp and key values as well
+kafka-console-consumer \
+--bootstrap-server localhost:9092 \
+9
+--topic users \
+--property print.timestamp=true \
+--property print.key=true \
+--property print.value=true \
+--from-beginning
+
+### Tear down your cluster
+docker-compose down
 
 =============================||=================================================
 
