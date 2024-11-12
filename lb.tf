@@ -19,96 +19,108 @@ output "lb" {
   value = module.lb
 }
 ==========||========================
-Next, save the following configuration to a file called 
+  dynamic "network_rules" {
+    for_each = var.network_rules == null ? [] : [var.network_rules]
 
-docker-compose.yml:
+    content {
+      default_action = var.tags.data_classification == "Public" && network_rules.value.default_action == "Allow" ? "Allow" : "Deny"
+      bypass         = network_rules.value.bypass
+
+      ip_rules = var.tags.data_classification == "Public" && network_rules.value.default_action == "Allow" ? [] : (
+        var.network_rules.private_link_access == null ? (
+          length(network_rules.value.virtual_network_subnet_ids) == 0 ? network_rules.value.ip_rules : []
+        ) : []
+      )
+
+      virtual_network_subnet_ids = var.tags.data_classification == "Public" && network_rules.value.default_action == "Allow" ? [] : (
+        var.network_rules.private_link_access == null ? (
+          length(network_rules.value.ip_rules) == 0 ? network_rules.value.virtual_network_subnet_ids : []
+        ) : []
+      )
+
+      dynamic "private_link_access" {
+        for_each = var.network_rules.private_link_access == null ? [] : var.network_rules.private_link_access
+
+        content {
+          endpoint_resource_id = private_link_access.value.endpoint_resource_id
+          endpoint_tenant_id   = private_link_access.value.endpoint_tenant_id
+        }
+      }
+    }
+  }
 ---
-version: '2'
-services:
-zookeeper:
-image: confluentinc/cp-zookeeper:6.0.0
-hostname: zookeeper
-container_name: zookeeper
-ports:
-- "2181:2181"
-environment:
-ZOOKEEPER_CLIENT_PORT: 2181
-ZOOKEEPER_TICK_TIME: 2000
-kafka:
-image: confluentinc/cp-enterprise-kafka:6.0.0
-hostname: kafka
-container_name: kafka
-depends_on:
-- zookeeper
-ports:
-- "29092:29092"
-environment:
-KAFKA_BROKER_ID: 1
-KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: |
-PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-KAFKA_ADVERTISED_LISTENERS: |
-PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+module "key_vault" {
+  source  = "app.terraform.io/xxxx/key-vault/azure"
+  version = "< 0.2.0"
 
----
-### command to start a local Kafka cluster
-docker-compose up
+  application_name                = "storcmk"
+  enabled_for_template_deployment = true
+  resource_group_name             = var.resource_group_name
 
-### log in to the container that has Kafka installed
-docker-compose exec kafka bash
+  network_acls = {
+    #Bypass must be set to AzureServices for Storage Account CMK usage when not using Private Endpoints
+    bypass = length(var.private_endpoints) != 0 ? "None" : "AzureServices"
+    #Set to allow only if no PE, IP Rules, or VNet rules exist.
+    default_action             = length(var.private_endpoints) == 0 && length(local.cmk.ip_rules) == 0 && length(local.cmk.virtual_network_subnet_ids) == 0 ? "Allow" : "Deny"
+    ip_rules                   = local.cmk.ip_rules
+    virtual_network_subnet_ids = local.cmk.virtual_network_subnet_ids
+  }
 
----
-### Create a Topic named users
-kafka-topics \
---bootstrap-server localhost:9092 \
---create \
---topic users \
---partitions 4 \
---replication-factor 1
+  tags = var.tags
+}
 
-### Print a Description of the Topic
-kafka-topics \
---bootstrap-server localhost:9092 \
---describe \
---topic users
+module "key_vault_rbac" {
+  source  = "app.terraform.io/xxxx/common/azure"
+  version = "< 0.2.0"
+  #source = "../terraform-azure-common"
+  resource_name = module.key_vault.display_name
+  resource_id   = module.key_vault.id
 
-### produce some data using the built-in kafka-console-producer script
-kafka-console-producer \
---bootstrap-server localhost:9092 \
---property key.separator=, \
---property parse.key=true \
---topic users
+  role_based_permissions = {
+    terraform = {
+      role_definition_id_or_name = "Key Vault Crypto Officer"
+      principal_id               = data.azurerm_client_config.current.object_id
+    }
+    storage_account_managed_identity_read = {
+      role_definition_id_or_name = "Key Vault Reader"
+      principal_id               = azurerm_storage_account.this.identity[0].principal_id
+    }
+    storage_account_managed_identity = {
+      role_definition_id_or_name = "Key Vault Crypto User"
+      principal_id               = azurerm_storage_account.this.identity[0].principal_id
+    }
+  }
+}
 
-### The previous command will drop you in an interactive prompt. From here, we can input several key-value pairs to produce to the userstopic. 
-### When you are finished, press Control-C on your keyboard to exit the prompt:
+module "key_vault_key" {
+  source     = "app.terraform.io/bxxx/key-vault-key/azure"
+  version    = "< 0.2.0"
+  depends_on = [module.key_vault_rbac]
 
->1,mitch
->2,elyse
->3,isabelle
->4,sammy
+  key_vault_resource_id = module.key_vault.id
+  name                  = "${azurerm_storage_account.this.name}-encryption"
+  type                  = "RSA"
+  size                  = "2048"
+  opts                  = ["encrypt", "decrypt", "sign", "unwrapKey", "wrapKey"]
+  tags                  = var.tags
+}
 
-### After producing the data to our topic, we can use the kafka-console-consumer script to read the data. The following command shows how:
-kafka-console-consumer \
---bootstrap-server localhost:9092 \
---topic users \
---from-beginning
+resource "azurerm_storage_account_customer_managed_key" "this" {
+  depends_on = [module.key_vault_key]
 
-### By default, the kafka-console-consumer will only print the message value. But as we learned earlier, events actually contain more 
-### information, including a key, a timestamp, and headers. Let’s pass in some additional properties to the console consumer so that we can see the timestamp and key values as well
-kafka-console-consumer \
---bootstrap-server localhost:9092 \
-9
---topic users \
---property print.timestamp=true \
---property print.key=true \
---property print.value=true \
---from-beginning
+  #By not binding to a specific version reference of the key, the newest key is always used
+  #Otherwise, version must be updated via terraform 
+  key_name           = "${azurerm_storage_account.this.name}-encryption"
+  storage_account_id = azurerm_storage_account.this.id
+  key_vault_id       = module.key_vault.id
 
-### Tear down your cluster
-docker-compose down
-
+  lifecycle {
+    precondition {
+      condition     = (var.account_kind == "StorageV2" || var.account_tier == "Premium")
+      error_message = "`var.customer_managed_key` can only be set when the `account_kind` is set to `StorageV2` or `account_tier` set to `Premium`."
+    }
+  }
+}
 =============================||=================================================
 
 
