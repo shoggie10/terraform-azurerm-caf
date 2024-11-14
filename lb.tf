@@ -19,23 +19,7 @@ output "lb" {
   value = module.lb
 }
 ========================||========================
-This is the first iteration of the storage account module. This module is meant to create and configure the top-level storage account resource.
-The following resource types have been purposely excluded from this module. They will reach receive their own modules to avoid an overwhelming amount of complexity in this single module.
 
-Blob containers
-File Shares
-Tables
-Queues
-
-There are still settings included that are configurable for all instances of containers/shares/tables/queues that are set in the top-level storage account resource. Those are configured here, and these settings inherit downwards.
-The following resources are planned to be bolted onto this via the Azure Common terraform module after base functionality of the storage account piece is confirmed.
-
-Diagnostic Settings
-RBAC permissions
-Resource Locks
-
-Private endpoint functionality will be completed when the standalone Private Endpoint terraform module is completed. There is also additional setup required in the Azure environment to fully support PEs.
-The CODEOWNERS file will also see changes if IAM/Security impose any specific requirements on this module.
 
 =============================||=================================================
 
