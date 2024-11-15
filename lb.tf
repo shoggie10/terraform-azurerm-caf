@@ -19,17 +19,7 @@ output "lb" {
   value = module.lb
 }
 ========================||========================
-  network_acls = {
-    #Bypass must be set to AzureServices for Storage Account CMK usage when not using Private Endpoints
-    bypass = length(var.private_endpoints) != 0 ? "None" : "AzureServices"
-    #Set to allow only if no PE, IP Rules, or VNet rules exist.
-    default_action             = length(var.private_endpoints) == 0 && length(local.cmk.ip_rules) == 0 && length(local.cmk.virtual_network_subnet_ids) == 0 ? "Allow" : "Deny"
-    ip_rules                   = local.cmk.ip_rules
-    virtual_network_subnet_ids = local.cmk.virtual_network_subnet_ids
-  }
 
-  tags = var.tags
-}
 
 =============================||=================================================
 
