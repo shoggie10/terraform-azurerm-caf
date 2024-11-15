@@ -19,16 +19,7 @@ output "lb" {
   value = module.lb
 }
 ========================||========================
-xxxxxxx % terraform validate
-╷
-│ Error: Unsupported attribute
-│ 
-│   on globals.tf line 16, in locals:
-│   16:   normalized_cmk_key_url = "https://${local.cmk_keyvault_name}.vault.azure.net/keys/${module.key_vault_key.application_name}"
-│     ├────────────────
-│     │ module.key_vault_key is a object
-│ 
-│ This object does not have an attribute named "application_name".
+
 ╵=============================||=================================================
 
 
