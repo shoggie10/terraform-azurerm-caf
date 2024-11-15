@@ -19,13 +19,17 @@ output "lb" {
   value = module.lb
 }
 ========================||========================
-In this update:
-- Removed the conditional `customer_managed_key` variable to prevent it from being set to null.
-- Added modules `key_vault_rbac` and `key_vault_key` to handle Customer Managed Key (CMK) creation and role assignments.
-- Removed `key_vault` module as requested.
-- Updated `locals.tf` to use consistent key URLs from the newly created Key Vault key module (`module.key_vault_key`).
-- Kept the new CMK and Key Vault permissions closely integrated with CosmosDB for a 1:1 relationship.
-=============================||=================================================
+xxxxxxx % terraform validate
+╷
+│ Error: Unsupported attribute
+│ 
+│   on globals.tf line 16, in locals:
+│   16:   normalized_cmk_key_url = "https://${local.cmk_keyvault_name}.vault.azure.net/keys/${module.key_vault_key.application_name}"
+│     ├────────────────
+│     │ module.key_vault_key is a object
+│ 
+│ This object does not have an attribute named "application_name".
+╵=============================||=================================================
 
 
 ========
