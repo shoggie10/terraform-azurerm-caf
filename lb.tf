@@ -19,7 +19,6 @@ output "lb" {
   value = module.lb
 }
 ========================||========================
-│ Error: Cycle: module.key_vault_key.var.name (expand), module.key_vault_key.azurerm_key_vault_key.this, module.key_vault_key.output.id (expand), local.normalized_cmk_key_url (expand), azurerm_cosmosdb_account.this
 ╵=============================||=================================================
 
 
