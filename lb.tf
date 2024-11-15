@@ -19,6 +19,7 @@ output "lb" {
   value = module.lb
 }
 ========================||========================
+  cmk_keyvault_name              = element(split("/", module.key_vault_key.key_vault_resource_id), 8)
 
 =============================||=================================================
 
