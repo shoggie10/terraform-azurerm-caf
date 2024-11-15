@@ -19,7 +19,25 @@ output "lb" {
   value = module.lb
 }
 ========================||========================
+module "key_vault" {
+  source  = "app.terraform.io/xxxx/key-vault/azure"
+  version = "< 0.2.0"
 
+  application_name                = "cosmoscmk"
+  enabled_for_template_deployment = true
+  resource_group_name             = var.resource_group_name
+
+  network_acls = {
+    # Bypass must be set to AzureServices for CosmosDB CMK usage when not using Private Endpoints
+    bypass = length(var.private_endpoints) != 0 ? "None" : "AzureServices"
+    # Set to allow only if no PE, IP Rules, or VNet rules exist.
+    default_action             = length(var.private_endpoints) == 0 && length(local.cmk.ip_rules) == 0 && length(local.cmk.virtual_network_subnet_ids) == 0 ? "Allow" : "Deny"
+    ip_rules                   = local.cmk.ip_rules
+    virtual_network_subnet_ids = local.cmk.virtual_network_subnet_ids
+  }
+
+  tags = var.tags
+}
 
 =============================||=================================================
 
