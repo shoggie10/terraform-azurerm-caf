@@ -19,8 +19,6 @@ output "lb" {
   value = module.lb
 }
 ========================||========================
-  normalized_cmk_default_identity_type = var.customer_managed_key != null ? "UserAssignedIdentity=${var.customer_managed_key.user_assigned_identity.resource_id}" : null
-  normalized_cmk_key_url                = "https://${local.cmk_keyvault_name}.vault.azure.net/keys/${module.key_vault_key.name}"
 
 =============================||=================================================
 
