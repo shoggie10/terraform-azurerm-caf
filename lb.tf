@@ -19,55 +19,17 @@ output "lb" {
   value = module.lb
 }
 ========================||========================
-## Custom Modularization for CosmosDB APIs
+  network_acls = {
+    #Bypass must be set to AzureServices for Storage Account CMK usage when not using Private Endpoints
+    bypass = length(var.private_endpoints) != 0 ? "None" : "AzureServices"
+    #Set to allow only if no PE, IP Rules, or VNet rules exist.
+    default_action             = length(var.private_endpoints) == 0 && length(local.cmk.ip_rules) == 0 && length(local.cmk.virtual_network_subnet_ids) == 0 ? "Allow" : "Deny"
+    ip_rules                   = local.cmk.ip_rules
+    virtual_network_subnet_ids = local.cmk.virtual_network_subnet_ids
+  }
 
-This Terraform configuration is a custom implementation for CosmosDB, custom implementation for organizational use. Below is the new structure along with the rewritten `main.tf` and module configuration changes.
-
-**Directory Structure:**
-- cosmosdb-databaseaccount/
-  - modules/
-    - core/
-    - sql_api/
-    - mongo_api/
-    - cassandra_api/
-    - gremlin_api/
-    - table_api/
-  - main.tf
-  - variables.tf
-  - outputs.tf
-  - versions.tf
-
-**Comments for CosmosDB Module**:
-
-This is the first iteration of the CosmosDB module. This module is intended to create and configure the top-level CosmosDB account resource.
-
-The following resource types have been intentionally excluded from this module to reduce complexity and promote modularity. They will receive their own dedicated modules to provide a clear separation of responsibilities:
-
-- SQL API configurations
-- MongoDB API configurations
-- Cassandra API configurations
-- Gremlin API configurations
-- Table API configurations
-
-These resources are handled separately to ensure that each API type can be independently configured and managed, avoiding overwhelming complexity in a single module.
-
-There are still certain settings that apply to all instances of the APIs, such as account-level consistency policies, geo-replication, network security configurations, and tagging. These settings are configured here in the core CosmosDB account module, and they inherit downward to the specific API configurations where appropriate.
-
-The following resources are planned to be added to this module via integration with the Azure Common Terraform module after the core functionality of the CosmosDB account is confirmed:
-
-- Diagnostic Settings
-- RBAC Permissions
-- Resource Locks
-
-Private endpoint functionality will be completed when the standalone Private Endpoint Terraform module is finalized. Additional setup is required in the Azure environment to fully support private endpoints.
-
-The `CODEOWNERS` file will be updated as needed, especially if IAM or security teams impose specific requirements on this module to ensure compliance and maintainability.
-
-**Main Account Module (cosmosdb-databaseaccount/main.tf):**
-
-The following `main.tf` includes only the core CosmosDB module, without references to specific APIs, making it independent so that separate API modules can be created.
-
-`
+  tags = var.tags
+}
 
 =============================||=================================================
 
