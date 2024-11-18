@@ -19,15 +19,7 @@ output "lb" {
   value = module.lb
 }
 ========================||========================
-╷
-│ Error: Invalid index
-│ 
-│   on ../customer-managed-key.tf line 37, in module "key_vault_rbac":
-│   37:       principal_id = azurerm_cosmosdb_account.this.identity[0].principal_id
-│     ├────────────────
-│     │ azurerm_cosmosdb_account.this.identity is empty list of object
-│ 
-│ The given key does not identify an element in this collection value: the collection has no elements.
+
 
 
 
