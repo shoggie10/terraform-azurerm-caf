@@ -234,6 +234,15 @@ variable "postgresql_version" {
   }
 }
 ### Example for administrator_password
+variable "administrator_password" {
+  description = "The administrator password for the PostgreSQL cluster"
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = length(var.administrator_password) >= 8
+    error_message = "Password must be at least 8 characters long."
+  }
+}
 
 ╵=============================||=================================================
 
