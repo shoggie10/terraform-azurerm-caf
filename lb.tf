@@ -21,25 +21,51 @@ output "lb" {
 ========================||========================
 # main.tf
 ---
-resource "azurerm_cosmosdb_table" "this" {
-  name                = var.table_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
+resource "azurerm_cosmosdb_postgresql_cluster" "this" {
+  name                = var.cluster_name
   resource_group_name = var.resource_group_name
-  throughput          = var.throughput
-
-  autoscale_settings {
-    max_throughput = var.max_throughput
+  location            = var.location
+  administrator_login = var.administrator_login
+  administrator_password = var.administrator_password
+  version             = var.postgresql_version
+  sku_name            = var.sku_name
+  storage_mb          = var.storage_mb
+  backup_retention_days = var.backup_retention_days
+  geo_redundant_backup_enabled = var.geo_redundant_backup_enabled
+  tags                = var.tags
+#  autoscale_settings {
+#   max_throughput = var.autoscale_max_throughput
+#  }
+  dynamic "geo_redundant_backup_enabled" {
+    for_each = var.enable_geo_redundant_backup ? [1] : []
+    content {
+      enabled = true
+    }
   }
+
+dynamic "autoscale_settings" {
+  for_each = var.autoscale_max_throughput != null ? [1] : []
+  content {
+    max_throughput = var.autoscale_max_throughput
+  }
+}
+
+}
+
+resource "azurerm_cosmosdb_postgresql_database" "this" {
+  name                = var.database_name
+  cluster_id          = azurerm_cosmosdb_postgresql_cluster.this.id
+  charset             = var.database_charset
+  collation           = var.database_collation
 }
 
 module "rbac" {
   source = "app.terraform.io/xxxx/common/azure"
 
   for_each = var.role_assignments
-  depends_on = [azurerm_cosmosdb_table.this]
 
-  resource_id   = azurerm_cosmosdb_table.this.id
-  resource_name = azurerm_cosmosdb_table.this.name
+  resource_id   = azurerm_cosmosdb_postgresql_database.this.id
+  resource_name = azurerm_cosmosdb_postgresql_database.this.name
 
   role_based_permissions = {
     assignment = {
@@ -49,6 +75,7 @@ module "rbac" {
   }
   wait_for_rbac = false
 }
+
 ---
 
   dynamic "autoscale_settings" {
@@ -61,22 +88,16 @@ module "rbac" {
 ---
 data "azurerm_client_config" "current" {}
 
-data "azurerm_cosmosdb_account" "this" {
-  name                = var.cosmosdb_account_name
-  resource_group_name = var.resource_group_name
+data "azurerm_resource_group" "this" {
+  name = var.resource_group_name
 }
 
 
 ###=======================================
 # variables.tf
 ---
-variable "table_name" {
-  description = "Name of the CosmosDB Table to create"
-  type        = string
-}
-
-variable "cosmosdb_account_name" {
-  description = "The name of the CosmosDB account"
+variable "cluster_name" {
+  description = "Name of the CosmosDB PostgreSQL cluster to create"
   type        = string
 }
 
@@ -85,16 +106,68 @@ variable "resource_group_name" {
   type        = string
 }
 
-variable "throughput" {
-  description = "The throughput for the CosmosDB Table (e.g., RU/s)"
-  type        = number
-  default     = null
+variable "location" {
+  description = "The Azure region where the resources will be created"
+  type        = string
 }
 
-variable "max_throughput" {
-  description = "The maximum throughput for autoscale settings"
+variable "administrator_login" {
+  description = "The administrator login name for the PostgreSQL cluster"
+  type        = string
+}
+
+variable "administrator_password" {
+  description = "The administrator password for the PostgreSQL cluster"
+  type        = string
+  sensitive   = true
+}
+
+variable "postgresql_version" {
+  description = "The version of PostgreSQL to use (e.g., 13)"
+  type        = string
+}
+
+variable "sku_name" {
+  description = "The SKU name for the PostgreSQL cluster (e.g., GP_Gen5_2)"
+  type        = string
+}
+
+variable "storage_mb" {
+  description = "The maximum storage for the PostgreSQL cluster in megabytes"
   type        = number
-  default     = null
+}
+
+variable "backup_retention_days" {
+  description = "The number of days to retain backups"
+  type        = number
+}
+
+variable "geo_redundant_backup_enabled" {
+  description = "Whether geo-redundant backup is enabled"
+  type        = bool
+}
+
+variable "tags" {
+  description = "A map of tags to assign to the resources"
+  type        = map(string)
+  default     = {}
+}
+
+variable "database_name" {
+  description = "The name of the PostgreSQL database to create"
+  type        = string
+}
+
+variable "database_charset" {
+  description = "The charset for the PostgreSQL database"
+  type        = string
+  default     = "UTF8"
+}
+
+variable "database_collation" {
+  description = "The collation for the PostgreSQL database"
+  type        = string
+  default     = "en_US.UTF8"
 }
 
 variable "role_assignments" {
@@ -117,45 +190,50 @@ variable "terraform_module" {
   type        = string
   default     = ""
 }
+---
+variable "autoscale_max_throughput" {
+  description = "Maximum throughput for autoscaling"
+  type        = number
+  default     = null
+}
+
 
 
 
 ###=======================================
 # outputs.tf
 ---
-output "cosmosdb_table_id" {
-  value       = azurerm_cosmosdb_table.this.id
-  description = "The ID of the CosmosDB Table"
+output "postgresql_cluster_id" {
+  value       = azurerm_cosmosdb_postgresql_cluster.this.id
+  description = "The ID of the CosmosDB PostgreSQL cluster"
 }
 
-output "cosmosdb_table_name" {
-  value       = azurerm_cosmosdb_table.this.name
-  description = "The name of the CosmosDB Table"
+output "postgresql_database_id" {
+  value       = azurerm_cosmosdb_postgresql_database.this.id
+  description = "The ID of the PostgreSQL database"
 }
+
 ---
-output "cosmosdb_table_resource_id" {
-  value       = azurerm_cosmosdb_table.this.id
-  description = "The resource ID of the CosmosDB Table"
+### Expose Additional Outputs: Include outputs for important attributes, such as the PostgreSQL cluster's FQDN or connection string.
+output "postgresql_cluster_fqdn" {
+  value       = azurerm_cosmosdb_postgresql_cluster.this.fully_qualified_domain_name
+  description = "The fully qualified domain name of the PostgreSQL cluster"
 }
 
-output "cosmosdb_table_etag" {
-  value       = azurerm_cosmosdb_table.this.etag
-  description = "The ETag of the CosmosDB Table"
-}
 
 =====
-locals {
-  throughput_settings = [var.throughput, var.max_throughput]
-}
+### Add Validation for Variables: Use validation blocks to enforce correct input values.
 
-variable "throughput_validation" {
-  description = "Validates that only one of throughput or max_throughput is set"
-  default     = null
+### Example for postgresql_version:
+variable "postgresql_version" {
+  description = "The version of PostgreSQL to use (e.g., 13)"
+  type        = string
   validation {
-    condition     = length(compact(local.throughput_settings)) == 1
-    error_message = "You must specify either 'throughput' or 'max_throughput', not both."
+    condition     = contains(["12", "13", "14"], var.postgresql_version)
+    error_message = "Supported PostgreSQL versions are: 12, 13, 14."
   }
 }
+### Example for administrator_password
 
 ╵=============================||=================================================
 
