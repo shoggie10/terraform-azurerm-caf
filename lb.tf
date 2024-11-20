@@ -20,8 +20,75 @@ output "lb" {
 }
 ========================||========================
 
+# main.tf
+resource "azurerm_storage_container" "this" {
+  name                 = var.container_name
+  storage_account_name = data.azurerm_storage_account.this.name
+}
 
+module "rbac" {
+  source = "app.terraform.io/xxxx/common/azure"
 
+  for_each = var.role_assignments
+
+  resource_id   = azurerm_storage_container.this.resource_manager_id
+  resource_name = azurerm_storage_container.this.name
+
+  role_based_permissions = {
+    assignment = {
+      role_definition_id_or_name = each.value.role_definition_id_or_name
+      principal_id               = each.value.principal_id
+    }
+  }
+  wait_for_rbac = false
+}
+
+--
+globals.tf
+data "azurerm_client_config" "current" {}
+
+data "azurerm_storage_account" "this" {
+  name                = var.storage_account_name
+  resource_group_name = var.resource_group_name
+}
+
+---
+# variables.tf
+variable "container_name" {
+  description = "Name of the container to create"
+  type = string
+}
+
+variable "storage_account_name" {
+  description = "Name of the storage account to create the container in"
+  type = string
+}
+
+variable "resource_group_name" {
+  description = "Name of the resource group the storage account resides in"
+  type = string
+}
+
+variable "role_assignments" {
+  type = map(object({
+    role_definition_id_or_name = string
+    principal_id               = string
+  }))
+  default     = {}
+  description = <<DESCRIPTION
+A map of role assignments to create on the resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+
+- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+- `principal_id` - The ID of the principal to assign the role to.
+DESCRIPTION
+  nullable    = false
+}
+
+variable "terraform_module" {
+  description = "Used to inform of a parent module"
+  type        = string
+  default     = ""
+}
 
 
 ╵=============================||=================================================
