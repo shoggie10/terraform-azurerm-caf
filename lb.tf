@@ -19,6 +19,25 @@ output "lb" {
   value = module.lb
 }
 ========================||========================
+terraform validate
+╷
+│ Error: invalid value for default_identity_type (user assigned identity must be in the format of: 'UserAssignedIdentity=/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{userAssignedIdentityName}')
+│ 
+│   with module.this.azurerm_cosmosdb_account.this,
+│   on ../main.tf line 15, in resource "azurerm_cosmosdb_account" "this":
+│   15:   default_identity_type                 = local.normalized_cmk_default_identity_type
+│ 
+╵
+╷
+│ Error: expected default_identity_type to be one of ["FirstPartyIdentity" "SystemAssignedIdentity"], got UserAssigned
+│ 
+│   with module.this.azurerm_cosmosdb_account.this,
+│   on ../main.tf line 15, in resource "azurerm_cosmosdb_account" "this":
+│   15:   default_identity_type                 = local.normalized_cmk_default_identity_type
+
+
+======================||==========================
+========================||========================
 # main.tf
 ---
 resource "azurerm_cosmosdb_postgresql_cluster" "this" {
