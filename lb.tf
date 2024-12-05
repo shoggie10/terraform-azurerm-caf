@@ -239,6 +239,65 @@ variable "partition_key_type" {
 
 
 ╵=============================||=================================================
+provider "azurerm" {
+  #4.0+ version of AzureRM Provider requires a subscription ID  
+  subscription_id = "bxxxxxxxxxxxxxxxxxxxx" 
+
+  #resource_provider_registrations = "none"
+
+  features {
+
+  }
+}
+
+
+data "azurerm_resource_group" "this" {
+  name = "wayne-tech-hub"
+}
+
+# data "azurerm_cosmosdb_account" "this" {
+#   name                = "xxxxxxxxxxdev259678"
+#   resource_group_name = data.azurerm_resource_group.this.name
+# }
+
+data "azuread_user" "this" {
+  user_principal_name = "earlybird@xxxx.com"
+}
+
+
+
+module "this" {
+  source = "../"
+
+  application_name    = "waynetechhub"
+  resource_group_name = data.azurerm_resource_group.this.name
+  location            = data.azurerm_resource_group.this.location
+
+  tags = local.tags
+
+
+  consistency_policy = {
+    consistency_level       = "ConsistentPrefix"
+    max_interval_in_seconds = 300
+    max_staleness_prefix    = 100000
+  }
+
+
+  geo_locations = [
+    {
+      location          = "eastus2" 
+      failover_priority = 0
+      zone_redundant    = false
+    }
+    #,
+    # {
+    #   location          = "centralus"
+    #   failover_priority = 1
+    #    zone_redundant = false
+
+    # }
+  ]
+}
 
 
 ========
