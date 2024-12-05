@@ -25,42 +25,28 @@ output "lb" {
 ========================||========================
 # main.tf
 ---
-resource "azurerm_cosmosdb_postgresql_cluster" "this" {
-  name                = var.cluster_name
+resource "azurerm_cosmosdb_mongo_database" "this" {
+  name                = var.mongo_database_name
+  account_name        = data.azurerm_cosmosdb_account.this.name
   resource_group_name = var.resource_group_name
-  location            = var.location
-  administrator_login = var.administrator_login
-  administrator_password = var.administrator_password
-  version             = var.postgresql_version
-  sku_name            = var.sku_name
-  storage_mb          = var.storage_mb
-  backup_retention_days = var.backup_retention_days
-  geo_redundant_backup_enabled = var.geo_redundant_backup_enabled
-  tags                = var.tags
-#  autoscale_settings {
-#   max_throughput = var.autoscale_max_throughput
-#  }
-  dynamic "geo_redundant_backup_enabled" {
-    for_each = var.enable_geo_redundant_backup ? [1] : []
+  throughput          = var.throughput
+}
+
+resource "azurerm_cosmosdb_mongo_collection" "this" {
+  name                = var.mongo_collection_name
+  resource_group_name = var.resource_group_name
+  account_name        = data.azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_mongo_database.this.name
+  shard_key           = var.shard_key
+  throughput          = var.collection_throughput
+
+  dynamic "index" {
+    for_each = var.indexes
     content {
-      enabled = true
+      keys    = index.value.keys
+      options = index.value.options
     }
   }
-
-dynamic "autoscale_settings" {
-  for_each = var.autoscale_max_throughput != null ? [1] : []
-  content {
-    max_throughput = var.autoscale_max_throughput
-  }
-}
-
-}
-
-resource "azurerm_cosmosdb_postgresql_database" "this" {
-  name                = var.database_name
-  cluster_id          = azurerm_cosmosdb_postgresql_cluster.this.id
-  charset             = var.database_charset
-  collation           = var.database_collation
 }
 
 module "rbac" {
@@ -68,8 +54,8 @@ module "rbac" {
 
   for_each = var.role_assignments
 
-  resource_id   = azurerm_cosmosdb_postgresql_database.this.id
-  resource_name = azurerm_cosmosdb_postgresql_database.this.name
+  resource_id   = azurerm_cosmosdb_mongo_collection.this.id
+  resource_name = azurerm_cosmosdb_mongo_collection.this.name
 
   role_based_permissions = {
     assignment = {
@@ -79,6 +65,7 @@ module "rbac" {
   }
   wait_for_rbac = false
 }
+
 
 ---
 
@@ -92,86 +79,61 @@ module "rbac" {
 ---
 data "azurerm_client_config" "current" {}
 
-data "azurerm_resource_group" "this" {
-  name = var.resource_group_name
+data "azurerm_cosmosdb_account" "this" {
+  name                = var.cosmosdb_account_name
+  resource_group_name = var.resource_group_name
 }
+
 
 
 ###=======================================
 # variables.tf
 ---
-variable "cluster_name" {
-  description = "Name of the CosmosDB PostgreSQL cluster to create"
+variable "mongo_database_name" {
+  description = "Name of the CosmosDB MongoDB database to create"
+  type        = string
+}
+
+variable "mongo_collection_name" {
+  description = "Name of the CosmosDB MongoDB collection to create"
+  type        = string
+}
+
+variable "shard_key" {
+  description = "The shard key for the MongoDB collection"
+  type        = map(string)
+  default     = {}
+}
+
+variable "indexes" {
+  description = "List of indexes to create on the MongoDB collection"
+  type = list(object({
+    keys    = list(string)
+    options = map(string)
+  }))
+  default = []
+}
+
+variable "throughput" {
+  description = "The throughput for the MongoDB database (e.g., RU/s)"
+  type        = number
+  default     = null
+}
+
+variable "collection_throughput" {
+  description = "The throughput for the MongoDB collection (e.g., RU/s)"
+  type        = number
+  default     = null
+}
+
+variable "cosmosdb_account_name" {
+  description = "The name of the CosmosDB account"
   type        = string
 }
 
 variable "resource_group_name" {
   description = "The name of the resource group"
   type        = string
-}
-
-variable "location" {
-  description = "The Azure region where the resources will be created"
-  type        = string
-}
-
-variable "administrator_login" {
-  description = "The administrator login name for the PostgreSQL cluster"
-  type        = string
-}
-
-variable "administrator_password" {
-  description = "The administrator password for the PostgreSQL cluster"
-  type        = string
-  sensitive   = true
-}
-
-variable "postgresql_version" {
-  description = "The version of PostgreSQL to use (e.g., 13)"
-  type        = string
-}
-
-variable "sku_name" {
-  description = "The SKU name for the PostgreSQL cluster (e.g., GP_Gen5_2)"
-  type        = string
-}
-
-variable "storage_mb" {
-  description = "The maximum storage for the PostgreSQL cluster in megabytes"
-  type        = number
-}
-
-variable "backup_retention_days" {
-  description = "The number of days to retain backups"
-  type        = number
-}
-
-variable "geo_redundant_backup_enabled" {
-  description = "Whether geo-redundant backup is enabled"
-  type        = bool
-}
-
-variable "tags" {
-  description = "A map of tags to assign to the resources"
-  type        = map(string)
-  default     = {}
-}
-
-variable "database_name" {
-  description = "The name of the PostgreSQL database to create"
-  type        = string
-}
-
-variable "database_charset" {
-  description = "The charset for the PostgreSQL database"
-  type        = string
-  default     = "UTF8"
-}
-
-variable "database_collation" {
-  description = "The collation for the PostgreSQL database"
-  type        = string
-  default     = "en_US.UTF8"
 }
 
 variable "role_assignments" {
@@ -189,14 +151,27 @@ DESCRIPTION
   nullable    = false
 }
 
+variable "tags" {
+  description = "A map of tags to assign to the resources"
+  type        = map(string)
+  default     = {}
+}
+
 variable "terraform_module" {
   description = "Used to inform of a parent module"
   type        = string
   default     = ""
 }
+
 ---
-variable "autoscale_max_throughput" {
-  description = "Maximum throughput for autoscaling"
+variable "autoscale_throughput" {
+  description = "Enable autoscale throughput for the database"
+  type        = bool
+  default     = false
+}
+
+variable "max_throughput" {
+  description = "Maximum throughput for autoscale settings"
   type        = number
   default     = null
 }
@@ -204,49 +179,58 @@ variable "autoscale_max_throughput" {
 
 
 
+
 ###=======================================
 # outputs.tf
 ---
-output "postgresql_cluster_id" {
-  value       = azurerm_cosmosdb_postgresql_cluster.this.id
-  description = "The ID of the CosmosDB PostgreSQL cluster"
+output "mongo_database_id" {
+  value       = azurerm_cosmosdb_mongo_database.this.id
+  description = "The ID of the CosmosDB MongoDB database"
 }
 
-output "postgresql_database_id" {
-  value       = azurerm_cosmosdb_postgresql_database.this.id
-  description = "The ID of the PostgreSQL database"
+output "mongo_collection_id" {
+  value       = azurerm_cosmosdb_mongo_collection.this.id
+  description = "The ID of the CosmosDB MongoDB collection"
 }
+
 
 ---
-### Expose Additional Outputs: Include outputs for important attributes, such as the PostgreSQL cluster's FQDN or connection string.
-output "postgresql_cluster_fqdn" {
-  value       = azurerm_cosmosdb_postgresql_cluster.this.fully_qualified_domain_name
-  description = "The fully qualified domain name of the PostgreSQL cluster"
+### Outputs for Useful Attributes: Include additional outputs, such as database throughput or shard key.
+output "mongo_database_throughput" {
+  value       = azurerm_cosmosdb_mongo_database.this.throughput
+  description = "The throughput of the MongoDB database"
 }
+
+output "mongo_shard_key" {
+  value       = var.shard_key
+  description = "The shard key for the MongoDB collection"
+}
+
 
 
 =====
-### Add Validation for Variables: Use validation blocks to enforce correct input values.
+### Validation for Variables: Add validation blocks to ensure correct inputs for critical variables.
 
-### Example for postgresql_version:
-variable "postgresql_version" {
-  description = "The version of PostgreSQL to use (e.g., 13)"
+### Example for mongo_database_name.:
+variable "mongo_database_name" {
+  description = "Name of the CosmosDB MongoDB database"
   type        = string
   validation {
-    condition     = contains(["12", "13", "14"], var.postgresql_version)
-    error_message = "Supported PostgreSQL versions are: 12, 13, 14."
+    condition     = can(regex("^[a-zA-Z0-9_-]+$", var.mongo_database_name))
+    error_message = "Database name must contain only alphanumeric characters, dashes, and underscores."
   }
 }
-### Example for administrator_password
-variable "administrator_password" {
-  description = "The administrator password for the PostgreSQL cluster"
-  type        = string
-  sensitive   = true
+
+### Example for throughput. :
+variable "throughput" {
+  description = "Throughput in RU/s for the database"
+  type        = number
   validation {
-    condition     = length(var.administrator_password) >= 8
-    error_message = "Password must be at least 8 characters long."
+    condition     = var.throughput >= 400 || var.throughput == null
+    error_message = "Throughput must be at least 400 RU/s."
   }
 }
+
 
 ╵=============================||=================================================
 
