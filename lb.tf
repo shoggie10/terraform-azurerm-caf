@@ -25,35 +25,38 @@ output "lb" {
 ========================||========================
 # main.tf
 ---
-resource "azurerm_cosmosdb_cassandra_keyspace" "this" {
-  name                = var.cassandra_keyspace_name
+resource "azurerm_cosmosdb_gremlin_database" "this" {
+  name                = var.gremlin_database_name
   resource_group_name = var.resource_group_name
   account_name        = data.azurerm_cosmosdb_account.this.name
-  throughput          = var.keyspace_throughput
+  throughput          = var.database_throughput
+
+  tags = var.tags
 }
 
-resource "azurerm_cosmosdb_cassandra_table" "this" {
-  name                 = var.cassandra_table_name
-  resource_group_name  = var.resource_group_name
-  account_name         = data.azurerm_cosmosdb_account.this.name
-  keyspace_name        = azurerm_cosmosdb_cassandra_keyspace.this.name
-  throughput           = var.table_throughput
+resource "azurerm_cosmosdb_gremlin_graph" "this" {
+  name                = var.gremlin_graph_name
+  resource_group_name = var.resource_group_name
+  account_name        = data.azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_gremlin_database.this.name
 
-  schema {
-    column {
-      name = var.partition_key_name
-      type = var.partition_key_type
-    }
-
-    column {
-      name = var.additional_column_name
-      type = var.additional_column_type
-    }
-
-    partition_key {
-      name = var.partition_key_name
-    }
+  index_policy {
+    automatic      = true
+    indexing_mode  = "consistent"
+    included_paths = ["/*"]
+    excluded_paths = ["/\"_etag\"/?"]
   }
+
+  conflict_resolution_policy {
+    mode                     = "LastWriterWins"
+    conflict_resolution_path = "/_ts"
+  }
+
+  unique_key {
+    paths = ["/definition/id1", "/definition/id2"]
+  }
+
+  tags = var.tags
 }
 
 module "rbac" {
@@ -61,8 +64,8 @@ module "rbac" {
 
   for_each = var.role_assignments
 
-  resource_id   = azurerm_cosmosdb_cassandra_table.this.id
-  resource_name = azurerm_cosmosdb_cassandra_table.this.name
+  resource_id   = azurerm_cosmosdb_gremlin_graph.this.id
+  resource_name = azurerm_cosmosdb_gremlin_graph.this.name
 
   role_based_permissions = {
     assignment = {
@@ -72,6 +75,7 @@ module "rbac" {
   }
   wait_for_rbac = false
 }
+
 
 
 ---
@@ -95,61 +99,40 @@ data "azurerm_cosmosdb_account" "this" {
 
 
 
+
 ###=======================================
 # variables.tf
 ---
-variable "cassandra_keyspace_name" {
-  description = "Name of the CosmosDB Cassandra keyspace to create"
+variable "gremlin_database_name" {
+  description = "Name of the Gremlin database to create"
   type        = string
 }
 
-variable "cassandra_table_name" {
-  description = "Name of the CosmosDB Cassandra table to create"
-  type        = string
-}
-
-variable "partition_key_name" {
-  description = "The name of the partition key column"
-  type        = string
-}
-
-variable "partition_key_type" {
-  description = "The data type of the partition key column (e.g., 'ascii', 'text', 'int')"
-  type        = string
-}
-
-variable "additional_column_name" {
-  description = "The name of an additional column in the table"
-  type        = string
-  default     = null
-}
-
-variable "additional_column_type" {
-  description = "The data type of the additional column (e.g., 'ascii', 'text', 'int')"
-  type        = string
-  default     = null
-}
-
-variable "keyspace_throughput" {
-  description = "The throughput for the Cassandra keyspace (e.g., RU/s)"
-  type        = number
-  default     = null
-}
-
-variable "table_throughput" {
-  description = "The throughput for the Cassandra table (e.g., RU/s)"
-  type        = number
-  default     = null
-}
-
-variable "cosmosdb_account_name" {
-  description = "The name of the CosmosDB account"
+variable "gremlin_graph_name" {
+  description = "Name of the Gremlin graph to create"
   type        = string
 }
 
 variable "resource_group_name" {
-  description = "The name of the resource group"
+  description = "Name of the resource group the Cosmos DB account resides in"
   type        = string
+}
+
+variable "cosmosdb_account_name" {
+  description = "Name of the Cosmos DB account"
+  type        = string
+}
+
+variable "database_throughput" {
+  description = "Throughput for the Gremlin database (e.g., RU/s)"
+  type        = number
+  default     = null
+}
+
+variable "tags" {
+  description = "A map of tags to assign to the resources"
+  type        = map(string)
+  default     = {}
 }
 
 variable "role_assignments" {
@@ -167,11 +150,13 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "tags" {
-  description = "A map of tags to assign to the resources"
-  type        = map(string)
-  default     = {}
+variable "terraform_module" {
+  description = "Used to inform of a parent module"
+  type        = string
+  default     = ""
 }
+
+
 
 
 ---
@@ -196,19 +181,14 @@ variable "max_throughput" {
 ###=======================================
 # outputs.tf
 ---
-output "cassandra_keyspace_id" {
-  value       = azurerm_cosmosdb_cassandra_keyspace.this.id
-  description = "The ID of the CosmosDB Cassandra keyspace"
+output "gremlin_database_id" {
+  value       = azurerm_cosmosdb_gremlin_database.this.id
+  description = "The ID of the Gremlin database"
 }
 
-output "cassandra_table_id" {
-  value       = azurerm_cosmosdb_cassandra_table.this.id
-  description = "The ID of the CosmosDB Cassandra table"
-}
-
-output "cassandra_table_schema" {
-  value       = azurerm_cosmosdb_cassandra_table.this.schema
-  description = "The schema of the Cassandra table"
+output "gremlin_graph_id" {
+  value       = azurerm_cosmosdb_gremlin_graph.this.id
+  description = "The ID of the Gremlin graph"
 }
 
 
