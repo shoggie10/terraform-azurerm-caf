@@ -25,28 +25,27 @@ output "lb" {
 ========================||========================
 # main.tf
 ---
-resource "azurerm_cosmosdb_mongo_database" "this" {
-  name                = var.mongo_database_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
+resource "azurerm_cosmosdb_cassandra_keyspace" "this" {
+  name                = var.cassandra_keyspace_name
   resource_group_name = var.resource_group_name
-  throughput          = var.throughput
+  account_name        = data.azurerm_cosmosdb_account.this.name
+  throughput          = var.keyspace_throughput
 }
 
-resource "azurerm_cosmosdb_mongo_collection" "this" {
-  name                = var.mongo_collection_name
-  resource_group_name = var.resource_group_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
-  database_name       = azurerm_cosmosdb_mongo_database.this.name
-  shard_key           = var.shard_key
-  throughput          = var.collection_throughput
-
-  dynamic "index" {
-    for_each = var.indexes
-    content {
-      keys    = index.value.keys
-      options = index.value.options
+resource "azurerm_cosmosdb_cassandra_table" "this" {
+  name                 = var.cassandra_table_name
+  resource_group_name  = var.resource_group_name
+  account_name         = data.azurerm_cosmosdb_account.this.name
+  keyspace_name        = azurerm_cosmosdb_cassandra_keyspace.this.name
+  schema {
+    partition_key = var.partition_key
+    clustering_key {
+      name     = var.clustering_key_name
+      order_by = var.clustering_key_order
     }
+    columns = var.columns
   }
+  throughput = var.table_throughput
 }
 
 module "rbac" {
@@ -54,8 +53,8 @@ module "rbac" {
 
   for_each = var.role_assignments
 
-  resource_id   = azurerm_cosmosdb_mongo_collection.this.id
-  resource_name = azurerm_cosmosdb_mongo_collection.this.name
+  resource_id   = azurerm_cosmosdb_cassandra_table.this.id
+  resource_name = azurerm_cosmosdb_cassandra_table.this.name
 
   role_based_permissions = {
     assignment = {
@@ -65,6 +64,7 @@ module "rbac" {
   }
   wait_for_rbac = false
 }
+
 
 
 ---
@@ -86,42 +86,53 @@ data "azurerm_cosmosdb_account" "this" {
 
 
 
+
 ###=======================================
 # variables.tf
 ---
-variable "mongo_database_name" {
-  description = "Name of the CosmosDB MongoDB database to create"
+variable "cassandra_keyspace_name" {
+  description = "Name of the CosmosDB Cassandra keyspace to create"
   type        = string
 }
 
-variable "mongo_collection_name" {
-  description = "Name of the CosmosDB MongoDB collection to create"
+variable "cassandra_table_name" {
+  description = "Name of the CosmosDB Cassandra table to create"
   type        = string
 }
 
-variable "shard_key" {
-  description = "The shard key for the MongoDB collection"
-  type        = map(string)
-  default     = {}
+variable "partition_key" {
+  description = "The partition key for the Cassandra table"
+  type        = list(string)
 }
 
-variable "indexes" {
-  description = "List of indexes to create on the MongoDB collection"
+variable "clustering_key_name" {
+  description = "The clustering key name for the Cassandra table"
+  type        = string
+  default     = null
+}
+
+variable "clustering_key_order" {
+  description = "The clustering key order for the Cassandra table (ASC or DESC)"
+  type        = string
+  default     = null
+}
+
+variable "columns" {
+  description = "List of columns for the Cassandra table"
   type = list(object({
-    keys    = list(string)
-    options = map(string)
+    name = string
+    type = string
   }))
-  default = []
 }
 
-variable "throughput" {
-  description = "The throughput for the MongoDB database (e.g., RU/s)"
+variable "keyspace_throughput" {
+  description = "The throughput for the Cassandra keyspace (e.g., RU/s)"
   type        = number
   default     = null
 }
 
-variable "collection_throughput" {
-  description = "The throughput for the MongoDB collection (e.g., RU/s)"
+variable "table_throughput" {
+  description = "The throughput for the Cassandra table (e.g., RU/s)"
   type        = number
   default     = null
 }
@@ -163,9 +174,10 @@ variable "terraform_module" {
   default     = ""
 }
 
+
 ---
-variable "autoscale_throughput" {
-  description = "Enable autoscale throughput for the database"
+variable "enable_autoscale" {
+  description = "Flag to enable autoscale throughput"
   type        = bool
   default     = false
 }
@@ -180,26 +192,34 @@ variable "max_throughput" {
 
 
 
+
 ###=======================================
 # outputs.tf
 ---
-output "mongo_database_id" {
-  value       = azurerm_cosmosdb_mongo_database.this.id
-  description = "The ID of the CosmosDB MongoDB database"
+output "cassandra_keyspace_id" {
+  value       = azurerm_cosmosdb_cassandra_keyspace.this.id
+  description = "The ID of the CosmosDB Cassandra keyspace"
 }
 
-output "mongo_collection_id" {
-  value       = azurerm_cosmosdb_mongo_collection.this.id
-  description = "The ID of the CosmosDB MongoDB collection"
+output "cassandra_table_id" {
+  value       = azurerm_cosmosdb_cassandra_table.this.id
+  description = "The ID of the CosmosDB Cassandra table"
 }
+
 
 
 ---
-### Outputs for Useful Attributes: Include additional outputs, such as database throughput or shard key.
-output "mongo_database_throughput" {
-  value       = azurerm_cosmosdb_mongo_database.this.throughput
-  description = "The throughput of the MongoDB database"
+### Output Additional Attributes: Include outputs for additional attributes like keyspace and table throughput, schema details, etc.
+output "cassandra_keyspace_throughput" {
+  value       = azurerm_cosmosdb_cassandra_keyspace.this.throughput
+  description = "The throughput of the Cassandra keyspace"
 }
+
+output "cassandra_table_schema" {
+  value       = azurerm_cosmosdb_cassandra_table.this.schema
+  description = "The schema of the Cassandra table"
+}
+
 
 output "mongo_shard_key" {
   value       = var.shard_key
@@ -209,27 +229,29 @@ output "mongo_shard_key" {
 
 
 =====
-### Validation for Variables: Add validation blocks to ensure correct inputs for critical variables.
+### Validation Blocks: Add validation blocks for critical variables to prevent misconfigurations.
 
-### Example for mongo_database_name.:
-variable "mongo_database_name" {
-  description = "Name of the CosmosDB MongoDB database"
+### Example for partition_key.:
+variable "partition_key" {
+  description = "The partition key for the Cassandra table"
+  type        = list(string)
+  validation {
+    condition     = length(var.partition_key) > 0
+    error_message = "At least one partition key must be defined."
+  }
+}
+
+
+### Example for clustering_key_order. :
+variable "clustering_key_order" {
+  description = "The clustering key order (ASC or DESC)"
   type        = string
   validation {
-    condition     = can(regex("^[a-zA-Z0-9_-]+$", var.mongo_database_name))
-    error_message = "Database name must contain only alphanumeric characters, dashes, and underscores."
+    condition     = var.clustering_key_order == "ASC" || var.clustering_key_order == "DESC" || var.clustering_key_order == null
+    error_message = "Clustering key order must be either 'ASC' or 'DESC'."
   }
 }
 
-### Example for throughput. :
-variable "throughput" {
-  description = "Throughput in RU/s for the database"
-  type        = number
-  validation {
-    condition     = var.throughput >= 400 || var.throughput == null
-    error_message = "Throughput must be at least 400 RU/s."
-  }
-}
 
 
 ╵=============================||=================================================
