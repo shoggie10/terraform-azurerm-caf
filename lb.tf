@@ -18,6 +18,69 @@ module "lb" {
 output "lb" {
   value = module.lb
 }
+=================||
+# Module for SQL Database (API)
+module "cosmosdb_sql_database" {
+  source               = "./modules/azurerm_cosmosdb_sql_database"
+  sql_database_name    = var.sql_database_name
+  resource_group_name  = var.resource_group_name
+  cosmosdb_account_name = var.cosmosdb_account_name
+  database_throughput  = var.database_throughput
+  tags                 = var.tags
+}
+
+# Module for MongoDB Database (API)
+module "cosmosdb_mongo_database" {
+  source               = "./modules/azurerm_cosmosdb_mongo_database"
+  mongo_database_name  = var.mongo_database_name
+  resource_group_name  = var.resource_group_name
+  cosmosdb_account_name = var.cosmosdb_account_name
+  database_throughput  = var.database_throughput
+  tags                 = var.tags
+}
+
+# Module for Gremlin Database (API)
+module "cosmosdb_gremlin_database" {
+  source               = "./modules/azurerm_cosmosdb_gremlin_database"
+  gremlin_database_name = var.gremlin_database_name
+  resource_group_name  = var.resource_group_name
+  cosmosdb_account_name = var.cosmosdb_account_name
+  database_throughput  = var.database_throughput
+  tags                 = var.tags
+}
+
+# Module for Cassandra Database (API)
+module "cosmosdb_cassandra_database" {
+  source               = "./modules/azurerm_cosmosdb_cassandra_database"
+  cassandra_database_name = var.cassandra_database_name
+  resource_group_name  = var.resource_group_name
+  cosmosdb_account_name = var.cosmosdb_account_name
+  database_throughput  = var.database_throughput
+  tags                 = var.tags
+}
+
+# Module for Table Database (API)
+module "cosmosdb_table_database" {
+  source               = "./modules/azurerm_cosmosdb_table_database"
+  table_database_name  = var.table_database_name
+  resource_group_name  = var.resource_group_name
+  cosmosdb_account_name = var.cosmosdb_account_name
+  database_throughput  = var.database_throughput
+  tags                 = var.tags
+}
+
+# Module for PostgreSQL Database (API)
+module "cosmosdb_postgresql_database" {
+  source               = "./modules/azurerm_cosmosdb_postgresql_database"
+  postgresql_database_name = var.postgresql_database_name
+  resource_group_name  = var.resource_group_name
+  cosmosdb_account_name = var.cosmosdb_account_name
+  database_throughput  = var.database_throughput
+  tags                 = var.tags
+}
+
+
+
 ========================||========================
 Gremlin API Example:
 # Gremlin API Configuration Example
