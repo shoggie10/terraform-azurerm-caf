@@ -19,6 +19,201 @@ output "lb" {
   value = module.lb
 }
 ========================||========================
+Gremlin API Example:
+# Gremlin API Configuration Example
+
+resource "azurerm_cosmosdb_gremlin_database" "gremlin_db" {
+  name                = "gremlin-database"
+  resource_group_name = var.resource_group_name
+  account_name        = data.azurerm_cosmosdb_account.this.name
+  throughput          = 400
+  tags                = var.tags
+}
+
+resource "azurerm_cosmosdb_gremlin_graph" "gremlin_graph" {
+  name                = "gremlin-graph"
+  resource_group_name = var.resource_group_name
+  account_name        = data.azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_gremlin_database.gremlin_db.name
+
+  index_policy {
+    automatic      = true
+    indexing_mode  = "consistent"
+    included_paths = ["/*"]
+    excluded_paths = ["/\"_etag\"/?"]
+  }
+
+  conflict_resolution_policy {
+    mode                     = "LastWriterWins"
+    conflict_resolution_path = "/_ts"
+  }
+
+  unique_key {
+    paths = ["/definition/id1", "/definition/id2"]
+  }
+
+  tags = var.tags
+}
+--------------------------------------
+Cassandra API Example
+# Cassandra API Configuration Example
+
+resource "azurerm_cosmosdb_cassandra_keyspace" "cassandra_keyspace" {
+  name                = "cassandra-keyspace"
+  resource_group_name = var.resource_group_name
+  account_name        = data.azurerm_cosmosdb_account.this.name
+  throughput          = 400
+}
+
+resource "azurerm_cosmosdb_cassandra_table" "cassandra_table" {
+  name                 = "cassandra-table"
+  resource_group_name  = var.resource_group_name
+  account_name         = data.azurerm_cosmosdb_account.this.name
+  keyspace_name        = azurerm_cosmosdb_cassandra_keyspace.cassandra_keyspace.name
+
+  schema {
+    partition_key {
+      name = "id"
+    }
+
+    clustering_key {
+      name     = "timestamp"
+      order_by = "ASC"
+    }
+
+    columns {
+      name = "id"
+      type = "uuid"
+    }
+
+    columns {
+      name = "timestamp"
+      type = "timestamp"
+    }
+
+    columns {
+      name = "value"
+      type = "text"
+    }
+  }
+
+  throughput = 400
+}
+---------------------------------
+SQL API Example
+# SQL API Configuration Example
+
+resource "azurerm_cosmosdb_sql_database" "sql_db" {
+  name                = "sql-database"
+  resource_group_name = var.resource_group_name
+  account_name        = data.azurerm_cosmosdb_account.this.name
+  throughput          = 400
+  tags                = var.tags
+}
+
+resource "azurerm_cosmosdb_sql_container" "sql_container" {
+  name                 = "sql-container"
+  resource_group_name  = var.resource_group_name
+  account_name         = data.azurerm_cosmosdb_account.this.name
+  database_name        = azurerm_cosmosdb_sql_database.sql_db.name
+  partition_key_path   = "/id"
+  throughput           = 400
+
+  unique_key {
+    paths = ["/definition/id1", "/definition/id2"]
+  }
+
+  tags = var.tags
+}
+-------------------------------------------------
+MongoDB API Example
+# MongoDB API Configuration Example
+
+resource "azurerm_cosmosdb_mongo_database" "mongo_db" {
+  name                = "mongo-database"
+  resource_group_name = var.resource_group_name
+  account_name        = data.azurerm_cosmosdb_account.this.name
+  throughput          = 400
+  tags                = var.tags
+}
+
+resource "azurerm_cosmosdb_mongo_collection" "mongo_collection" {
+  name                 = "mongo-collection"
+  resource_group_name  = var.resource_group_name
+  account_name         = data.azurerm_cosmosdb_account.this.name
+  database_name        = azurerm_cosmosdb_mongo_database.mongo_db.name
+  partition_key_path   = "/_id"
+  throughput           = 400
+
+  unique_key {
+    paths = ["/definition/id1", "/definition/id2"]
+  }
+
+  tags = var.tags
+}
+---------------------------------------------
+Table API Example
+# Table API Configuration Example
+
+resource "azurerm_cosmosdb_table" "table_db" {
+  name                = "table-database"
+  resource_group_name = var.resource_group_name
+  account_name        = data.azurerm_cosmosdb_account.this.name
+  throughput          = 400
+  tags                = var.tags
+}
+
+resource "azurerm_cosmosdb_table_entity" "table_entity" {
+  table_name          = azurerm_cosmosdb_table.table_db.name
+  partition_key       = "partitionKey"
+  row_key             = "rowKey"
+  properties = {
+    "property1" = "value1"
+    "property2" = "value2"
+  }
+}
+-----------------------------------------------
+PostgreSQL API Example
+# PostgreSQL API Configuration Example
+
+resource "azurerm_cosmosdb_postgresql_cluster" "postgresql_cluster" {
+  name                = "postgresql-cluster"
+  resource_group_name = var.resource_group_name
+  account_name        = data.azurerm_cosmosdb_account.this.name
+  administrator_login = var.admin_login
+  administrator_password = var.admin_password
+  version             = "13"
+  sku_name            = "GP_Gen5_2"
+  storage_mb          = 5120
+  backup_retention_days = 30
+  geo_redundant_backup_enabled = true
+  tags                = var.tags
+}
+
+resource "azurerm_cosmosdb_postgresql_database" "postgresql_db" {
+  name                = "postgresql-database"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_postgresql_cluster.postgresql_cluster.name
+  charset             = "UTF8"
+  collation           = "en_US.UTF8"
+  throughput          = 400
+}
+
+resource "azurerm_cosmosdb_postgresql_table" "postgresql_table" {
+  name                = "postgresql-table"
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_postgresql_cluster.postgresql_cluster.name
+  database_name       = azurerm_cosmosdb_postgresql_database.postgresql_db.name
+  schema              = "public"
+  columns = [
+    { name = "id", type = "SERIAL PRIMARY KEY" },
+    { name = "name", type = "VARCHAR(100)" },
+    { name = "created_at", type = "TIMESTAMP" }
+  ]
+  throughput           = 400
+}
+
+
 
 
 ======================||==========================
