@@ -78,6 +78,64 @@ module "cosmosdb_postgresql_database" {
   database_throughput  = var.database_throughput
   tags                 = var.tags
 }
+-----------------------------------------------------
+# Module for SQL API
+module "cosmosdb_sql_database" {
+  source                  = "./modules/azurerm_cosmosdb_sql_database"
+  sql_database_name       = var.sql_database_name       # Required argument for SQL database name
+  resource_group_name     = var.resource_group_name     # Required argument for resource group name
+  cosmosdb_account_name   = var.cosmosdb_account_name   # Required argument for Cosmos DB account name
+  database_throughput     = var.database_throughput     # Required argument for throughput (RU/s)
+}
+
+# Module for MongoDB API
+module "cosmosdb_mongo_database" {
+  source                  = "./modules/azurerm_cosmosdb_mongo_database"
+  mongo_database_name     = var.mongo_database_name     # Required argument for MongoDB database name
+  resource_group_name     = var.resource_group_name     # Required argument for resource group name
+  cosmosdb_account_name   = var.cosmosdb_account_name   # Required argument for Cosmos DB account name
+  database_throughput     = var.database_throughput     # Required argument for throughput (RU/s)
+}
+
+# Module for Gremlin API
+module "cosmosdb_gremlin_database" {
+  source                  = "./modules/azurerm_cosmosdb_gremlin_database"
+  gremlin_database_name   = var.gremlin_database_name   # Required argument for Gremlin database name
+  resource_group_name     = var.resource_group_name     # Required argument for resource group name
+  cosmosdb_account_name   = var.cosmosdb_account_name   # Required argument for Cosmos DB account name
+  database_throughput     = var.database_throughput     # Required argument for throughput (RU/s)
+}
+
+# Module for Cassandra API
+module "cosmosdb_cassandra_keyspace" {
+  source                  = "./modules/azurerm_cosmosdb_cassandra_keyspace"
+  cassandra_keyspace_name = var.cassandra_keyspace_name # Required argument for Cassandra keyspace name
+  resource_group_name     = var.resource_group_name     # Required argument for resource group name
+  cosmosdb_account_name   = var.cosmosdb_account_name   # Required argument for Cosmos DB account name
+  keyspace_throughput     = var.keyspace_throughput     # Required argument for throughput (RU/s)
+}
+
+# Module for Table API
+module "cosmosdb_table" {
+  source              = "./modules/azurerm_cosmosdb_table"
+  table_name         = var.table_name          # Required argument for Cosmos DB table name
+  resource_group_name = var.resource_group_name  # Required argument for resource group name
+  cosmosdb_account_name = var.cosmosdb_account_name  # Required argument for Cosmos DB account name
+  table_throughput   = var.table_throughput    # Required argument for throughput (RU/s)
+}
+
+# Module for PostgreSQL API
+module "cosmosdb_postgresql_cluster" {
+  source                    = "./modules/azurerm_cosmosdb_postgresql_cluster"
+  cluster_name              = var.cluster_name            # Required argument for PostgreSQL cluster name
+  resource_group_name       = var.resource_group_name     # Required argument for resource group name
+  location                  = var.location                # Required argument for location
+  administrator_login       = var.administrator_login     # Required argument for administrator login
+  administrator_password    = var.administrator_password  # Required argument for administrator password
+  version                   = var.postgresql_version     # Required argument for PostgreSQL version
+  sku_name                  = var.sku_name                # Required argument for SKU name
+  storage_mb                = var.storage_mb              # Required argument for storage in MB
+}
 
 
 
