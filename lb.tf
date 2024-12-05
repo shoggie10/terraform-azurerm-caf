@@ -37,15 +37,23 @@ resource "azurerm_cosmosdb_cassandra_table" "this" {
   resource_group_name  = var.resource_group_name
   account_name         = data.azurerm_cosmosdb_account.this.name
   keyspace_name        = azurerm_cosmosdb_cassandra_keyspace.this.name
+  throughput           = var.table_throughput
+
   schema {
-    partition_key = var.partition_key
-    clustering_key {
-      name     = var.clustering_key_name
-      order_by = var.clustering_key_order
+    column {
+      name = var.partition_key_name
+      type = var.partition_key_type
     }
-    columns = var.columns
+
+    column {
+      name = var.additional_column_name
+      type = var.additional_column_type
+    }
+
+    partition_key {
+      name = var.partition_key_name
+    }
   }
-  throughput = var.table_throughput
 }
 
 module "rbac" {
@@ -66,14 +74,14 @@ module "rbac" {
 }
 
 
-
 ---
-
   dynamic "autoscale_settings" {
-    for_each = var.max_throughput != null ? [1] : []
+    for_each = var.enable_autoscale ? [1] : []
     content {
       max_throughput = var.max_throughput
     }
+  }
+
 ###=======================================
 # globals.tf
 ---
@@ -100,29 +108,26 @@ variable "cassandra_table_name" {
   type        = string
 }
 
-variable "partition_key" {
-  description = "The partition key for the Cassandra table"
-  type        = list(string)
+variable "partition_key_name" {
+  description = "The name of the partition key column"
+  type        = string
 }
 
-variable "clustering_key_name" {
-  description = "The clustering key name for the Cassandra table"
+variable "partition_key_type" {
+  description = "The data type of the partition key column (e.g., 'ascii', 'text', 'int')"
+  type        = string
+}
+
+variable "additional_column_name" {
+  description = "The name of an additional column in the table"
   type        = string
   default     = null
 }
 
-variable "clustering_key_order" {
-  description = "The clustering key order for the Cassandra table (ASC or DESC)"
+variable "additional_column_type" {
+  description = "The data type of the additional column (e.g., 'ascii', 'text', 'int')"
   type        = string
   default     = null
-}
-
-variable "columns" {
-  description = "List of columns for the Cassandra table"
-  type = list(object({
-    name = string
-    type = string
-  }))
 }
 
 variable "keyspace_throughput" {
@@ -168,14 +173,10 @@ variable "tags" {
   default     = {}
 }
 
-variable "terraform_module" {
-  description = "Used to inform of a parent module"
-  type        = string
-  default     = ""
-}
-
 
 ---
+Updated variables.tf (Autoscale Throughput):
+
 variable "enable_autoscale" {
   description = "Flag to enable autoscale throughput"
   type        = bool
@@ -187,7 +188,6 @@ variable "max_throughput" {
   type        = number
   default     = null
 }
-
 
 
 
@@ -206,10 +206,16 @@ output "cassandra_table_id" {
   description = "The ID of the CosmosDB Cassandra table"
 }
 
+output "cassandra_table_schema" {
+  value       = azurerm_cosmosdb_cassandra_table.this.schema
+  description = "The schema of the Cassandra table"
+}
+
+
 
 
 ---
-### Output Additional Attributes: Include outputs for additional attributes like keyspace and table throughput, schema details, etc.
+### Output Additional Attributes: Include outputs for additional resource details, such as schema and throughput.
 output "cassandra_keyspace_throughput" {
   value       = azurerm_cosmosdb_cassandra_keyspace.this.throughput
   description = "The throughput of the Cassandra keyspace"
@@ -221,36 +227,33 @@ output "cassandra_table_schema" {
 }
 
 
-output "mongo_shard_key" {
-  value       = var.shard_key
-  description = "The shard key for the MongoDB collection"
-}
-
 
 
 =====
 ### Validation Blocks: Add validation blocks for critical variables to prevent misconfigurations.
 
-### Example for partition_key.:
-variable "partition_key" {
-  description = "The partition key for the Cassandra table"
-  type        = list(string)
-  validation {
-    condition     = length(var.partition_key) > 0
-    error_message = "At least one partition key must be defined."
-  }
-}
-
-
-### Example for clustering_key_order. :
-variable "clustering_key_order" {
-  description = "The clustering key order (ASC or DESC)"
+### Example for partition_key_name.:
+variable "partition_key_name" {
+  description = "The name of the partition key column"
   type        = string
   validation {
-    condition     = var.clustering_key_order == "ASC" || var.clustering_key_order == "DESC" || var.clustering_key_order == null
-    error_message = "Clustering key order must be either 'ASC' or 'DESC'."
+    condition     = contains(var.columns[*].name, var.partition_key_name)
+    error_message = "Partition key name must match one of the defined column names."
   }
 }
+
+
+
+### Example for variable partition_key_name.: 
+variable "partition_key_type" {
+  description = "The data type of the partition key column (e.g., 'ascii', 'text', 'int')"
+  type        = string
+  validation {
+    condition     = contains(["ascii", "text", "int", "uuid", "timestamp"], var.partition_key_type)
+    error_message = "Partition key type must be a valid Cassandra type (e.g., 'ascii', 'text', 'int')."
+  }
+}
+
 
 
 
