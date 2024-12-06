@@ -555,18 +555,16 @@ variable "partition_key_type" {
 
 
 ╵=============================||=================================================
-terraform validate
-╷
-│ Error: Invalid value for variable
-│ 
-│   on main.tf line 66, in module "this":
-│   66:   partition_key_paths = ["/id"]
-│     ├────────────────
-│     │ var.partition_key_paths is list of string with 1 element
-│ 
-│ The partition key path must start with a '/'.
-│ 
-│ This was checked by the validation rule at ../variables.tf:26,3-13.
+variable "partition_key_paths" {
+  description = "The partition key paths for the CosmosDB SQL container"
+  type        = list(string)
+  
+  validation {
+    condition     = alltrue([for path in var.partition_key_paths : can(regex("^/.*", path))])
+    error_message = "Each partition key path must start with a '/'"
+  }
+}
+
 
 ========
 artifact feeds also use this RBAC role permission but with different, and more, roles.
