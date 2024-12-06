@@ -557,12 +557,16 @@ variable "partition_key_type" {
 ╵=============================||=================================================
 terraform validate
 ╷
-│ Error: Invalid value for input variable
+│ Error: Invalid value for variable
 │ 
 │   on main.tf line 66, in module "this":
 │   66:   partition_key_paths = ["/id"]
+│     ├────────────────
+│     │ var.partition_key_paths is list of string with 1 element
 │ 
-│ The given value is not suitable for module.this.var.partition_key_paths declared at ../variables.tf:22,1-31: string required.
+│ The partition key path must start with a '/'.
+│ 
+│ This was checked by the validation rule at ../variables.tf:26,3-13.
 
 ========
 artifact feeds also use this RBAC role permission but with different, and more, roles.
