@@ -555,11 +555,7 @@ variable "partition_key_type" {
 
 
 ╵=============================||=================================================
-│ Error: checking for presence of existing Key "cdbwaynetechhubdev707857-encryption" (Key Vault "https://kv-0000-cosmosd-dev-400.vault.azure.net/"): keyvault.BaseClient#GetKey: Failure responding to request: StatusCode=403 -- Original Error: autorest/azure: Service returned an error. Status=403 Code="Forbidden" Message="Caller is not authorized to perform action on resource.\r\nIf role assignments, deny assignments or role definitions were changed recently, please observe propagation time.\r\nCaller: appid=04b07795-8ddb-461a-bbee-02f9e1bf7b46;oid=730ce96a-7db7-4204-9611-4851956b3076;iss=https://sts.windows.net/e7066c90-b459-44c5-91f1-3581f3d1f082/\r\nAction: 'Microsoft.KeyVault/vaults/keys/read'\r\nResource: '/subscriptions/b987518f-1b04-4491-915c-e21dabc7f2d3/resourcegroups/wayne-tech-hub/providers/microsoft.keyvault/vaults/kv-0000-cosmosd-dev-400/keys/cdbwaynetechhubdev707857-encryption'\r\nAssignment: (not found)\r\nDenyAssignmentId: null\r\nDecisionReason: null \r\nVault: kv-0000-cosmosd-dev-400;location=eastus\r\n" InnerError={"code":"ForbiddenByRbac"}
-│ 
-│   with module.this.module.key_vault_key.azurerm_key_vault_key.this,
-│   on .terraform/modules/this.key_vault_key/main.tf line 1, in resource "azurerm_key_vault_key" "this":
-│    1: resource "azurerm_key_vault_key" "this" {
+
 │ 
 
 ========
