@@ -25,80 +25,93 @@ module "keyvaults" {
 ===============================================================================================
 # main.tf
 -------
-resource "azurerm_cosmosdb_gremlin_database" "this" {
-  name                = var.db_name
+resource "azurerm_cosmosdb_cassandra_keyspace" "this" {
+  name                = var.keyspace_name
   resource_group_name = data.azurerm_resource_group.this.name
   account_name        = azurerm_cosmosdb_account.this.name
-  throughput          = var.db_throughput != null ? var.db_throughput : null
+  throughput          = var.keyspace_max_throughput != null ? null : var.keyspace_throughput
 
   autoscale_settings {
-    max_throughput = var.db_max_throughput
+    max_throughput = var.keyspace_max_throughput
   }
 }
 
-resource "azurerm_cosmosdb_gremlin_graph" "this" {
-  name                = var.graph_name
-  resource_group_name = data.azurerm_resource_group.this.name
-  account_name        = azurerm_cosmosdb_account.this.name
-  database_name       = var.db_name
-  throughput          = var.graph_throughput != null ? var.graph_throughput : null
+resource "azurerm_cosmosdb_cassandra_table" "this" {
+  name                   = var.table_name
+  cassandra_keyspace_id   = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${data.azurerm_resource_group.this.name}/providers/Microsoft.DocumentDB/databaseAccounts/${azurerm_cosmosdb_account.this.name}/cassandraKeyspaces/${var.keyspace_name}"
+  throughput             = var.table_max_throughput != null ? null : var.table_throughput
+  default_ttl            = var.default_ttl_seconds != null ? var.default_ttl_seconds : null
   analytical_storage_ttl = var.analytical_storage_ttl != null ? var.analytical_storage_ttl : null
 
+  autoscale_settings {
+    max_throughput = var.table_max_throughput
+  }
 
-  indexing_policy {
-    indexing_mode = "Consistent"
-    included_path {
-      path = "/*"
+  schema {
+    column {
+      name = var.column_name
+      type = var.column_type
+    }
+
+    partition_key {
+      name = var.partition_key_name
+    }
+
+    cluster_key {
+      name     = var.cluster_key_name
+      order_by = var.cluster_key_order_by
     }
   }
+
   depends_on = [
-    azurerm_cosmosdb_gremlin_database.this
+    azurerm_cosmosdb_cassandra_keyspace.this
   ]
 }
 
 
 
 
-
 # variables.tf
 ----------
-variable "db_name" {
-  description = "The name of the Cosmos DB Gremlin database."
+variable "keyspace_name" {
+  description = "The name of the Cosmos DB Cassandra keyspace."
   type        = string
 }
 
-variable "db_throughput" {
-  description = "The throughput for the database. If null, the database will be autoscaled."
-  type        = number
-  default     = null
-}
-
-variable "db_max_throughput" {
-  description = "The maximum throughput for autoscaling the database."
+variable "keyspace_throughput" {
+  description = "The throughput for the keyspace."
   type        = number
   default     = 400
 }
 
-variable "graph_name" {
-  description = "The name of the Cosmos DB Gremlin graph."
+variable "keyspace_max_throughput" {
+  description = "The maximum throughput for autoscaling the keyspace."
+  type        = number
+  default     = 4000
+}
+
+
+variable "table_name" {
+  description = "The name of the Cassandra table."
   type        = string
 }
 
-variable "db_throughput" {
-  description = "The throughput for the database. If null, the database will be autoscaled."
-  type        = number
-  default     = null
-  validation {
-    condition     = var.db_throughput >= 400 || var.db_throughput == null
-    error_message = "Throughput must be greater than or equal to 400 if provided."
-  }
-}
-
-
-variable "graph_max_throughput" {
-  description = "The maximum throughput to use for autoscaling the graph."
+variable "table_throughput" {
+  description = "The throughput for the table."
   type        = number
   default     = 400
+}
+
+variable "table_max_throughput" {
+  description = "The maximum throughput for autoscaling the table."
+  type        = number
+  default     = 4000
+}
+
+variable "default_ttl_seconds" {
+  description = "The TTL (time-to-live) for the table."
+  type        = number
+  default     = null
 }
 
 variable "analytical_storage_ttl" {
@@ -107,52 +120,97 @@ variable "analytical_storage_ttl" {
   default     = null
 }
 
+variable "column_name" {
+  description = "The name of the Cassandra column."
+  type        = string
+}
+
+variable "column_type" {
+  description = "The type of the Cassandra column."
+  type        = string
+}
+
+variable "partition_key_name" {
+  description = "The name of the partition key for the table."
+  type        = string
+}
+
+variable "cluster_key_name" {
+  description = "The name of the cluster key for the table."
+  type        = string
+}
+
+variable "cluster_key_order_by" {
+  description = "The order by for the cluster key."
+  type        = string
+  default     = "Ascending"
+}
+
+variable "keyspace_throughput" {
+  description = "The throughput for the keyspace."
+  type        = number
+  default     = 400
+  validation {
+    condition     = var.keyspace_throughput >= 400
+    error_message = "Keyspace throughput must be greater than or equal to 400."
+  }
+}
+
+
 
 # locals.tf
 ------------
 locals {
-  database_throughput = var.db_throughput != null ? var.db_throughput : var.db_max_throughput
-  graph_throughput = var.graph_throughput != null ? var.graph_throughput : var.graph_max_throughput
+  keyspace_throughput = var.keyspace_throughput != null ? var.keyspace_throughput : var.keyspace_max_throughput
+  table_throughput    = var.table_throughput != null ? var.table_throughput : var.table_max_throughput
 }
+
 
 
 
 
 # outputs.tf
 ----------
-output "cosmosdb_gremlin_database_id" {
-  description = "The ID of the Cosmos DB Gremlin database."
-  value       = azurerm_cosmosdb_gremlin_database.this.id
+output "cosmosdb_cassandra_keyspace_id" {
+  description = "The ID of the Cosmos DB Cassandra keyspace."
+  value       = azurerm_cosmosdb_cassandra_keyspace.this.id
 }
 
-output "cosmosdb_gremlin_graph_id" {
-  description = "The ID of the Cosmos DB Gremlin graph."
-  value       = azurerm_cosmosdb_gremlin_graph.this.id
+output "cosmosdb_cassandra_table_id" {
+  description = "The ID of the Cosmos DB Cassandra table."
+  value       = azurerm_cosmosdb_cassandra_table.this.id
 }
+
 
 
 
 
 # examples.tf
 -----------
-module "cosmosdb_gremlin" {
-  source               = "./path/to/your/module"
-  db_name              = "example-gremlin-database"
-  db_throughput        = 1000
-  db_max_throughput    = 4000
-  graph_name           = "example-graph"
-  graph_throughput     = 500
-  graph_max_throughput = 2000
-  analytical_storage_ttl = 3600
+module "cosmosdb_cassandra" {
+  source              = "./path/to/your/module"
+  keyspace_name       = "example-keyspace"
+  keyspace_throughput = 1000
+  keyspace_max_throughput = 4000
+  table_name          = "example-table"
+  table_throughput    = 1000
+  table_max_throughput = 4000
+  default_ttl_seconds = 3600
+  column_name         = "example_column"
+  column_type         = "text"
+  partition_key_name  = "id"
+  cluster_key_name    = "timestamp"
+  cluster_key_order_by = "Ascending"
 }
 
-output "cosmosdb_gremlin_database_id" {
-  value = module.cosmosdb_gremlin.cosmosdb_gremlin_database_id
+output "cosmosdb_cassandra_keyspace_id" {
+  value = module.cosmosdb_cassandra.cosmosdb_cassandra_keyspace_id
 }
 
-output "cosmosdb_gremlin_graph_id" {
-  value = module.cosmosdb_gremlin.cosmosdb_gremlin_graph_id
+output "cosmosdb_cassandra_table_id" {
+  value = module.cosmosdb_cassandra.cosmosdb_cassandra_table_id
 }
+
 
 
 
