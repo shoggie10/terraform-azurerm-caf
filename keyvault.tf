@@ -56,9 +56,10 @@ resource "azurerm_cosmosdb_sql_container" "this" {
       path = var.excluded_path
     }
     composite_index {
+      for_each = var.composite_index
       index {
-        path = var.index_path
-        order = var.index_order
+        path  = each.value.index[0].path
+        order = each.value.index[0].order
       }
     }
     spatial_index {
@@ -183,6 +184,16 @@ variable "conflict_resolution_policy" {
   default     = "LastWriterWins"
 }
 
+variable "composite_index" {
+  description = "List of composite indexes for the Cosmos DB SQL container."
+  type = list(object({
+    index = list(object({
+      path  = string
+      order = string
+    }))
+  }))
+  default = []
+}
 
 
 # locals.tf
@@ -236,6 +247,51 @@ module "cosmosdb_sql" {
   spatial_path        = "/\"location\"/?"
   unique_key_paths    = ["/\"email\""]
   conflict_resolution_policy = "LastWriterWins"
+
+module "cosmosdb_sql" {
+  source              = "./path/to/your/module"
+  db_name             = "example-database"
+  db_throughput       = 1000
+  db_max_throughput   = 4000
+  container_name      = "example-container"
+  partition_key_path  = "/id"
+  container_throughput = 400
+  container_max_throughput = 1000
+  default_ttl         = 3600
+  indexing_mode       = "Consistent"
+  included_path       = "/*"
+  excluded_path       = "/\"_etag\"/?"
+  index_path          = "/\"_ts\"/?"
+  index_order         = "Ascending"
+  spatial_path        = "/\"location\"/?"
+  unique_key_paths    = ["/\"email\""]
+  conflict_resolution_policy = "LastWriterWins"
+
+  composite_index = [
+    {
+      index = [
+        {
+          path  = "/\"lastName\""
+          order = "Ascending"
+        },
+        {
+          path  = "/\"firstName\""
+          order = "Descending"
+        }
+      ]
+    }
+  ]
+}
+
+output "cosmosdb_sql_database_id" {
+  value = module.cosmosdb_sql.cosmosdb_sql_database_id
+}
+
+output "cosmosdb_sql_container_id" {
+  value = module.cosmosdb_sql.cosmosdb_sql_container_id
+}
+
+
 }
 
 output "cosmosdb_sql_database_id" {
