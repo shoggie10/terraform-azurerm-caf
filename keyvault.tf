@@ -25,7 +25,7 @@ module "keyvaults" {
 ===============================================================================================
 # main.tf
 -------
-resource "azurerm_cosmosdb_sql_database" "this" {
+resource "azurerm_cosmosdb_mongo_database" "this" {
   name                = var.db_name
   resource_group_name = data.azurerm_resource_group.this.name
   account_name        = azurerm_cosmosdb_account.this.name
@@ -34,272 +34,168 @@ resource "azurerm_cosmosdb_sql_database" "this" {
   autoscale_settings {
     max_throughput = var.db_max_throughput
   }
+
+  validation {
+    condition     = var.db_throughput >= 400
+    error_message = "Throughput must be a positive number greater than or equal to 400."
+  }
 }
 
-resource "azurerm_cosmosdb_sql_container" "this" {
-  name                = var.container_name
+resource "azurerm_cosmosdb_mongo_collection" "this" {
+  name                = var.collection_name
   resource_group_name = data.azurerm_resource_group.this.name
   account_name        = azurerm_cosmosdb_account.this.name
   database_name       = var.db_name
-  partition_key_path  = var.partition_key_path
-  partition_key_version = var.partition_key_version != null ? var.partition_key_version : 2
-  throughput          = var.container_throughput != null ? null : var.container_max_throughput
-  default_ttl         = var.default_ttl
-  analytical_storage_ttl = var.analytical_storage_ttl
+  default_ttl_seconds = var.default_ttl_seconds != null ? var.default_ttl_seconds : null
+  shard_key           = var.shard_key
+  throughput          = var.collection_throughput != null ? null : var.collection_max_throughput
+  analytical_storage_ttl = var.analytical_storage_ttl != null ? var.analytical_storage_ttl : null
 
-  indexing_policy {
-    indexing_mode = var.indexing_mode
-    included_path {
-      path = var.included_path
-    }
-    excluded_path {
-      path = var.excluded_path
-    }
-    composite_index {
-      for_each = var.composite_index
-      index {
-        path  = each.value.index[0].path
-        order = each.value.index[0].order
-      }
-    }
-    spatial_index {
-      path = var.spatial_path
-    }
+  index {
+    keys  = var.mongo_index_keys
+    unique = var.mongo_index_unique != null ? var.mongo_index_unique : false
   }
 
-  unique_key {
-    paths = var.unique_key_paths
-  }
-
-  conflict_resolution_policy {
-    mode = var.conflict_resolution_policy
-  }
+  depends_on = [
+    azurerm_cosmosdb_mongo_database.this
+  ]
 }
+
+
 
 
 # variables.tf
 ----------
 variable "db_name" {
-  description = "The name of the Cosmos DB SQL database."
+  description = "The name of the MongoDB database."
   type        = string
+}
+
+variable "db_throughput" {
+  description = "The throughput for the MongoDB database. If null, autoscale is used."
+  type        = number
+  default     = null
 }
 
 variable "db_throughput" {
   description = "The throughput for the database. If null, the database will be autoscaled."
   type        = number
   default     = null
+  validation {
+    condition     = var.db_throughput >= 400
+    error_message = "Throughput must be a positive number greater than or equal to 400."
+  }
 }
+
 
 variable "db_max_throughput" {
-  description = "The maximum throughput to use for autoscaling the database."
+  description = "The maximum throughput for the MongoDB database when autoscaling."
   type        = number
   default     = 400
 }
 
-variable "container_name" {
-  description = "The name of the Cosmos DB SQL container."
+variable "collection_name" {
+  description = "The name of the MongoDB collection."
   type        = string
 }
 
-variable "partition_key_path" {
-  description = "The path to use as the partition key for the container."
+variable "db_name" {
+  description = "The database name to associate with the MongoDB collection."
   type        = string
 }
 
-variable "partition_key_version" {
-  description = "The version of the partition key for the container."
-  type        = number
-  default     = 2
+variable "shard_key" {
+  description = "The shard key for the MongoDB collection."
+  type        = string
 }
 
-variable "container_throughput" {
-  description = "The throughput for the container. If null, the container will be autoscaled."
+variable "collection_throughput" {
+  description = "The throughput for the MongoDB collection. If null, autoscale is used."
   type        = number
   default     = null
 }
 
-variable "container_max_throughput" {
-  description = "The maximum throughput to use for autoscaling the container."
+variable "collection_max_throughput" {
+  description = "The maximum throughput for the MongoDB collection when autoscaling."
   type        = number
   default     = 400
-}
-
-variable "default_ttl" {
-  description = "The default TTL (time-to-live) for the container."
-  type        = number
-  default     = null
 }
 
 variable "analytical_storage_ttl" {
-  description = "The TTL for analytical storage."
+  description = "The TTL (time-to-live) for analytical storage in the MongoDB collection."
   type        = number
   default     = null
 }
 
-variable "indexing_mode" {
-  description = "The indexing mode for the container."
-  type        = string
-  default     = "Consistent"
-}
-
-variable "included_path" {
-  description = "Included path for indexing."
-  type        = string
-  default     = "/*"
-}
-
-variable "excluded_path" {
-  description = "Excluded path for indexing."
-  type        = string
-  default     = "/\"_etag\"/?"
-}
-
-variable "index_path" {
-  description = "Path for indexing."
-  type        = string
-  default     = "/\"_ts\"/?"
-}
-
-variable "index_order" {
-  description = "Order for indexing."
-  type        = string
-  default     = "Ascending"
-}
-
-variable "spatial_path" {
-  description = "Path for spatial indexing."
-  type        = string
-  default     = "/\"location\"/?"
-}
-
-variable "unique_key_paths" {
-  description = "Paths for the unique key in the container."
+variable "index_keys" {
+  description = "The keys for indexing in the MongoDB collection."
   type        = list(string)
-  default     = []
 }
 
-variable "conflict_resolution_policy" {
-  description = "The conflict resolution policy for the container."
-  type        = string
-  default     = "LastWriterWins"
+variable "index_unique" {
+  description = "Whether the index should be unique."
+  type        = bool
+  default     = false
 }
 
-variable "composite_index" {
-  description = "List of composite indexes for the Cosmos DB SQL container."
-  type = list(object({
-    index = list(object({
-      path  = string
-      order = string
-    }))
-  }))
-  default = []
-}
 
 
 # locals.tf
 ------------
 locals {
   database_throughput = var.db_throughput != null ? var.db_throughput : var.db_max_throughput
-  container_throughput = var.container_throughput != null ? var.container_throughput : var.container_max_throughput
+  collection_throughput = var.collection_throughput != null ? var.collection_throughput : var.collection_max_throughput
 }
+
+
 
 
 # outputs.tf
 ----------
-output "cosmosdb_sql_database_id" {
-  description = "The ID of the Cosmos DB SQL database."
-  value       = azurerm_cosmosdb_sql_database.this.id
+output "cosmosdb_mongo_database_id" {
+  description = "The ID of the Cosmos DB MongoDB database."
+  value       = azurerm_cosmosdb_mongo_database.this.id
 }
 
-output "cosmosdb_sql_container_id" {
-  description = "The ID of the Cosmos DB SQL container."
-  value       = azurerm_cosmosdb_sql_container.this.id
+output "cosmosdb_mongo_collection_id" {
+  description = "The ID of the Cosmos DB MongoDB collection."
+  value       = azurerm_cosmosdb_mongo_collection.this.id
 }
 
-output "cosmosdb_sql_database_name" {
-  description = "The name of the Cosmos DB SQL database."
-  value       = azurerm_cosmosdb_sql_database.this.name
+output "cosmosdb_mongo_database_name" {
+  description = "The name of the Cosmos DB MongoDB database."
+  value       = azurerm_cosmosdb_mongo_database.this.name
 }
 
-output "cosmosdb_sql_container_name" {
-  description = "The name of the Cosmos DB SQL container."
-  value       = azurerm_cosmosdb_sql_container.this.name
+output "cosmosdb_mongo_collection_name" {
+  description = "The name of the Cosmos DB MongoDB collection."
+  value       = azurerm_cosmosdb_mongo_collection.this.name
 }
+
 
 
 # examples.tf
 -----------
-module "cosmosdb_sql" {
-  source              = "./path/to/your/module"
-  db_name             = "example-database"
-  db_throughput       = 1000
-  db_max_throughput   = 4000
-  container_name      = "example-container"
-  partition_key_path  = "/id"
-  container_throughput = 400
-  container_max_throughput = 1000
-  default_ttl         = 3600
-  indexing_mode       = "Consistent"
-  included_path       = "/*"
-  excluded_path       = "/\"_etag\"/?"
-  index_path          = "/\"_ts\"/?"
-  index_order         = "Ascending"
-  spatial_path        = "/\"location\"/?"
-  unique_key_paths    = ["/\"email\""]
-  conflict_resolution_policy = "LastWriterWins"
-
-module "cosmosdb_sql" {
-  source              = "./path/to/your/module"
-  db_name             = "example-database"
-  db_throughput       = 1000
-  db_max_throughput   = 4000
-  container_name      = "example-container"
-  partition_key_path  = "/id"
-  container_throughput = 400
-  container_max_throughput = 1000
-  default_ttl         = 3600
-  indexing_mode       = "Consistent"
-  included_path       = "/*"
-  excluded_path       = "/\"_etag\"/?"
-  index_path          = "/\"_ts\"/?"
-  index_order         = "Ascending"
-  spatial_path        = "/\"location\"/?"
-  unique_key_paths    = ["/\"email\""]
-  conflict_resolution_policy = "LastWriterWins"
-
-  composite_index = [
-    {
-      index = [
-        {
-          path  = "/\"lastName\""
-          order = "Ascending"
-        },
-        {
-          path  = "/\"firstName\""
-          order = "Descending"
-        }
-      ]
-    }
-  ]
+module "cosmosdb_mongo" {
+  source            = "./path/to/your/module"
+  db_name           = "example-mongo-database"
+  db_throughput     = 1000
+  db_max_throughput = 4000
+  collection_name   = "example-mongo-collection"
+  shard_key         = "id"
+  collection_throughput = 400
+  collection_max_throughput = 1000
+  analytical_storage_ttl = 3600
+  index_keys        = ["id", "email"]
+  index_unique      = true
 }
 
-output "cosmosdb_sql_database_id" {
-  value = module.cosmosdb_sql.cosmosdb_sql_database_id
+output "cosmosdb_mongo_database_id" {
+  value = module.cosmosdb_mongo.cosmosdb_mongo_database_id
 }
 
-output "cosmosdb_sql_container_id" {
-  value = module.cosmosdb_sql.cosmosdb_sql_container_id
-}
-
-
-}
-
-output "cosmosdb_sql_database_id" {
-  value = module.cosmosdb_sql.cosmosdb_sql_database_id
-}
-
-output "cosmosdb_sql_container_id" {
-  value = module.cosmosdb_sql.cosmosdb_sql_container_id
+output "cosmosdb_mongo_collection_id" {
+  value = module.cosmosdb_mongo.cosmosdb_mongo_collection_id
 }
 
 
