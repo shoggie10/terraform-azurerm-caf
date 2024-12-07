@@ -160,16 +160,7 @@ output "cosmosdb_gremlin_graph_id" {
 
 
 ===========||=========
-╷
-│ Error: checking for presence of existing Gremlin Database (Subscription: "b987518f-1b04-4491-915c-e21dabc7f2d3"
-│ Resource Group Name: "wayne-tech-hub"
-│ Database Account Name: "cdbwaynetechhubdev259678"
-│ Gremlin Database Name: "gremlin_database1"): unexpected status 405 (405 Method Not Allowed) with response: {"code":"MethodNotAllowed","message":"Requests for API gremlin are not supported for this account.\r\nActivityId: e4e05b06-d04e-4230-a4d0-b6b9023e54de, Microsoft.Azure.Documents.Common/2.14.0"}
-│ 
-│   with module.this.azurerm_cosmosdb_gremlin_database.this,
-│   on ../main.tf line 7, in resource "azurerm_cosmosdb_gremlin_database" "this":
-│    7: resource "azurerm_cosmosdb_gremlin_database" "this" {
-│ 
+
 
 
 
