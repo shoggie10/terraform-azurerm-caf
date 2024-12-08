@@ -25,16 +25,21 @@ module "keyvaults" {
 ===============================================================================================
 # main.tf
 -------
-resource "azurerm_cosmosdb_table" "this" {
-  name                = var.table_name
+resource "azurerm_cosmosdb_postgresql_cluster" "this" {
+  name                = var.cluster_name
   resource_group_name = data.azurerm_resource_group.this.name
   account_name        = azurerm_cosmosdb_account.this.name
-  throughput          = var.table_throughput != null ? var.table_throughput : null
+  location            = var.location
+  administrator_login = var.administrator_login
+  administrator_password = var.administrator_password
+  sku_name            = var.sku_name
+  capacity            = var.capacity
+  backup_retention    = var.backup_retention
+  geo_redundancy_enabled = var.geo_redundancy_enabled
 
-  autoscale_settings {
-    max_throughput = var.table_max_throughput
-  }
+  tags = var.tags
 }
+
 
 
 
@@ -42,31 +47,67 @@ resource "azurerm_cosmosdb_table" "this" {
 
 # variables.tf
 ----------
-variable "table_name" {
-  description = "The name of the Cosmos DB Table."
+variable "cluster_name" {
+  description = "The name of the Cosmos DB PostgreSQL cluster."
   type        = string
 }
 
-variable "table_throughput" {
-  description = "The throughput for the table. If null, the table will be autoscaled."
-  type        = number
-  default     = null
+variable "location" {
+  description = "The Azure region where the PostgreSQL cluster should be located."
+  type        = string
 }
 
-variable "table_max_throughput" {
-  description = "The maximum throughput to use for autoscaling the table."
-  type        = number
-  default     = 400
+variable "administrator_login" {
+  description = "The administrator login for the PostgreSQL cluster."
+  type        = string
 }
 
-variable "table_throughput" {
-  description = "The throughput for the table. If null, the table will be autoscaled."
+variable "administrator_password" {
+  description = "The administrator password for the PostgreSQL cluster."
+  type        = string
+  sensitive   = true
+}
+
+variable "sku_name" {
+  description = "The SKU name for the PostgreSQL cluster."
+  type        = string
+}
+
+variable "capacity" {
+  description = "The capacity for the PostgreSQL cluster."
   type        = number
-  default     = null
+}
+
+variable "backup_retention" {
+  description = "The backup retention period in days for the PostgreSQL cluster."
+  type        = number
+}
+
+variable "geo_redundancy_enabled" {
+  description = "Whether geo-redundancy is enabled for the PostgreSQL cluster."
+  type        = bool
+}
+
+variable "tags" {
+  description = "Tags to associate with the PostgreSQL cluster."
+  type        = map(string)
+  default     = {}
+}
+
+variable "backup_retention" {
+  description = "The backup retention period in days for the PostgreSQL cluster."
+  type        = number
+  default     = 7
   validation {
-    condition     = var.table_throughput >= 400
-    error_message = "Table throughput must be a positive number greater than or equal to 400."
+    condition     = var.backup_retention >= 7
+    error_message = "Backup retention should be at least 7 days."
   }
+}
+
+variable "geo_redundancy_enabled" {
+  description = "Whether geo-redundancy is enabled for the PostgreSQL cluster."
+  type        = bool
+  default     = false
 }
 
 
@@ -75,7 +116,7 @@ variable "table_throughput" {
 # locals.tf
 ------------
 locals {
-  table_throughput = var.table_throughput != null ? var.table_throughput : var.table_max_throughput
+  backup_retention = var.backup_retention != null ? var.backup_retention : 7
 }
 
 
@@ -84,9 +125,14 @@ locals {
 
 # outputs.tf
 ----------
-output "cosmosdb_table_id" {
-  description = "The ID of the Cosmos DB Table."
-  value       = azurerm_cosmosdb_table.this.id
+output "cosmosdb_postgresql_cluster_id" {
+  description = "The ID of the Cosmos DB PostgreSQL cluster."
+  value       = azurerm_cosmosdb_postgresql_cluster.this.id
+}
+
+output "cosmosdb_postgresql_cluster_name" {
+  description = "The name of the Cosmos DB PostgreSQL cluster."
+  value       = azurerm_cosmosdb_postgresql_cluster.this.name
 }
 
 
@@ -95,15 +141,27 @@ output "cosmosdb_table_id" {
 
 # examples.tf
 -----------
-module "cosmosdb_table" {
-  source            = "./path/to/your/module"
-  table_name        = "example-table"
-  table_throughput  = 1000
-  table_max_throughput = 4000
+module "cosmosdb_postgresql" {
+  source                  = "./path/to/your/module"
+  cluster_name            = "example-postgresql-cluster"
+  location                = "East US"
+  administrator_login     = "adminuser"
+  administrator_password  = "adminpassword"
+  sku_name                = "Standard_B1ms"
+  capacity                = 2
+  backup_retention        = 7
+  geo_redundancy_enabled  = true
+  tags                    = {
+    environment = "production"
+  }
 }
 
-output "cosmosdb_table_id" {
-  value = module.cosmosdb_table.cosmosdb_table_id
+output "cosmosdb_postgresql_cluster_id" {
+  value = module.cosmosdb_postgresql.cosmosdb_postgresql_cluster_id
+}
+
+output "cosmosdb_postgresql_cluster_name" {
+  value = module.cosmosdb_postgresql.cosmosdb_postgresql_cluster_name
 }
 
 
