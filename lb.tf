@@ -318,6 +318,38 @@ locals {
 
 }
 
+------------------
+module "cosmosdb_account" {
+  source = "./modules/cosmosdb_account"
+
+  location                         = "East US"
+  resource_group_name              = "example-resource-group"
+  cosmosdb_name                    = "example-cosmosdb"
+  kind                             = "MongoDB"
+  enable_private_endpoint          = false
+  is_virtual_network_filter_enabled = false
+  enable_automatic_failover        = true
+  enable_multiple_write_locations = true
+  key_vault_name                   = "example-keyvault"
+  enable_systemassigned_identity   = true
+  zone_redundant                   = true
+  failover_location                = "West US"
+  failover_zone_redundant          = false
+  allowed_origins                  = ["https://example.com"]
+  additional_subnet_ids            = []
+  capabilities                     = ["EnableCassandra"]
+  consistency_level                = "Session"
+  max_interval_in_seconds          = 5
+  max_staleness_prefix             = 10000
+  backup_type                      = "Periodic"
+  interval_in_minutes              = 30
+  retention_in_hours               = 24
+  storage_redundancy               = "GeoRedundant"
+}
+
+
+
+
 ========================||========================
 Gremlin API Example:
 # Gremlin API Configuration Example
