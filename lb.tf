@@ -21,88 +21,302 @@ output "lb" {
 =================||
 -----------------------------------------------------
 
-resource "azurerm_cosmosdb_account" "db" {
-  name                               = local.cosmosdb_name
-  location                           = var.location
-  resource_group_name                = var.resource_group_name
-  offer_type                         = "Standard"
-  kind                               = var.kind
-  public_network_access_enabled      = !var.enable_private_endpoint
-  is_virtual_network_filter_enabled  = var.is_virtual_network_filter_enabled
-  access_key_metadata_writes_enabled = false
+## Required Module Specific Variables
 
-  ip_range_filter = var.enable_private_endpoint || var.is_msdn_cosmosdb 
-  enable_automatic_failover       = var.enable_automatic_failover
-  enable_multiple_write_locations = var.enable_multiple_write_locations
-  
-
-  key_vault_key_id                = var.key_vault_name != "" ? data.azurerm_key_vault_key.this[0].versionless_id : null
-  # When referencing an azurerm_key_vault_key resource, use versionless_id instead of id
-
-  dynamic "identity" {
-    for_each = var.enable_systemassigned_identity ? [1] : []
-    content {
-      type = "SystemAssigned"
-    }
+variable "consistency_level" {
+  description = "(Required) The Consistency Level to use for this CosmosDB Account. Valid values are (BoundedStaleness, Eventual, Session, Strong or ConsistentPrefix)"
+  type        = string
+  validation {
+    condition     = contains(["BoundedStaleness", "Eventual", "Session", "Strong", "ConsistentPrefix"], var.consistency_level)
+    error_message = "Valid values for cosmosdb kind are (BoundedStaleness, Eventual, Session, Strong or ConsistentPrefix)."
   }
-
-  geo_location {
-    location          = var.location
-    failover_priority = 0
-    zone_redundant    = var.zone_redundant
-  }
-
-  geo_location {
-    location          = var.enable_replication ? var.failover_location : var.location
-    failover_priority = var.enable_replication ? 1 : 0
-    zone_redundant    = var.failover_zone_redundant
-  }
-
-
-
-  dynamic "cors_rule" {
-    for_each = toset(var.allowed_origins)
-    content {
-      allowed_headers    = ["*"]
-      allowed_methods    = ["DELETE", "GET", "HEAD", "MERGE", "POST", "OPTIONS", "PUT", "PATCH"]
-      allowed_origins    = cors_rule.key
-      exposed_headers    = ["*"]
-      max_age_in_seconds = 3600
-    }
-  }
-
-  dynamic "virtual_network_rule" {
-    for_each = var.enable_private_endpoint || var.is_msdn_cosmosdb || var.is_test_run ? [] : (var.additional_subnet_ids != [] 
-    content {
-      id                                   = virtual_network_rule.value
-      ignore_missing_vnet_service_endpoint = false
-    }
-  }
-
-
-  dynamic "capabilities" {
-    for_each = toset(var.capabilities)
-    content {
-      name = capabilities.key
-    }
-  }
-
-  consistency_policy {
-    consistency_level       = var.consistency_level
-    max_interval_in_seconds = var.max_interval_in_seconds
-    max_staleness_prefix    = var.max_staleness_prefix
-  }
-
-  backup {
-    type                = var.backup_type
-    interval_in_minutes = var.backup_type == "Periodic" ? var.interval_in_minutes : null
-    retention_in_hours  = var.backup_type == "Periodic" ? var.retention_in_hours : null
-    storage_redundancy  = var.backup_type == "Periodic" ? var.storage_redundancy : null
-  }
-
-  tags = module.shared_vars.common_tags
 }
 
+variable "resource_group_name" {
+  description = "(Required) Name of the resource group where the cosmosdb belongs."
+  type        = string
+}
+
+## Optional Module Specific Variables
+
+variable "additional_ip_addresses" {
+  description = "(Optional) One or more IP Addresses, or CIDR Blocks which should be able to access CosmosDb. Additional Ip's can be whitelisted when 'private endpoint is not enabled'"
+  type        = list(any)
+  default     = []
+}
+
+variable "additional_subnet_ids" {
+  description = "(Optional) Subnet/s to be allowed in the firewall to access CosmosDb"
+  type        = list(any)
+  default     = []
+}
+
+variable "allowed_origins" {
+  description = <<EOT
+  (Optional) Configures the allowed origins for this Cosmos DB account in CORS Feature:
+  A list of origin domains that will be allowed by CORS.
+  EOT
+  type        = list(string)
+  default     = []
+}
+
+variable "backup_type" {
+  description = "(Optional) The type of the backup. Possible values are Continuous and Periodic. Defaults to Periodic."
+  type        = string
+  default     = "Periodic"
+}
+
+variable "capabilities" {
+  description = <<EOT
+  (Optional) Configures the capabilities to enable for this Cosmos DB account:
+  Possible values are
+  AllowSelfServeUpgradeToMongo36, DisableRateLimitingResponses,
+  EnableAggregationPipeline, EnableCassandra, EnableGremlin,EnableMongo, EnableTable, EnableServerless,
+  MongoDBv3.4 and mongoEnableDocLevelTTL.
+  EOT
+  type        = list(string)
+  default     = []
+}
+
+variable "database_settings" {
+  description = "(Optional) Supported API for the databases in the account and a list of databases to provision. Allowed values of API type are Sql, Cassandra, MongoDB, Gremlin, Table. If 'use_autoscale' is set, 'throughput' becomes 'max_throughput' with a minimum value of 1000."
+  type = object({
+    api_type = string
+    databases = list(object({
+      name          = string
+      throughput    = number
+      use_autoscale = bool #If set, throughput will become max_throughput
+    }))
+  })
+  default = {
+    api_type  = "Sql"
+    databases = []
+  }
+  validation {
+    condition     = contains(["Sql", "Cassandra", "MongoDB", "Gremlin", "Table"], var.database_settings.api_type)
+    error_message = "Valid values for database API type are (Sql, Cassandra, MongoDB, Gremlin and Table)."
+  }
+}
+
+variable "database_throughput" {
+  description = "(Optional) RU throughput value for the selected database."
+  type        = number
+  default     = 400
+}
+
+variable "enable_automatic_failover" {
+  description = "(Optional) Enable automatic failover for this Cosmos DB account. Valid values are (true, false)."
+  type        = bool
+  default     = false
+  validation {
+    condition     = can(regex("true|false", var.enable_automatic_failover))
+    error_message = "Valid values are true, false."
+  }
+}
+
+variable "enable_diagnostics" {
+  description = "(Optional) Enable Cosmosdb diagnostic setting. Valid values are (true, false)."
+  type        = bool
+  default     = false
+  validation {
+    condition     = can(regex("true|false", var.enable_diagnostics))
+    error_message = "Valid values are true, false."
+  }
+}
+
+variable "enable_multiple_write_locations" {
+  description = "(Optional) Enable multiple write locations for this Cosmos DB account. Valid values are (true, false)."
+  type        = bool
+  default     = false
+  validation {
+    condition     = can(regex("true|false", var.enable_multiple_write_locations))
+    error_message = "Valid values are true, false."
+  }
+}
+
+variable "enable_private_endpoint" {
+  description = "(Optional) Private Endpoint requirement. Valid values are (true, false). "
+  type        = bool
+  default     = false
+  validation {
+    condition     = can(regex("true|false", var.enable_private_endpoint))
+    error_message = "Valid values are true, false."
+  }
+}
+
+variable "enable_replication" {
+  description = "(Optional) Enable replication of this Cosmos DB account to a secondary location. Valid values are (true, false)."
+  type        = bool
+  default     = false
+  validation {
+    condition     = can(regex("true|false", var.enable_replication))
+    error_message = "Valid values are true, false."
+  }
+}
+
+variable "failover_location" {
+  description = "(Optional) The name of the Azure region to host replicated data. Valid values are (eastus2, centralus)."
+  type        = string
+  default     = ""
+  validation {
+    condition     = contains(["", "eastus2", "centralus"], var.failover_location)
+    error_message = "Valid values for failover_location are (eastus2 and centralus)."
+  }
+}
+
+variable "failover_priority" {
+  description = "(Optional) The failover priority of the region. A failover priority of 0 indicates a write region."
+  type        = string
+  default     = "0"
+}
+
+variable "index" {
+  description = "(Optional) cosmosdb unique index (ex: 01,02...etc)"
+  type        = string
+  default     = "01"
+}
+
+variable "interval_in_minutes" {
+  description = "(Optional) The interval in minutes between two backups. This is configurable only when type is Periodic. Possible values are between 60 and 1440."
+  type        = number
+  default     = 60
+  validation {
+    condition     = var.interval_in_minutes >= 60 && var.interval_in_minutes <= 1440 && floor(var.interval_in_minutes) == var.interval_in_minutes
+    error_message = "Accepted values in between (minutes): 60 - 1440."
+  }
+}
+
+variable "is_test_run" {
+  description = "(Optional) Is this a test run? Defaults to false. Only set to true to use in a test harness to disable certain networking features."
+  type        = bool
+  default     = false
+}
+
+variable "kind" {
+  description = "(Optional) Specifies the Kind of CosmosDB to create - possible values are 'GlobalDocumentDB' and 'MongoDB'."
+  type        = string
+  default     = "GlobalDocumentDB"
+  validation {
+    condition     = contains(["MongoDB", "GlobalDocumentDB"], var.kind)
+    error_message = "Valid values for cosmosdb kind are (GlobalDocumentDB or MongoDB)."
+  }
+}
+
+variable "local_authentication_disabled" {
+  description = <<EOT
+  (Optional) Disable local authentication and ensure only MSI and AAD can be used exclusively for authentication.
+  Defaults to false. Can be set only when using the SQL API.
+  Valid values are (true, false).
+  EOT
+  type        = bool
+  default     = false
+  validation {
+    condition     = can(regex("true|false", var.local_authentication_disabled))
+    error_message = "Valid values are true, false."
+  }
+}
+
+variable "max_interval_in_seconds" {
+  description = "(Optional) When used with the Bounded Staleness consistency level, this value represents the time amount of staleness (in seconds) tolerated. Accepted range for this value is 5 - 86400 (1 day)."
+  type        = string
+  default     = "5"
+}
+
+variable "max_staleness_prefix" {
+  description = "(Optional) When used with the Bounded Staleness consistency level, this value represents the number of stale requests tolerated. Accepted range for this value is 10 – 2147483647."
+  type        = string
+  default     = "10"
+}
+
+variable "pe_subnet_id_primary" {
+  description = <<EOT
+  (Optional) Private endpoint Subnet id, required when Private_Endpoint is enabled
+  Subnet_ID usage: "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets/{subnetName}"
+  EOT
+  default     = ""
+}
+
+variable "pe_subnet_id_secondary" {
+  description = <<EOT
+  (Optional) Private endpoint Subnet id, required when Private_Endpoint is enabled and replicating to a secondary region
+  Subnet_ID usage: "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets/{subnetName}"
+  EOT
+  default     = ""
+}
+
+variable "retention_days" {
+  description = "(Optional) Cosmosdb retention daysl[Provide retention days if 'enable_diagnostics' is set to true]"
+  default     = 7
+}
+
+variable "retention_in_hours" {
+  description = "(Optional) The time in hours that each backup is retained. This is configurable only when type is Periodic. Possible values are between 8 and 720."
+  type        = number
+  default     = 8
+  validation {
+    condition     = var.retention_in_hours >= 8 && var.retention_in_hours <= 720 && floor(var.retention_in_hours) == var.retention_in_hours
+    error_message = "Accepted values in between (hours): 8 - 720."
+  }
+}
+
+variable "storage_redundancy" {
+  description = "(Optional) The storage redundancy is used to indicate the type of backup residency. This is configurable only when type is Periodic. Possible values are Geo, Local and Zone."
+  type        = string
+  default     = "Local"
+  validation {
+    condition     = contains(["Geo", "Local", "Zone"], var.storage_redundancy)
+    error_message = "Valid values for storage_redundancy are (Geo, Local and Zone)."
+  }
+}
+
+variable "is_msdn_cosmosdb" {
+  description = "Is this cosmos db to be used in an msdn subscription. Default is false."
+  type        = bool
+  default     = false
+}
+
+variable "dns_private_zone_rg" {
+  type        = string
+  description = "The resource group that the privatelink DNS zone record is in (Azure Private DNS)"
+  default     = "dnsproxy-prd"
+}
+
+variable "is_virtual_network_filter_enabled" {
+  description = "Is this cosmos db to be used in an msdn subscription. Default is false."
+  type        = bool
+  default     = true
+}
+
+variable "zone_redundant" {
+  description = "(Optional) Should Zone Redundancy in the primary region be enabled?"
+  type        = bool
+  default     = false
+}
+
+variable "failover_zone_redundant" {
+  description = "(Optional) Should Zone Redundancy in the failover region be enabled?"
+  type        = bool
+  default     = false
+}
+
+### ----
+# Outputs
+output "cosmosdb_id" {
+  description = "ID of the deployed CosmosDB account"
+  value       = azurerm_cosmosdb_account.db.id
+}
+
+output "cosmosdb_name" {
+  description = "Name of the deployed CosmosDB account"
+  value       = azurerm_cosmosdb_account.db.name
+}
+
+### locals
+locals {
+  cosmosdb_name = ""
+
+
+}
 
 ========================||========================
 Gremlin API Example:
