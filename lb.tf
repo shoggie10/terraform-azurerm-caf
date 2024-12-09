@@ -19,124 +19,89 @@ output "lb" {
   value = module.lb
 }
 =================||
-# Module for SQL Database (API)
-module "cosmosdb_sql_database" {
-  source               = "./modules/azurerm_cosmosdb_sql_database"
-  sql_database_name    = var.sql_database_name
-  resource_group_name  = var.resource_group_name
-  cosmosdb_account_name = var.cosmosdb_account_name
-  database_throughput  = var.database_throughput
-  tags                 = var.tags
-}
-
-# Module for MongoDB Database (API)
-module "cosmosdb_mongo_database" {
-  source               = "./modules/azurerm_cosmosdb_mongo_database"
-  mongo_database_name  = var.mongo_database_name
-  resource_group_name  = var.resource_group_name
-  cosmosdb_account_name = var.cosmosdb_account_name
-  database_throughput  = var.database_throughput
-  tags                 = var.tags
-}
-
-# Module for Gremlin Database (API)
-module "cosmosdb_gremlin_database" {
-  source               = "./modules/azurerm_cosmosdb_gremlin_database"
-  gremlin_database_name = var.gremlin_database_name
-  resource_group_name  = var.resource_group_name
-  cosmosdb_account_name = var.cosmosdb_account_name
-  database_throughput  = var.database_throughput
-  tags                 = var.tags
-}
-
-# Module for Cassandra Database (API)
-module "cosmosdb_cassandra_database" {
-  source               = "./modules/azurerm_cosmosdb_cassandra_database"
-  cassandra_database_name = var.cassandra_database_name
-  resource_group_name  = var.resource_group_name
-  cosmosdb_account_name = var.cosmosdb_account_name
-  database_throughput  = var.database_throughput
-  tags                 = var.tags
-}
-
-# Module for Table Database (API)
-module "cosmosdb_table_database" {
-  source               = "./modules/azurerm_cosmosdb_table_database"
-  table_database_name  = var.table_database_name
-  resource_group_name  = var.resource_group_name
-  cosmosdb_account_name = var.cosmosdb_account_name
-  database_throughput  = var.database_throughput
-  tags                 = var.tags
-}
-
-# Module for PostgreSQL Database (API)
-module "cosmosdb_postgresql_database" {
-  source               = "./modules/azurerm_cosmosdb_postgresql_database"
-  postgresql_database_name = var.postgresql_database_name
-  resource_group_name  = var.resource_group_name
-  cosmosdb_account_name = var.cosmosdb_account_name
-  database_throughput  = var.database_throughput
-  tags                 = var.tags
-}
 -----------------------------------------------------
-# Module for SQL API
-module "cosmosdb_sql_database" {
-  source                  = "./modules/azurerm_cosmosdb_sql_database"
-  sql_database_name       = var.sql_database_name       # Required argument for SQL database name
-  resource_group_name     = var.resource_group_name     # Required argument for resource group name
-  cosmosdb_account_name   = var.cosmosdb_account_name   # Required argument for Cosmos DB account name
-  database_throughput     = var.database_throughput     # Required argument for throughput (RU/s)
-}
 
-# Module for MongoDB API
-module "cosmosdb_mongo_database" {
-  source                  = "./modules/azurerm_cosmosdb_mongo_database"
-  mongo_database_name     = var.mongo_database_name     # Required argument for MongoDB database name
-  resource_group_name     = var.resource_group_name     # Required argument for resource group name
-  cosmosdb_account_name   = var.cosmosdb_account_name   # Required argument for Cosmos DB account name
-  database_throughput     = var.database_throughput     # Required argument for throughput (RU/s)
-}
+resource "azurerm_cosmosdb_account" "db" {
+  name                               = local.cosmosdb_name
+  location                           = var.location
+  resource_group_name                = var.resource_group_name
+  offer_type                         = "Standard"
+  kind                               = var.kind
+  public_network_access_enabled      = !var.enable_private_endpoint
+  is_virtual_network_filter_enabled  = var.is_virtual_network_filter_enabled
+  access_key_metadata_writes_enabled = false
 
-# Module for Gremlin API
-module "cosmosdb_gremlin_database" {
-  source                  = "./modules/azurerm_cosmosdb_gremlin_database"
-  gremlin_database_name   = var.gremlin_database_name   # Required argument for Gremlin database name
-  resource_group_name     = var.resource_group_name     # Required argument for resource group name
-  cosmosdb_account_name   = var.cosmosdb_account_name   # Required argument for Cosmos DB account name
-  database_throughput     = var.database_throughput     # Required argument for throughput (RU/s)
-}
+  ip_range_filter = var.enable_private_endpoint || var.is_msdn_cosmosdb 
+  enable_automatic_failover       = var.enable_automatic_failover
+  enable_multiple_write_locations = var.enable_multiple_write_locations
+  
 
-# Module for Cassandra API
-module "cosmosdb_cassandra_keyspace" {
-  source                  = "./modules/azurerm_cosmosdb_cassandra_keyspace"
-  cassandra_keyspace_name = var.cassandra_keyspace_name # Required argument for Cassandra keyspace name
-  resource_group_name     = var.resource_group_name     # Required argument for resource group name
-  cosmosdb_account_name   = var.cosmosdb_account_name   # Required argument for Cosmos DB account name
-  keyspace_throughput     = var.keyspace_throughput     # Required argument for throughput (RU/s)
-}
+  key_vault_key_id                = var.key_vault_name != "" ? data.azurerm_key_vault_key.this[0].versionless_id : null
+  # When referencing an azurerm_key_vault_key resource, use versionless_id instead of id
 
-# Module for Table API
-module "cosmosdb_table" {
-  source              = "./modules/azurerm_cosmosdb_table"
-  table_name         = var.table_name          # Required argument for Cosmos DB table name
-  resource_group_name = var.resource_group_name  # Required argument for resource group name
-  cosmosdb_account_name = var.cosmosdb_account_name  # Required argument for Cosmos DB account name
-  table_throughput   = var.table_throughput    # Required argument for throughput (RU/s)
-}
+  dynamic "identity" {
+    for_each = var.enable_systemassigned_identity ? [1] : []
+    content {
+      type = "SystemAssigned"
+    }
+  }
 
-# Module for PostgreSQL API
-module "cosmosdb_postgresql_cluster" {
-  source                    = "./modules/azurerm_cosmosdb_postgresql_cluster"
-  cluster_name              = var.cluster_name            # Required argument for PostgreSQL cluster name
-  resource_group_name       = var.resource_group_name     # Required argument for resource group name
-  location                  = var.location                # Required argument for location
-  administrator_login       = var.administrator_login     # Required argument for administrator login
-  administrator_password    = var.administrator_password  # Required argument for administrator password
-  version                   = var.postgresql_version     # Required argument for PostgreSQL version
-  sku_name                  = var.sku_name                # Required argument for SKU name
-  storage_mb                = var.storage_mb              # Required argument for storage in MB
-}
+  geo_location {
+    location          = var.location
+    failover_priority = 0
+    zone_redundant    = var.zone_redundant
+  }
 
+  geo_location {
+    location          = var.enable_replication ? var.failover_location : var.location
+    failover_priority = var.enable_replication ? 1 : 0
+    zone_redundant    = var.failover_zone_redundant
+  }
+
+
+
+  dynamic "cors_rule" {
+    for_each = toset(var.allowed_origins)
+    content {
+      allowed_headers    = ["*"]
+      allowed_methods    = ["DELETE", "GET", "HEAD", "MERGE", "POST", "OPTIONS", "PUT", "PATCH"]
+      allowed_origins    = cors_rule.key
+      exposed_headers    = ["*"]
+      max_age_in_seconds = 3600
+    }
+  }
+
+  dynamic "virtual_network_rule" {
+    for_each = var.enable_private_endpoint || var.is_msdn_cosmosdb || var.is_test_run ? [] : (var.additional_subnet_ids != [] 
+    content {
+      id                                   = virtual_network_rule.value
+      ignore_missing_vnet_service_endpoint = false
+    }
+  }
+
+
+  dynamic "capabilities" {
+    for_each = toset(var.capabilities)
+    content {
+      name = capabilities.key
+    }
+  }
+
+  consistency_policy {
+    consistency_level       = var.consistency_level
+    max_interval_in_seconds = var.max_interval_in_seconds
+    max_staleness_prefix    = var.max_staleness_prefix
+  }
+
+  backup {
+    type                = var.backup_type
+    interval_in_minutes = var.backup_type == "Periodic" ? var.interval_in_minutes : null
+    retention_in_hours  = var.backup_type == "Periodic" ? var.retention_in_hours : null
+    storage_redundancy  = var.backup_type == "Periodic" ? var.storage_redundancy : null
+  }
+
+  tags = module.shared_vars.common_tags
+}
 
 
 ========================||========================
