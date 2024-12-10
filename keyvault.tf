@@ -172,29 +172,21 @@ output "cosmosdb_postgresql_cluster_name" {
 
 
 ===========||=========
-The cosmosdb_gremlin_database module is designed specifically to create and manage Cosmos DB Gremlin API databases. This module is built using the new design and works in conjunction with the foundational module cosmosdb_account_common, which serves as a flexible and reusable base for implementing Cosmos DB accounts for Gremlin and other API databases.
-
-Key Features:
-Facilitates the deployment and configuration of Gremlin API databases within a Cosmos DB account.
-Relies on cosmosdb_account_common for shared configurations such as consistency policies, geo-replication, network security, and tagging.
-Maintains a modular structure, enabling independent management and scaling of Gremlin API databases.
-
-Integration:
-To use this module, ensure the cosmosdb_account_common module is deployed as the foundational resource. This modular approach ensures consistent configurations across API types while providing the flexibility to adapt and scale specific database needs.
-
-Future enhancements will include advanced settings such as optimized throughput scaling, diagnostic integration, and additional security features, aligned with the foundational module's updates.
+│ Error: authorization.RoleAssignmentsClient#Create: Failure responding to request: StatusCode=400 -- Original Error: autorest/azure: Service returned an error. Status=400 Code="InvalidPrincipalId" Message="A valid principal ID must be provided for role assignment."
+│ 
+│   with module.this.module.key_vault_rbac.azurerm_role_assignment.this["cosmosdb_account_managed_identity"],
+│   on .terraform/modules/this.key_vault_rbac/main.tf line 1, in resource "azurerm_role_assignment" "this":
+│    1: resource "azurerm_role_assignment" "this" {
+│ 
+╵
+╷
+│ Error: authorization.RoleAssignmentsClient#Create: Failure responding to request: StatusCode=400 -- Original Error: autorest/azure: Service returned an error. Status=400 Code="InvalidPrincipalId" Message="A valid principal ID must be provided for role assignment."
+│ 
+│   with module.this.module.key_vault_rbac.azurerm_role_assignment.this["cosmosdb_account_managed_identity_read"],
+│   on .terraform/modules/this.key_vault_rbac/main.tf line 1, in resource "azurerm_role_assignment" "this":
+│    1: resource "azurerm_role_assignment" "this" {
 
 ----------------------------
-The cosmosdb_table module is designed specifically to create and manage Cosmos DB Table API databases. This module follows the new design and integrates seamlessly with the foundational module cosmosdb_account_common, which serves as a flexible and reusable base for implementing Cosmos DB accounts for Table and other API databases.
-
-Key Features:
-Streamlines the deployment and management of Table API databases within a Cosmos DB account.
-Utilizes cosmosdb_account_common for shared configurations such as consistency policies, geo-replication, network security, and tagging.
-Supports modularity, allowing independent configuration and scaling of Table API databases.
-Integration:
-This module is intended to work alongside the cosmosdb_account_common foundational module. Ensure the foundational module is deployed and properly configured to enable consistent and centralized management across various API databases.
-
-Future updates will incorporate advanced features such as dynamic throughput scaling, diagnostic settings, and enhanced security configurations, in alignment with the foundational module's evolution.
 
 
 
