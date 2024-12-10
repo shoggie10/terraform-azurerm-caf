@@ -172,30 +172,29 @@ output "cosmosdb_postgresql_cluster_name" {
 
 
 ===========||=========
-Comments for cosmosdb_sql_database Module
-
-The cosmosdb_sql_database module is designed specifically to create and manage Cosmos DB SQL API databases. This module is intended to work in conjunction with the foundational module cosmosdb_account, which serves as a flexible and reusable base for implementing Cosmos DB accounts.
+The cosmosdb_gremlin_database module is designed specifically to create and manage Cosmos DB Gremlin API databases. This module is built using the new design and works in conjunction with the foundational module cosmosdb_account_common, which serves as a flexible and reusable base for implementing Cosmos DB accounts for Gremlin and other API databases.
 
 Key Features:
-Simplifies the deployment and management of SQL API databases within a Cosmos DB account.
-Ensures modularity by leveraging cosmosdb_account for shared configurations like consistency policies, network security, and tagging.
-Supports independent configuration and scaling for SQL API databases without impacting other API types.
-Integration:
-To use this module, ensure that the cosmosdb_account module is deployed and properly configured as the base resource. This modular design allows for flexibility and scalability, enabling seamless integration of additional API types in the future.
+Facilitates the deployment and configuration of Gremlin API databases within a Cosmos DB account.
+Relies on cosmosdb_account_common for shared configurations such as consistency policies, geo-replication, network security, and tagging.
+Maintains a modular structure, enabling independent management and scaling of Gremlin API databases.
 
-This module will evolve to support advanced settings like throughput scaling and integration with diagnostic settings once the core functionality is validated.
+Integration:
+To use this module, ensure the cosmosdb_account_common module is deployed as the foundational resource. This modular approach ensures consistent configurations across API types while providing the flexibility to adapt and scale specific database needs.
+
+Future enhancements will include advanced settings such as optimized throughput scaling, diagnostic integration, and additional security features, aligned with the foundational module's updates.
 
 ----------------------------
-The cosmosdb_mongo_database module is designed specifically to create and manage Cosmos DB MongoDB API databases. This module is intended to work seamlessly with the foundational module cosmosdb_account, which serves as a flexible and reusable base for implementing Cosmos DB accounts.
+The cosmosdb_table module is designed specifically to create and manage Cosmos DB Table API databases. This module follows the new design and integrates seamlessly with the foundational module cosmosdb_account_common, which serves as a flexible and reusable base for implementing Cosmos DB accounts for Table and other API databases.
 
 Key Features:
-Simplifies the deployment and management of MongoDB API databases within a Cosmos DB account.
-Leverages the cosmosdb_account module for shared configurations such as account-level policies, geo-replication, and network security.
-Enables independent management of MongoDB API databases, ensuring modularity and ease of scaling.
+Streamlines the deployment and management of Table API databases within a Cosmos DB account.
+Utilizes cosmosdb_account_common for shared configurations such as consistency policies, geo-replication, network security, and tagging.
+Supports modularity, allowing independent configuration and scaling of Table API databases.
 Integration:
-This module requires the cosmosdb_account module to be deployed and configured as the foundational resource. The modular approach ensures flexibility for adding or modifying other API types independently while maintaining a consistent base configuration.
+This module is intended to work alongside the cosmosdb_account_common foundational module. Ensure the foundational module is deployed and properly configured to enable consistent and centralized management across various API databases.
 
-Future updates will include support for advanced features like throughput scaling, diagnostic settings, and enhanced security configurations once the core functionality has been confirmed.
+Future updates will incorporate advanced features such as dynamic throughput scaling, diagnostic settings, and enhanced security configurations, in alignment with the foundational module's evolution.
 
 
 
