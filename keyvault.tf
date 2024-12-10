@@ -172,19 +172,7 @@ output "cosmosdb_postgresql_cluster_name" {
 
 
 ===========||=========
-│ Error: authorization.RoleAssignmentsClient#Create: Failure responding to request: StatusCode=400 -- Original Error: autorest/azure: Service returned an error. Status=400 Code="InvalidPrincipalId" Message="A valid principal ID must be provided for role assignment."
-│ 
-│   with module.this.module.key_vault_rbac.azurerm_role_assignment.this["cosmosdb_account_managed_identity"],
-│   on .terraform/modules/this.key_vault_rbac/main.tf line 1, in resource "azurerm_role_assignment" "this":
-│    1: resource "azurerm_role_assignment" "this" {
-│ 
-╵
-╷
-│ Error: authorization.RoleAssignmentsClient#Create: Failure responding to request: StatusCode=400 -- Original Error: autorest/azure: Service returned an error. Status=400 Code="InvalidPrincipalId" Message="A valid principal ID must be provided for role assignment."
-│ 
-│   with module.this.module.key_vault_rbac.azurerm_role_assignment.this["cosmosdb_account_managed_identity_read"],
-│   on .terraform/modules/this.key_vault_rbac/main.tf line 1, in resource "azurerm_role_assignment" "this":
-│    1: resource "azurerm_role_assignment" "this" {
+
 
 ----------------------------
 
