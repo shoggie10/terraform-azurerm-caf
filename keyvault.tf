@@ -172,6 +172,34 @@ output "cosmosdb_postgresql_cluster_name" {
 
 
 ===========||=========
+Comments for cosmosdb_sql_database Module
+
+The cosmosdb_sql_database module is designed specifically to create and manage Cosmos DB SQL API databases. This module is intended to work in conjunction with the foundational module cosmosdb_account, which serves as a flexible and reusable base for implementing Cosmos DB accounts.
+
+Key Features:
+Simplifies the deployment and management of SQL API databases within a Cosmos DB account.
+Ensures modularity by leveraging cosmosdb_account for shared configurations like consistency policies, network security, and tagging.
+Supports independent configuration and scaling for SQL API databases without impacting other API types.
+Integration:
+To use this module, ensure that the cosmosdb_account module is deployed and properly configured as the base resource. This modular design allows for flexibility and scalability, enabling seamless integration of additional API types in the future.
+
+This module will evolve to support advanced settings like throughput scaling and integration with diagnostic settings once the core functionality is validated.
+
+----------------------------
+The cosmosdb_mongo_database module is designed specifically to create and manage Cosmos DB MongoDB API databases. This module is intended to work seamlessly with the foundational module cosmosdb_account, which serves as a flexible and reusable base for implementing Cosmos DB accounts.
+
+Key Features:
+Simplifies the deployment and management of MongoDB API databases within a Cosmos DB account.
+Leverages the cosmosdb_account module for shared configurations such as account-level policies, geo-replication, and network security.
+Enables independent management of MongoDB API databases, ensuring modularity and ease of scaling.
+Integration:
+This module requires the cosmosdb_account module to be deployed and configured as the foundational resource. The modular approach ensures flexibility for adding or modifying other API types independently while maintaining a consistent base configuration.
+
+Future updates will include support for advanced features like throughput scaling, diagnostic settings, and enhanced security configurations once the core functionality has been confirmed.
+
+
+
+
 
 
 
