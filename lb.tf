@@ -766,9 +766,30 @@ variable "partition_key_type" {
 
 
 ╵=============================||=================================================
+The cosmosdb_cassandra_database module is designed specifically to create and manage Cosmos DB Cassandra API databases. This module adheres to the new design principles and integrates seamlessly with the foundational module cosmosdb_account_common, which serves as a flexible and reusable base for implementing Cosmos DB accounts for Cassandra and other API databases.
 
+Key Features:
+Simplifies the deployment and configuration of Cassandra API databases within a Cosmos DB account.
+Leverages cosmosdb_account_common for centralized configurations, including consistency policies, geo-replication, network security, and tagging.
+Promotes modularity, enabling independent scaling and management of Cassandra API databases.
 
+Integration:
+This module is designed to operate in conjunction with the cosmosdb_account_common foundational module. Ensure the foundational module is deployed and configured to establish consistent settings across all API databases while maintaining the flexibility to tailor Cassandra-specific requirements.
 
+Planned updates include support for advanced features such as dynamic throughput scaling, enhanced diagnostic integration, and additional security configurations, aligned with improvements in the foundational module.
+
+--------------------------------------------------
+The cosmosdb_postgresql_database module is designed specifically to create and manage Cosmos DB PostgreSQL API databases. This module aligns with the new design approach and integrates seamlessly with the foundational module cosmosdb_account_common, which serves as a flexible and reusable base for implementing Cosmos DB accounts for PostgreSQL and other API databases.
+
+Key Features:
+Simplifies the deployment and management of PostgreSQL API databases within a Cosmos DB account.
+Utilizes cosmosdb_account_common for shared configurations such as consistency policies, geo-replication, network security, and tagging.
+Ensures modularity, enabling independent configuration and scaling of PostgreSQL API databases.
+
+Integration:
+This module is intended to work alongside the cosmosdb_account_common foundational module. Ensure the foundational module is deployed and properly configured to maintain consistent account-level settings while providing flexibility for PostgreSQL-specific database needs.
+
+Future enhancements will include advanced features such as dynamic throughput scaling, enhanced diagnostic settings, and additional security measures, in line with updates to the foundational module.
 ========
 artifact feeds also use this RBAC role permission but with different, and more, roles.
 
