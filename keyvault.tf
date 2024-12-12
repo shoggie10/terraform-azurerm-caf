@@ -176,9 +176,6 @@ output "cosmosdb_postgresql_cluster_name" {
 
 ----------------------------
 
-What do storage accounts compare to in AWS?  Is it similar to IAM in AWS?
-Do you have to have different storage accounts for the different types of storage or can one storage account be associated to several types of storage?
-Is there a 1:1 relationship between storage accounts and the actual storage resource (File, Blob etc) or do you map many storage resources to a single account?
 
 
 
