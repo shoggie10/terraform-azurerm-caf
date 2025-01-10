@@ -19,6 +19,11 @@ output "lb" {
   value = module.lb
 }
 =================||
+% terraform plan
+╷
+│ Error: Insufficient rights to generate a plan
+│ 
+│ The provided credentials have insufficient rights to generate a plan. In order to generate plans, at least plan permissions on the workspace are required.
 -----------------------------------------------------
 
 ## Required Module Specific Variables
