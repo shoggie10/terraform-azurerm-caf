@@ -19,7 +19,7 @@ output "lb" {
   value = module.lb
 }
 =================||
-
+Partha Bhowmick is inviting you to a scheduled Zoom meeting. Topic: Partha Bhowmick's Personal Meeting Room Join Zoom Meeting https://us05web.zoom.us/j/81498588549?pwd=XSfAdRtwdxceHUYOR0ysfdWEK8DJWn.1 Meeting ID: 814 9858 8549 Passcode: y5u15e
 -----------------------------------------------------
 
 ## Required Module Specific Variables
