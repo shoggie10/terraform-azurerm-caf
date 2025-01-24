@@ -19,7 +19,206 @@ output "lb" {
   value = module.lb
 }
 =================||
-Join Zoom Meeting https://us05web.zoom.us/j/83299315954?pwd=CgfREYhZ3p52qT941H6Qk45galtcPm.1 Meeting ID: 832 9931 5954 Passcode: EDx1f9
+### Local Variables ###
+locals {
+
+  log_analytics_workspace = "sentinel-log-analytics-workspace-BOKF-${var.environment_long}"
+  resource_group_name     = "bokf-2913-${var.environment_long}-eastus-rg-datalake"
+
+  # Flattened list of all policies with their parameters, such as effect and initiative assignment (policy, effect, initiative assignment)
+  policy_initiatives = flatten([
+    for polset in var.policy_initiatives : [
+      for pol in polset.policy_list : {
+        policy_initiative = polset.policy_initiative
+        policy_name       = pol.policy
+        effect            = pol.effect
+        log               = pol.set_log_location ? data.azurerm_log_analytics_workspace.sentinel_log.id : null
+        log_workspace_id  = pol.set_log_location_id ? data.azurerm_log_analytics_workspace.sentinel_log.id : null
+        operation         = pol.operation != null ? pol.operation : null
+        regions           = length(pol.regions) != 0 ? pol.regions : null
+        retention_days    = pol.retention_days != null ? pol.retention_days : null
+        rgName            = pol.set_log_rg_name ? local.log_analytics_workspace : null
+        storagePrefix     = pol.set_storage_prefix ? local.resource_group_name : null
+    }]
+  ])
+
+  # 2 element list of all policies and their effect (policy -> effect)
+  policy_initiatives_policy_map = {
+    for p in local.policy_initiatives : p.policy_name => p.effect
+  }
+
+  # 2 element list of all policies and their log (policy -> log)
+  policy_initiatives_log_map = {
+    for p in local.policy_initiatives : p.policy_name => p.log
+  }
+
+  # 2 element list of all policies and their workspace_id (policy -> log_workspace_id)
+  policy_initiatives_log_workspace_id_map = {
+    for p in local.policy_initiatives : p.policy_name => p.log_workspace_id
+  }
+
+  # 2 element list of all policies and their operation (policy -> operation)
+  policy_initiatives_operation_map = {
+    for p in local.policy_initiatives : p.policy_name => p.operation
+  }
+
+  # 2 element list of all policies and their regions (policy -> regions)
+  policy_initiatives_region_map = {
+    for p in local.policy_initiatives : p.policy_name => p.regions
+  }
+
+  # 2 element list of all policies and their resource group name (policy -> rgName)
+  policy_initiatives_rgname_map = {
+    for p in local.policy_initiatives : p.policy_name => p.rgName
+  }
+
+  # 2 element list of all policies and their storage prefix (policy -> storagePrefix)
+  policy_initiatives_storageprefix_map = {
+    for p in local.policy_initiatives : p.policy_name => p.storagePrefix
+  }
+
+  # 2 element list of all policies and their retention_days (policy -> retention_days)
+  policy_initiatives_retention_days_map = {
+    for p in local.policy_initiatives : p.policy_name => p.retention_days
+  }
+}
+### End of Local Variables ###
+
+data "azurerm_log_analytics_workspace" "sentinel_log" {
+  name                = local.log_analytics_workspace
+  resource_group_name = local.resource_group_name
+}
+
+resource "azurerm_policy_set_definition" "tag_governance" {
+
+  name         = "tag_governance"
+  policy_type  = "Custom"
+  display_name = "tag_governance"
+  description  = "Contains common tag_governance policies"
+
+  metadata = <<METADATA
+    {
+    "category": "${var.policyset_definition_category}"
+    }
+
+METADATA
+
+  policy_definitions = <<POLICY_DEFINITIONS
+    [
+        {
+            "policyDefinitionId": "${var.addTagToRG_policy_id_0}"
+        },
+        {
+            "policyDefinitionId": "${var.addTagToRG_policy_id_1}"
+        },
+        {
+            "policyDefinitionId": "${var.addTagToRG_policy_id_2}"
+        },     
+        {
+            "policyDefinitionId": "${var.addTagToRG_policy_id_3}"
+        },
+        {
+            "policyDefinitionId": "${var.addTagToRG_policy_id_4}"
+        },
+        {
+            "policyDefinitionId": "${var.addTagToRG_policy_id_5}"
+        },
+        {
+            "policyDefinitionId": "${var.bulkAddTagsToRG_policy_id}"
+        },
+        {
+            "policyDefinitionId": "${var.bulkInheritTagsFromRG_policy_id}"
+        },
+        {
+            "policyDefinitionId": "${var.inheritTagFromRG_policy_id_0}"
+        },
+        {
+            "policyDefinitionId": "${var.inheritTagFromRG_policy_id_1}"
+        },
+        {
+            "policyDefinitionId": "${var.inheritTagFromRG_policy_id_2}"
+        },
+        {
+            "policyDefinitionId": "${var.inheritTagFromRG_policy_id_3}"
+        },
+        {
+            "policyDefinitionId": "${var.inheritTagFromRG_policy_id_4}"
+        },
+        {
+            "policyDefinitionId": "${var.inheritTagFromRG_policy_id_5}"
+        }
+    ]
+POLICY_DEFINITIONS
+}
+
+# Look up the policy id for every policy listed in the policyset definitions variable 
+# by referencing the "policy" element containing the display name of the policy
+# data is indexed by the policy display name so it can be searched with lookup function
+data "azurerm_policy_definition" "security_governance" {
+  for_each     = local.policy_initiatives_policy_map
+  display_name = each.key
+}
+
+resource "azurerm_policy_set_definition" "security_governance" {
+  name         = "Security governance"
+  policy_type  = "Custom"
+  display_name = "Security Governance"
+  description  = "Assignment of the Security Governance initiative to subscription."
+
+  metadata = <<METADATA
+    {
+    "category": "${var.policyset_definition_category}"
+    }
+METADATA
+
+  dynamic "policy_definition_reference" {
+
+    for_each = data.azurerm_policy_definition.security_governance
+    content {
+      policy_definition_id = policy_definition_reference.value.id
+      reference_id         = policy_definition_reference.value.id
+      parameters = {
+        Effect                  = lookup(local.policy_initiatives_policy_map, policy_definition_reference.key, null)
+        logAnalytics            = lookup(local.policy_initiatives_log_map, policy_definition_reference.key, null)
+        logAnalyticsWorkspaceID = lookup(local.policy_initiatives_log_workspace_id_map, policy_definition_reference.key, null)
+        operationName           = lookup(local.policy_initiatives_operation_map, policy_definition_reference.key, null)
+        #listOfLocations       = lookup(local.policy_initiatives_region_map, policy_definition_reference.key, null) == null ? null : lookup(local.policy_initiatives_region_map, policy_definition_reference.key, null)
+        requiredRetentionDays = lookup(local.policy_initiatives_retention_days_map, policy_definition_reference.key, null)
+        rgName                = lookup(local.policy_initiatives_rgname_map, policy_definition_reference.key, null)
+        storagePrefix         = lookup(local.policy_initiatives_storageprefix_map, policy_definition_reference.key, null)
+      }
+    }
+  }
+}
+
+/*********************************************************************************************************************
+** Saving as a template for future growth into additional policy initiatives - All current are in security_governance"
+**********************************************************************************************************************
+resource "azurerm_policy_set_definition" "data_policy_set" {
+  for_each     = { for pi in local.data_governance : pi.policy_initiative => pi... }
+  name         = each.key
+  policy_type  = "Custom"
+  display_name = each.key
+  description  = "Assignment of the ${each.key} initiative to subscription."
+
+  metadata = <<METADATA
+    {
+    "category": "${var.policyset_definition_category}"
+    }
+METADATA
+
+  dynamic "policy_definition_reference" {
+
+    for_each = data.azurerm_policy_definition.data_governance
+    content {
+      policy_definition_id = policy_definition_reference.value.id
+      parameters = {
+        Effect = lookup(local.data_governance_policy_map, policy_definition_reference.key, "AuditIfNotExists")
+      }
+    }
+  }
+}
+*/
 
 
 -----------------------------------------------------
