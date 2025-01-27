@@ -19,7 +19,7 @@ output "lb" {
   value = module.lb
 }
 =================||
-
+Join Zoom Meeting https://us05web.zoom.us/j/83299315954?pwd=CgfREYhZ3p52qT941H6Qk45galtcPm.1 Meeting ID: 832 9931 5954 Passcode: EDx1f9
 
 
 -----------------------------------------------------
