@@ -20,7 +20,6 @@ output "lb" {
 }
 =================||
 Join Zoom Meeting https://us05web.zoom.us/j/84272448514?pwd=PzL4nX8QGKaY6WUlhngkQlmsbFhMDH.1 Meeting ID: 842 7244 8514 Passcode: c7HzMH
-
 -----------------------------------------------------
 
 ## Required Module Specific Variables
