@@ -19,7 +19,7 @@ output "lb" {
   value = module.lb
 }
 =================||
-https://us05web.zoom.us/j/85404970501?pwd=52vRzJbbVCe2b8t8xWbwxBnbpysI72.1
+https://us05web.zoom.us/j/81107052511?pwd=neRYbCOQKmLJoCtsd2PQU7IX8u4uVL.1
 
 
 
