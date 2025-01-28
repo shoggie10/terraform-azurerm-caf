@@ -19,58 +19,7 @@ output "lb" {
   value = module.lb
 }
 =================||
-#!/bin/bash
-set -eo pipefail
 
-su - ec2-user
-
-rpm --import https://download.newrelic.com/infrastructure_agent/gpg/newrelic-infra.gpg
-sudo curl -o /etc/yum.repos.d/newrelic-infra.repo https://download.newrelic.com/infrastructure_agent/linux/yum/amazonlinux/2023/x86_64/newrelic-infra.repo
-
-curl -s https://packagecloud.io/install/repositories/circleci/runner/script.rpm.sh?any=true | sudo bash
-
-sudo yum install -y \
-  circleci-runner \
-  git \
-  newrelic-infra
-
-aws secretsmanager get-secret-value --secret-id circleci/container-agent --region us-east-2 --query SecretString --output text > secret.json
-
-export RUNNER_AUTH_TOKEN="$(cat secret.json | jq -r .machineRunnerResourceClassToken)"
-sudo sed -i "s/<< AUTH_TOKEN >>/$RUNNER_AUTH_TOKEN/g" /etc/circleci-runner/circleci-runner-config.yaml
-
-cat << EOF | sudo tee /etc/newrelic-infra.yml > /dev/null
-license_key: $(cat secret.json | jq -r .newRelicLicense)
-enable_process_metrics: true
-display_name: circleci-runner (test)
-EOF
-
-rm secret.json
-
-cat << EOF | sudo tee /etc/newrelic-infra/logging.d/cloudinitlogs.yml
-logs:
-- name: cloud-init-logs
-  systemd: cloud-init
-EOF
-
-cat << EOF | sudo tee /etc/newrelic-infra/logging.d/circleci.yml
-logs:
-- name: circleci-runner-logs
-  systemd: circleci-runner
-EOF
-
-sudo systemctl enable circleci-runner
-sudo systemctl start circleci-runner
-sudo systemctl status circleci-runner
-
-sudo systemctl enable newrelic-infra
-sudo systemctl start newrelic-infra
-sudo systemctl status newrelic-infra
-
-curl -o /usr/bin/kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.30.4/2024-09-11/bin/linux/amd64/kubectl
-chmod 755 /usr/bin/kubectl
-
-curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | sudo bash
 
 
 
