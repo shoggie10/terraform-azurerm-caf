@@ -18,7 +18,46 @@ module "lb" {
 output "lb" {
   value = module.lb
 }
+#!/bin/bash
+set -eo pipefail 
+
+
+# su - ec2-user
+sudo yum update -y
+
+#Required dependencies
+sudo yum install -y git tar jq libcurl libicu openssl --allowerasing
+sudo dnf install -y libicu
+#Create a directory for the Azure DevOps agent 
+mkdir -p ~/ado-agent && cd ~/ado-agent
+
+
+wget https://vstsagentpackage.azureedge.net/agent/4.248.0/vsts-agent-linux-x64-4.248.0.tar.gz
+tar zxvf vsts-agent-linux-x64-4.248.0.tar.gz
+
+#Configure the ADO agent
+export ADO_URL="https://dev.azure.com/xxxxxx-devops-xxxxx"    
+export ADO_POOL="Default"                
+export ADO_PAT="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"       
+
+./config.sh --unattended \
+  --url "$ADO_URL" \
+  --auth pat \
+  --token "$ADO_PAT" \
+  --pool "$ADO_POOL" \
+  --agent "$(hostname)" \
+  --replace
+
+#Start the ADO agent as a service
+sudo ./svc.sh install
+sudo ./svc.sh start
+
+
+#Verify the service is running
+sudo systemctl status vsts.agent.*
+
 =================||
+https://us05web.zoom.us/j/83598599043?pwd=aTw04PA9NkE1GGQHsrq1F5vf4wbXlp.1
 
 
 
