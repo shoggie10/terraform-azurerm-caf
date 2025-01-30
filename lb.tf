@@ -21,8 +21,197 @@ output "lb" {
 
 
 =================||
+locals {
+  #Virtual Netork#
+  enterprise_vnet_name           = "xxxx-${var.enterprise_application_id}-${var.environment}-${var.location_short}-vnet-enterprise"
+  #Resource Group#
+  aks_resource_group_name        = "xxxx-${var.aks_application_id}-${var.environment}-${var.location_short}-rg-aks-enterprise"
+  #Resource Group#
+  # enterprise_resource_group_name = "xxxx-${var.enterprise_application_id}-${var.environment}-${var.location_short}-rg-enterprise"
+  #Subnet#
+  aks_subnet_name_base           = "xxxx-${var.aks_application_id}-${var.environment}-${var.location_short}-snet"
+  #Public IP#
+  #aks_ip_name_base              = "xxxx-${var.aks_application_id}-${var.environment}-${var.location_short}-pubip"
+  #Virtual aks Gateway#
+  #aks_vng_name_base             = "xxxx-${var.aks_application_id}-${var.environment}-${var.location_short}-vng"
+  #Private Link#
+  #aks_pl_name_base              = "xxxx-${var.aks_application_id}-${var.environment}-${var.location_short}-pl"
+  #Private Endpoint#
+  #aks_pe_name_base              = "xxxx-${var.aks_application_id}-${var.environment}-${var.location_short}-pe"
+  #Load Balancer#
+  #aks_lb_name_base              = "xxxx-${var.aks_application_id}-${var.environment}-${var.location_short}-lb"
+  #Route Table#
+  aks_rt_name_base               = "xxxx-${var.enterprise_application_id}-${var.environment}-${var.location_short}-rt"
 
-https://us05web.zoom.us/j/87974779795?pwd=MWnBbMPFMN4cWJocEnOpmlpgPvhhcx.1
+  aws_cidr_blocks = [{
+    environment = "tst"
+    account = "shdsvcs"
+    region = "us-east-2"
+    cidr_blocks = ["172.23.0.0/17", "172.29.96.0/20"]
+  }, {
+    environment = "prd"
+    account = "shdsvcs"
+    region = "us-east-2"
+    cidr_blocks = ["172.28.96.0/20"]
+  }]
+  env_aws_cidr_blocks = flatten([for item in local.aws_cidr_blocks : item.environment == var.environment ? item.cidr_blocks : []])
+}
+
+#--- VNET and Subnet Configuration -------#
+#-----------------------------------------#
+
+resource "azurerm_virtual_network" "vnet-enterprise" {
+  name                = local.enterprise_vnet_name
+  location            = var.location_long
+  resource_group_name = module.resource_group_enterprise["resource_group_enterprise"].name
+  address_space       = [var.enterprise_vnet_cidr]
+  depends_on          = [module.resource_group_enterprise]
+
+
+  tags = {
+    applicationId = "4321"
+    costCenter    = "7891"
+    managedBy     = "IT_cloud"
+    environment   = var.environment
+    assetClass    = "standard"
+    dataClassification = "confidential"
+    requestedBy   = "xxxxxxx.xxxxxx@xxxx.com"
+    sourceCode    = "https://gitlab.com/xxxx/cloud/azure-network"
+    deployedBy    = "azure-network-xxxx-${var.environment}"
+  }
+  lifecycle {
+      ignore_changes = [
+        address_space
+      ]
+    }  
+}
+
+resource "azurerm_subnet" "aks-snet-enterprise" {
+  name                 = "${local.aks_subnet_name_base}-aks-enterprise"
+  resource_group_name  = module.resource_group_enterprise["resource_group_enterprise"].name
+  virtual_network_name = azurerm_virtual_network.vnet-enterprise.name
+  address_prefixes     = [var.aks_snet_cidr_internal]
+
+  enforce_private_link_service_network_policies   = false
+  enforce_private_link_endpoint_network_policies  = true
+  depends_on          = [module.resource_groups]
+  service_endpoints = ["Microsoft.Storage","Microsoft.KeyVault","Microsoft.EventHub"]
+}
+
+resource "azurerm_subnet" "aks-snet-app-gw" {
+  name                 = "${local.aks_subnet_name_base}-aks-app-gw"
+  resource_group_name  = module.resource_group_enterprise["resource_group_enterprise"].name
+  virtual_network_name = azurerm_virtual_network.vnet-enterprise.name
+  address_prefixes     = [var.aks_snet_cidr_app_gw]
+
+  enforce_private_link_service_network_policies   = false
+  enforce_private_link_endpoint_network_policies  = true
+  depends_on          = [module.resource_groups]
+}
+
+resource "azurerm_route_table" "aks-enterprise-aws-rt" {
+  name                          = "${local.aks_rt_name_base}-aks-enterprise-aws"
+  location                      = module.resource_group_enterprise["resource_group_enterprise"].location
+  resource_group_name           = module.resource_group_enterprise["resource_group_enterprise"].name
+  disable_bgp_route_propagation = false
+  depends_on                    = [module.resource_group_enterprise]
+  dynamic "route" {
+    for_each = local.env_aws_cidr_blocks
+    content {
+      name                  = "routeToAWS"
+      address_prefix        = route.value
+      next_hop_type         = "VirtualNetworkGateway"
+    }
+  }
+  tags = {
+    applicationId = "4321"
+    costCenter    = "7891"
+    managedBy     = "IT_cloud"
+    environment   = var.environment
+    assetClass    = "standard"
+    dataClassification = "confidential"
+    requestedBy   = "xxxxxxx.xxxxxx@xxxx.com"
+    sourceCode    = "https://gitlab.com/xxxx/cloud/azure-network"
+    deployedBy    = "azure-network-xxxx-${var.environment}"
+  }
+}
+
+resource "azurerm_subnet_route_table_association" "aks-to-aws" {
+  subnet_id      = azurerm_subnet.aks-snet-app-gw.id
+  route_table_id = azurerm_route_table.aks-enterprise-aws-rt.id
+}
+
+
+resource "azurerm_route_table" "aks-enterprise-rt" {
+  name                          = "${local.aks_rt_name_base}-aks-enterprise"
+  location                      = var.location_long
+  resource_group_name           = module.resource_group_enterprise["resource_group_enterprise"].name
+  disable_bgp_route_propagation = false
+  depends_on                    = [module.resource_group_enterprise]
+  route {
+    name           = "DefaultRTTtoFW"
+    address_prefix = "0.0.0.0/0"
+    next_hop_type  = "VirtualAppliance"
+    next_hop_in_ip_address = data.azurerm_firewall.hub-fw.ip_configuration[0].private_ip_address
+  }
+
+  tags = {
+    applicationId = "4321"
+    costCenter    = "7891"
+    managedBy     = "IT_cloud"
+    environment   = var.environment
+    assetClass    = "standard"
+    dataClassification = "confidential"
+    requestedBy   = "xxxxxxx.xxxxxx@xxxx.com"
+    sourceCode    = "https://gitlab.com/xxxx/cloud/azure-network"
+    deployedBy    = "azure-network-xxxx-${var.environment}"
+  }
+}
+
+resource "azurerm_subnet_route_table_association" "aks-enterprise-to-fw" {
+  subnet_id      = azurerm_subnet.aks-snet-enterprise.id
+  route_table_id = azurerm_route_table.aks-enterprise-rt.id
+}
+
+# #------------ Peering to HUB -------------#
+# #-----------------------------------------#
+resource "azurerm_virtual_network_peering" "akstohub" {
+  name                          = "${var.environment}-network-to-${var.environment}-enterprise"
+  resource_group_name           = module.resource_group_enterprise["resource_group_enterprise"].name
+  virtual_network_name          = azurerm_virtual_network.vnet-enterprise.name
+  remote_virtual_network_id     = azurerm_virtual_network.vnet-hub.id
+  allow_virtual_network_access  = true
+  allow_forwarded_traffic       = true
+  allow_gateway_transit         = false
+  use_remote_gateways           = var.aks_peering_use_remote_gateways
+  depends_on                    = [module.resource_group_enterprise]
+}
+=========
+# AKS Tags
+variable "aks_application_id" {
+    default = "4208"
+}
+variable "enterprise_application_id" {
+    default = "4321"
+}
+variable "aks_cost_center" {
+    default = "7891"
+}
+variable "aks_managed_by" {
+    default = "IT_cloud"
+}
+variable "enterprise_vnet_cidr" {
+    default = "172.xx.xx.x/19"
+}
+variable "aks_snet_cidr_internal" {
+    default = "172.xx.xx.x/20"
+}
+variable "aks_peering_use_remote_gateways" {
+    default = true
+}
+variable "aks_snet_cidr_app_gw" {
+    default = "172.xx.xx.x/24"
+}
 
 
 
