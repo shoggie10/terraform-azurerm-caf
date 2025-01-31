@@ -21,67 +21,9 @@ output "lb" {
 
 
 =================||
-
+https://us05web.zoom.us/j/86143433266?pwd=7iNGNEGD2urLkQWXJQjozw1bR9vqi7.1
 
 =========
-#!/bin/bash
-set -eo pipefail  
-su - ec2-user
-
-# Update system packages
-sudo yum update -y
-
-# Install required dependencies
-sudo yum install -y git tar jq libcurl libicu openssl --allowerasing
-sudo dnf install -y libicu
-
-# Create a directory for the Azure DevOps agent
-AGENT_DIR=~/ado-agent
-mkdir -p $AGENT_DIR && cd $AGENT_DIR
-
-# Download and extract the Azure DevOps agent
-wget https://vstsagentpackage.azureedge.net/agent/4.248.0/vsts-agent-linux-x64-4.248.0.tar.gz
-tar zxvf vsts-agent-linux-x64-4.248.0.tar.gz
-
-aws secretsmanager get-secret-value --secret-id ado/runner --region us-east-2 --query SecretString --output text > secret.json
-
-export ADO_PAT="$(cat secret.json | jq -r .adoPat)"
-export ADO_ORG_URL="$(cat secret.json | jq -r .adoOrgUrl)"
-export ADO_POOL="SelfHostedAgents"
-
-
-./config.sh --unattended \
-  --url "$ADO_URL" \
-  --auth pat \
-  --token "$ADO_PAT" \
-  --pool "$ADO_POOL" \
-  --agent "$(hostname)" \
-  --replace
-
-
-rm -f secret.json
-
-# Install and start the Azure DevOps agent as a systemd service
-cat << EOF | sudo tee /etc/systemd/system/ado-agent.service
-[Unit]
-Description=Azure DevOps Self-Hosted Agent
-After=network.target
-
-[Service]
-ExecStart=$AGENT_DIR/run.sh
-WorkingDirectory=$AGENT_DIR
-User=ec2-user
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Reload systemd, enable, and start the service
-sudo systemctl daemon-reload
-sudo systemctl enable ado-agent
-sudo systemctl start ado-agent
-sudo systemctl status ado-agent
 
 
 
