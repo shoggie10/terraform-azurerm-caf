@@ -21,10 +21,253 @@ output "lb" {
 
 
 =================||
-https://us05web.zoom.us/j/83060124730?pwd=4OdQFqYscTtJ9yzTJjr1xf18CWC2tF.1
+
 =========
 
+locals {
+  circleci_user_data_b64_test = base64encode(templatefile("${path.module}/install-circleci-runner-al2023.tftpl", {
+  }))
+  circleci_user_data_b64_prod = base64encode(templatefile("${path.module}/install-circleci-runner-al2023.tftpl", {
+  }))
+  circleci_user_data_b64 = var.environment == "prd" ? local.circleci_user_data_b64_prod : local.circleci_user_data_b64_test
+  dso_gitlab_runner_user_data_base64d_test = base64encode(templatefile("${path.module}/install-test-gitlab-runner-al2023.tftpl", {
+    "GITLAB_RUNNER_TAGS"             = "xxxx-aws-test-dsg,docker"
+    "GITLAB_RUNNER_AWS_TAGS"         = join(",", [for key, value in local.tags : "${key},${value}"])
+    "GITLAB_RUNNER_SUBNET"           = "subnet-08ab94ca1410ddaf6"
+    "GITLAB_RUNNER_ZONE"             = "c"
+    "GITLAB_RUNNER_NAME"             = "Consumer runner manager (${var.environment})"
+    "GITLAB_RUNNER_SECURITY_GROUP"   = "xxxx-2956-tst-us-east-2-sg-dynamic-gitlab-runner"
+    "GITLAB_RUNNER_INSTANCE_TYPE"    = "t3a.small"
+    "GITLAB_RUNNER_INSTANCE_PROFILE" = "${data.aws_iam_instance_profile.ec2_instance_profile.name}"
+    "GITLAB_RUNNER_AMI"              = "${data.aws_ssm_parameter.al2023_ami.insecure_value}"
+    "GITLAB_RUNNER_VPC"              = "vpc-009185eb890fe4f1e"
+    "GITLAB_RUNNER_GROUP"            = "DSO"
+    "TERRAFORM_ENVIRONMENT"          = "${var.environment}"
+  }))
+  dso_gitlab_runner_user_data_base64d_prod = base64encode(templatefile("${path.module}/install-prod-gitlab-runner-al2023.tftpl", {
+    "GITLAB_RUNNER_TAGS"             = "xxxx-aws-prod-dsg"
+    "GITLAB_RUNNER_AWS_TAGS"         = join(",", [for key, value in local.tags : "${key},${value}"])
+    "GITLAB_RUNNER_SUBNET"           = "subnet-01ca37723ea517de2"
+    "GITLAB_RUNNER_ZONE"             = "c"
+    "GITLAB_RUNNER_NAME"             = "Consumer runner manager (prod)"
+    "GITLAB_RUNNER_SECURITY_GROUP"   = "xxxx-2956-prd-us-east-2-sg-dynamic-gitlab-runner"
+    "GITLAB_RUNNER_INSTANCE_TYPE"    = "t3a.small"
+    "GITLAB_RUNNER_INSTANCE_PROFILE" = "${data.aws_iam_instance_profile.ec2_instance_profile.name}"
+    "GITLAB_RUNNER_AMI"              = "${data.aws_ssm_parameter.al2023_ami.insecure_value}"
+    "GITLAB_RUNNER_VPC"              = "vpc-0c6b3f5332844d902"
+    "GITLAB_RUNNER_GROUP"            = "DSO"
+    "TERRAFORM_ENVIRONMENT"          = "${var.environment}"
+  }))
+  dso_gitlab_runner_user_data_base64d = var.environment == "prd" ? local.dso_gitlab_runner_user_data_base64d_prod : local.dso_gitlab_runner_user_data_base64d_test
+  consumer_gitlab_runner_user_data_base64d_test = base64encode(templatefile("${path.module}/install-test-gitlab-runner-al2023.tftpl", {
+    "GITLAB_RUNNER_TAGS"             = "xxxx-aws-test-dsg,docker"
+    "GITLAB_RUNNER_AWS_TAGS"         = join(",", [for key, value in local.tags : "${key},${value}"])
+    "GITLAB_RUNNER_SUBNET"           = "subnet-08ab94ca1410ddaf6"
+    "GITLAB_RUNNER_ZONE"             = "c"
+    "GITLAB_RUNNER_NAME"             = "Consumer runner manager (${var.environment})"
+    "GITLAB_RUNNER_SECURITY_GROUP"   = "xxxx-2956-tst-us-east-2-sg-dynamic-gitlab-runner"
+    "GITLAB_RUNNER_INSTANCE_TYPE"    = "t3a.small"
+    "GITLAB_RUNNER_INSTANCE_PROFILE" = "${data.aws_iam_instance_profile.ec2_instance_profile.name}"
+    "GITLAB_RUNNER_AMI"              = "${data.aws_ssm_parameter.al2023_ami.insecure_value}"
+    "GITLAB_RUNNER_VPC"              = "vpc-009185eb890fe4f1e"
+    "GITLAB_RUNNER_GROUP"            = "DSG"
+    "TERRAFORM_ENVIRONMENT"          = "${var.environment}"
+  }))
+  consumer_gitlab_runner_user_data_base64d_prod = base64encode(templatefile("${path.module}/install-prod-gitlab-runner-al2023.tftpl", {
+    "GITLAB_RUNNER_TAGS"             = "xxxx-aws-prod-dsg"
+    "GITLAB_RUNNER_AWS_TAGS"         = join(",", [for key, value in local.tags : "${key},${value}"])
+    "GITLAB_RUNNER_SUBNET"           = "subnet-01ca37723ea517de2"
+    "GITLAB_RUNNER_ZONE"             = "c"
+    "GITLAB_RUNNER_NAME"             = "Consumer runner manager (prod)"
+    "GITLAB_RUNNER_SECURITY_GROUP"   = "xxxx-2956-prd-us-east-2-sg-dynamic-gitlab-runner"
+    "GITLAB_RUNNER_INSTANCE_TYPE"    = "t3a.small"
+    "GITLAB_RUNNER_INSTANCE_PROFILE" = "${data.aws_iam_instance_profile.ec2_instance_profile.name}"
+    "GITLAB_RUNNER_AMI"              = "${data.aws_ssm_parameter.al2023_ami.insecure_value}"
+    "GITLAB_RUNNER_VPC"              = "vpc-0c6b3f5332844d902"
+    "GITLAB_RUNNER_GROUP"            = "DSG"
+    "TERRAFORM_ENVIRONMENT"          = "${var.environment}"
+  }))
+  consumer_gitlab_runner_user_data_base64d = var.environment == "prd" ? local.consumer_gitlab_runner_user_data_base64d_prod : local.consumer_gitlab_runner_user_data_base64d_test
 
+  ado_selfhosted_runner_user_data_b64_test = base64encode(templatefile("${path.module}/install-ado-selfhosted-runner-al2025.tftpl", {
+  "ADO_RUNNER_TAGS"               = "xxxx-aws-test-ado,docker"
+  "ADO_RUNNER_AWS_TAGS"           = join(",", [for key, value in local.tags : "${key},${value}"])
+  "ADO_RUNNER_SUBNET"             = "subnet-08ab94ca1410ddaf6"
+  "ADO_RUNNER_ZONE"               = "c"
+  "ADO_RUNNER_NAME"               = "ADO runner manager (${var.environment})"
+  "ADO_RUNNER_SECURITY_GROUP"     = "xxxx-2956-tst-us-east-2-sg-dynamic-ado-runner"
+  "ADO_RUNNER_INSTANCE_TYPE"      = "t3a.small"
+  "ADO_RUNNER_INSTANCE_PROFILE"   = "${data.aws_iam_instance_profile.ec2_instance_profile.name}"
+  "ADO_RUNNER_AMI"                = "${data.aws_ssm_parameter.al2023_ami.insecure_value}"
+  "ADO_RUNNER_VPC"                = "vpc-009185eb890fe4f1e"
+  "ADO_RUNNER_GROUP"              = "DSO"
+  "TERRAFORM_ENVIRONMENT"         = "${var.environment}"
+  }))
+  ado_selfhosted_runner_user_data_b64 = local.ado_selfhosted_runner_user_data_b64_test
+}
+
+data "aws_security_groups" "default" {
+  filter {
+    name   = "group-name"
+    values = ["default"]
+  }
+}
+
+data "aws_ssm_parameter" "al2023_ami" {
+  name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
+}
+
+module "circleci_launch_template" {
+  count         = var.environment == "prd" || var.environment == "dev" ? 1 : 0
+  source        = "app.terraform.io/xxxx/launch-template/aws"
+  name          = "circleci-machine-runner"
+  tags          = local.tags
+  instance_type = "t3a.medium"
+  image_id      = data.aws_ssm_parameter.al2023_ami.insecure_value
+  block_device_mappings = [
+    {
+      device_name = "/dev/sda1"
+      size        = 20
+      volume_type = "gp3"
+      iops        = null
+      kms_key_id  = data.aws_kms_alias.ebs.arn
+    }
+  ]
+  iam_instance_profile_arn = data.aws_iam_instance_profile.ec2_instance_profile.arn
+  user_data                = local.circleci_user_data_b64
+  network_interfaces = [
+    {
+      description     = null
+      device_index    = 0
+      security_groups = var.environment == "prd" ? ["sg-0bd65dec0292b0c69"] : ["sg-0f0fbd155f2d40518"]
+    }
+  ]
+}
+
+module "circleci_asg" {
+  count              = var.environment == "prd" || var.environment == "dev" ? 1 : 0
+  source             = "app.terraform.io/xxxx/autoscaling-group/aws"
+  tags               = local.tags
+  name               = "circleci-machine-runner"
+  max_size           = 1
+  min_size           = 1
+  launch_template_id = module.circleci_launch_template[0].id
+  subnet_ids         = var.environment == "prd" ? ["subnet-01ca37723ea517de2"] : ["subnet-08ab94ca1410ddaf6"]
+}
+
+module "gitlab_runner_dso_launch_template" {
+  count         = var.environment == "prd" || var.environment == "dev" ? 1 : 0
+  source        = "app.terraform.io/xxxx/launch-template/aws"
+  name          = "dso-gitlab-runner"
+  tags          = local.tags
+  instance_type = "t3a.medium"
+  image_id      = data.aws_ssm_parameter.al2023_ami.insecure_value
+  block_device_mappings = [
+    {
+      device_name = "/dev/sda1"
+      size        = 20
+      volume_type = "gp3"
+      iops        = null
+      kms_key_id  = data.aws_kms_alias.ebs.arn
+    }
+  ]
+  iam_instance_profile_arn = data.aws_iam_instance_profile.ec2_instance_profile.arn
+  user_data                = local.dso_gitlab_runner_user_data_base64d
+  network_interfaces = [
+    {
+      description     = null
+      device_index    = 0
+      security_groups = var.environment == "prd" ? ["sg-0bd65dec0292b0c69"] : ["sg-0f0fbd155f2d40518"]
+    }
+  ]
+}
+
+module "gitlab_runner_dso_asg" {
+  count              = var.environment == "prd" || var.environment == "dev" ? 1 : 0
+  source             = "app.terraform.io/xxxx/autoscaling-group/aws"
+  tags               = local.tags
+  name               = "dso-gitlab-runner"
+  max_size           = 1
+  min_size           = 1
+  launch_template_id = module.gitlab_runner_dso_launch_template[0].id
+  subnet_ids         = var.environment == "prd" ? ["subnet-01ca37723ea517de2"] : ["subnet-08ab94ca1410ddaf6"]
+}
+
+module "gitlab_runner_dsg_launch_template" {
+  count         = var.environment == "prd" || var.environment == "dev" ? 1 : 0
+  source        = "app.terraform.io/xxxx/launch-template/aws"
+  name          = "consumer-gitlab-runner"
+  tags          = local.tags
+  instance_type = "t3a.medium"
+  image_id      = data.aws_ssm_parameter.al2023_ami.insecure_value
+  block_device_mappings = [
+    {
+      device_name = "/dev/sda1"
+      size        = 20
+      volume_type = "gp3"
+      iops        = null
+      kms_key_id  = data.aws_kms_alias.ebs.arn
+    }
+  ]
+  iam_instance_profile_arn = data.aws_iam_instance_profile.ec2_instance_profile.arn
+  user_data                = local.consumer_gitlab_runner_user_data_base64d
+  network_interfaces = [
+    {
+      description     = null
+      device_index    = 0
+      security_groups = var.environment == "prd" ? ["sg-0bd65dec0292b0c69"] : ["sg-0f0fbd155f2d40518"]
+    }
+  ]
+}
+
+module "gitlab_runner_dsg_asg" {
+  count              = var.environment == "prd" || var.environment == "dev" ? 1 : 0
+  source             = "app.terraform.io/xxxx/autoscaling-group/aws"
+  tags               = local.tags
+  name               = "consumer-gitlab-runner"
+  max_size           = 1
+  min_size           = 1
+  launch_template_id = module.gitlab_runner_dsg_launch_template[0].id
+  subnet_ids         = var.environment == "prd" ? ["subnet-01ca37723ea517de2"] : ["subnet-08ab94ca1410ddaf6"]
+}
+
+module "ado_selfhosted_runner_launch_template" {
+  count         = var.environment == "prd" || var.environment == "dev" ? 1 : 0
+  source        = "app.terraform.io/xxxx/launch-template/aws"
+  name          = "ado-selfhosted-runner"
+  tags          = local.tags
+  instance_type = "t3a.medium"
+  image_id      = data.aws_ssm_parameter.al2023_ami.insecure_value
+  block_device_mappings = [
+    {
+      device_name = "/dev/sda1"
+      size        = 20
+      volume_type = "gp3"
+      iops        = null
+      kms_key_id  = data.aws_kms_alias.ebs.arn
+    }
+  ]
+  iam_instance_profile_arn = data.aws_iam_instance_profile.ec2_instance_profile.arn
+  user_data                = local.ado_selfhosted_runner_user_data_b64
+  network_interfaces = [
+    {
+      description     = null
+      device_index    = 0
+      security_groups = var.environment == "prd" ? ["sg-0bd65dec0292b0c69"] : ["sg-0f0fbd155f2d40518"]
+    }
+  ]
+}
+
+module "ado_selfhosted_runner_asg" {
+  count              = var.environment == "prd" || var.environment == "dev" ? 1 : 0
+  source             = "app.terraform.io/xxxx/autoscaling-group/aws"
+  tags               = local.tags
+  name               = "ado-selfhosted-runner"
+  max_size           = 1
+  min_size           = 1
+  launch_template_id = module.ado_selfhosted_runner_launch_template[0].id
+  subnet_ids         = var.environment == "prd" ? ["subnet-01ca37723ea517de2"] : ["subnet-08ab94ca1410ddaf6"]
+}
 
 ======||===
 
