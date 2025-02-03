@@ -21,8 +21,7 @@ output "lb" {
 
 
 =================||
-https://us05web.zoom.us/j/86871575376?pwd=aEdoJ6WVOXxMLfCwbrHj7MqkHbG5j1.1
-
+https://us05web.zoom.us/j/85985398250?pwd=c7b5QMGScjWhcIJQ5b46MrjIo6cD3C.1
 =========
 
 
