@@ -25,62 +25,73 @@ https://us05web.zoom.us/j/83395893473?pwd=VJe4K6vIpi5YbSmTr6nZrlb7ATHBaA.1
 
 
 =========
-#!/bin/bash
-set -eo pipefail  
 
-# Add /usr/bin to PATH
-export PATH=$PATH:/usr/bin
+module "consumer_pat_secrets" {
+  source = "app.terraform.io/xxxx/secret/aws"
 
-su - ec2-user
+  tags = {
+    environment         = var.environment
+    application_id      = var.application_id
+    cost_center         = var.cost_center
+    asset_class         = var.asset_class
+    data_classification = var.data_classification
+    managed_by          = var.managed_by
+    deployed_by         = var.TFC_WORKSPACE_NAME
+    requested_by        = "xxxxxxx@xxxx.com"
+    source_code         = var.source_code
+    application_role    = ""
+  }
 
-# Update system packages
-sudo yum update -y
+  kms_key_id     = module.consumer_sso_secrets_key.kms_arn
+  secret_rotates = false
+  secret_name    = "consumer_digitalbanking_pat_secret"
+  secret_key_value = {
+    "ADO_PAT" : var.ADO_PAT,
+    "ADO_ORG_URL" : var.ADO_ORG_URL
 
-# Install required dependencies
-sudo yum install -y git tar jq libcurl libicu openssl --allowerasing
-sudo dnf install -y libicu
+  }
+  iam-policy-users-map = [{
+    roletype = "AWS"
+    role = [
+      data.aws_iam_role.oa.arn,
+      data.aws_iam_role.sso_sre.arn,
+      data.aws_iam_role.sso_cloud_eng.arn,
+    ]
+    allow_actions = [
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:GetResourcePolicy",
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:ListSecretVersionIds"
+    ]
+    sid = "ConsumerServiceRole"
+    },
+    {
+      sid      = "AllowAdminstrationOfTheSecret2"
+      role     = [data.aws_iam_user.ci_cd_user.arn]
+      roletype = "AWS"
+      allow_actions = [
+        "secretsmanager:CreateSecret",
+        "secretsmanager:DeleteResourcePolicy",
+        "secretsmanager:DeleteSecret",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetRandomPassword",
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:ListSecretVersionIds",
+        "secretsmanager:PutResourcePolicy",
+        "secretsmanager:PutSecretValue",
+        "secretsmanager:RemoveRegionsFromReplication",
+        "secretsmanager:ReplicateSecretToRegions",
+        "secretsmanager:StopReplicationtoReplica",
+        "secretsmanager:TagResource",
+        "secretsmanager:UntagResource",
+        "secretsmanager:UpdateSecret",
+        "secretsmanager:UpdateSecretVersionStage",
+        "secretsmanager:ValidateResourcePolicy"
+      ]
+  }]
+}
 
-# Create a directory for the Azure DevOps agent
-AGENT_DIR=~/ado-agent 
-mkdir -p $AGENT_DIR && cd $AGENT_DIR
-
-# Download and extract the Azure DevOps agent
-wget https://vstsagentpackage.azureedge.net/agent/4.248.0/vsts-agent-linux-x64-4.248.0.tar.gz
-tar zxvf vsts-agent-linux-x64-4.248.0.tar.gz
-
-## aws cred
-
-./config.sh --unattended \
-  --url "$ADO_URL" \
-  --auth pat \
-  --token "$ADO_PAT" \
-  --pool "$ADO_POOL" \
-  --agent "ado-agent" \
-  --replace
-
-rm -f secret.json
-
-# Install and start the Azure DevOps agent as a systemd service
-cat << EOF | sudo tee /etc/systemd/system/ado-agent.service
-[Unit]
-Description=Azure DevOps Self-Hosted Agent
-After=network.target
-
-[Service]
-ExecStart=$AGENT_DIR/run.sh
-WorkingDirectory=$AGENT_DIR
-User=ec2-user
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Reload systemd, enable, and start the service
-sudo systemctl daemon-reload
-sudo systemctl enable ado-agent
-sudo systemctl start ado-agent
-sudo systemctl status ado-agent
 
 
 
