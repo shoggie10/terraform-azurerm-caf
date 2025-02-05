@@ -21,6 +21,35 @@ output "lb" {
 
 
 =================||
+# Node.js
+
+# Build a general Node.js project with npm.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+- sonarqube-pipeline-test
+
+pool: sonarqube
+
+steps:
+- task: SonarQubePrepare@7
+  inputs:
+    SonarQube: 'SonarQube'
+    scannerMode: 'cli'
+    configMode: 'manual'
+    cliProjectKey: 'DMT_Brandsites_Rates_Angular_AZRQ3sB3f8y7rydQt4WP'
+    cliProjectName: 'web-rates'
+    cliSources: '.'
+- task: SonarQubeAnalyze@7
+  inputs:
+    jdkversion: 'JAVA_HOME_17_X64'
+- task: SonarQubePublish@7
+  inputs:
+    pollingTimeoutSec: '300'
+
+
+
 
 =========
 
