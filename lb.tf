@@ -21,7 +21,12 @@ output "lb" {
 
 
 =================||
+##[error]No agent found in pool sonarqube which satisfies the specified demands: java, Agent.Version -gtVersion 3.218.0
+Pool: sonarqube
+Started: Just now
+Duration: 1m 48s
 
+Job preparation parameters
 
 
 
