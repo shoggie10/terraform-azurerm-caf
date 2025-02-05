@@ -21,16 +21,17 @@ output "lb" {
 
 
 =================||
-A copy of the Team Explorer Everywhere license agreement can be found at:
-  /home/ec2-user/ado-agent/license.html
-
-
->> Connect:
-
-Error reported in diagnostic logs. Please examine the log for more details.
-    - /home/ec2-user/ado-agent/_diag/Agent_20250205-082502-utc.log
-Value cannot be null. (Parameter 'Invalid configuration provided for url. Terminating unattended configuration.')
-
+[2025-02-05 08:25:02Z INFO CommandSettings] Arg 'url': ''
+[2025-02-05 08:25:02Z INFO CommandSettings] Flag 'unattended': 'True'
+[2025-02-05 08:25:02Z INFO PromptManager] ReadValue
+[2025-02-05 08:25:02Z ERR  Agent] System.ArgumentNullException: Value cannot be null. (Parameter 'Invalid configuration provided for url. Terminating unattended configuration.')
+   at Microsoft.VisualStudio.Services.Agent.Listener.Configuration.PromptManager.ReadValue(String argName, String description, Boolean secret, String defaultValue, Func`2 validator, Boolean unattended) in /mnt/vss/_work/1/s/src/Agent.Listener/Configuration/PromptManager.cs:line 76
+   at Microsoft.VisualStudio.Services.Agent.Listener.CommandSettings.GetArgOrPrompt(String argValue, String name, String description, String defaultValue, Func`2 validator) in /mnt/vss/_work/1/s/src/Agent.Listener/CommandSettings.cs:line 723
+   at Microsoft.VisualStudio.Services.Agent.Listener.CommandSettings.GetUrl(Boolean suppressPromptIfEmpty) in /mnt/vss/_work/1/s/src/Agent.Listener/CommandSettings.cs:line 328
+   at Microsoft.VisualStudio.Services.Agent.Listener.Configuration.BuildReleasesAgentConfigProvider.GetServerUrl(AgentSettings agentSettings, CommandSettings command) in /mnt/vss/_work/1/s/src/Agent.Listener/Configuration/ConfigurationProvider.cs:line 69
+   at Microsoft.VisualStudio.Services.Agent.Listener.Configuration.ConfigurationManager.ConfigureAsync(CommandSettings command) in /mnt/vss/_work/1/s/src/Agent.Listener/Configuration/ConfigurationManager.cs:line 155
+   at Microsoft.VisualStudio.Services.Agent.Listener.Agent.ExecuteCommand(CommandSettings command) in /mnt/vss/_work/1/s/src/Agent.Listener/Agent.cs:line 104
+[2025-02-05 08:25:02Z ERR  Terminal] WRITE ERROR: Value cannot be null. (Parameter 'Invalid configuration provided for url. Terminating unattended configuration.')
 =========
 
 
