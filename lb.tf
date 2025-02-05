@@ -21,7 +21,11 @@ output "lb" {
 
 
 =================||
-sudo yum install -y java-11-openjdk
+[ec2-user@ip-172-29-3-21 ado-agent]$ sudo yum install -y java-11-openjdk
+circleci_runner_rpm_any                                                                                                                                                            617  B/s | 833  B     00:01
+circleci_runner_rpm_any-source                                                                                                                                                     612  B/s | 833  B     00:01
+No match for argument: java-11-openjdk
+Error: Unable to find a match: java-11-openjdk
 
 
 
