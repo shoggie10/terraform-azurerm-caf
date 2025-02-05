@@ -21,28 +21,13 @@ output "lb" {
 
 
 =================||
-# Installing OpenJDK 11 via a Manual Download
-wget https://download.java.net/java/early_access/jdk11/10/GPL/openjdk-11-ea+10_linux-x64_bin.tar.gz
-tar -xvzf openjdk-11-ea+10_linux-x64_bin.tar.gz
+/home/ec2-user/ado-agent/_work/_tasks/SonarQubeAnalyze_6d01813a-9589-4b15-8491-8164aeb38055/7.1.1/sonar-scanner/bin/sonar-scanner
+##[error]Error: LinkageError occurred while loading main class org.sonarsource.scanner.cli.Main
+	java.lang.UnsupportedClassVersionError: org/sonarsource/scanner/cli/Main has been compiled by a more recent version of the Java Runtime (class file version 61.0), this version of the Java Runtime only recognizes class file versions up to 55.0
+Error: LinkageError occurred while loading main class org.sonarsource.scanner.cli.Main
 
-
-# Move the extracted directory to /opt
-sudo mv jdk-11 /opt/
-
-
-### Set up environment variables: Add the following lines to your /etc/profile or ~/.bashrc file to set the JAVA_HOME and PATH environment variables
-export JAVA_HOME=/opt/jdk-11
-export PATH=$JAVA_HOME/bin:$PATH
-
-
-# Apply the changes
-source ~/.bashrc
-
-
-### Verify the installation
-java -version
-
-
+##[error][ERROR] SonarQube Server: Error while executing task Analyze: The process '/home/ec2-user/ado-agent/_work/_tasks/SonarQubeAnalyze_6d01813a-9589-4b15-8491-8164aeb38055/7.1.1/sonar-scanner/bin/sonar-scanner' failed with exit code 1
+##[error]The process '/home/ec2-user/ado-agent/_work/_tasks/SonarQubeAnalyze_6d01813a-9589-4b15-8491-8164aeb38055/7.1.1/sonar-scanner/bin/sonar-scanner' failed with exit code 1
 
 
 
