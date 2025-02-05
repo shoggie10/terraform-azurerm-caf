@@ -21,7 +21,26 @@ output "lb" {
 
 
 =================||
+# Installing OpenJDK 11 via a Manual Download
+wget https://download.java.net/java/early_access/jdk11/10/GPL/openjdk-11-ea+10_linux-x64_bin.tar.gz
+tar -xvzf openjdk-11-ea+10_linux-x64_bin.tar.gz
 
+
+# Move the extracted directory to /opt
+sudo mv jdk-11 /opt/
+
+
+### Set up environment variables: Add the following lines to your /etc/profile or ~/.bashrc file to set the JAVA_HOME and PATH environment variables
+export JAVA_HOME=/opt/jdk-11
+export PATH=$JAVA_HOME/bin:$PATH
+
+
+# Apply the changes
+source ~/.bashrc
+
+
+### Verify the installation
+java -version
 
 
 
