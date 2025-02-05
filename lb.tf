@@ -21,14 +21,6 @@ output "lb" {
 
 
 =================||
-[ec2-user@ip-172-29-3-21 ado-agent]$ sudo amazon-linux-extras enable java-openjdk11
-sudo: amazon-linux-extras: command not found
-[ec2-user@ip-172-29-3-21 ado-agent]$ amazon-linux-extras enable java-openjdk11
--bash: amazon-linux-extras: command not found
-[ec2-user@ip-172-29-3-21 ado-agent]$ sudo yum install -y java-11-openjdk-devel
-Last metadata expiration check: 0:04:27 ago on Wed Feb  5 09:13:14 2025.
-No match for argument: java-11-openjdk-devel
-Error: Unable to find a match: java-11-openjdk-devel
 
 
 
