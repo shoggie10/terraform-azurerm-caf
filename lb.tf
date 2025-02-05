@@ -21,8 +21,15 @@ output "lb" {
 
 
 =================||
-https://us05web.zoom.us/j/83395893473?pwd=VJe4K6vIpi5YbSmTr6nZrlb7ATHBaA.1
+A copy of the Team Explorer Everywhere license agreement can be found at:
+  /home/ec2-user/ado-agent/license.html
 
+
+>> Connect:
+
+Error reported in diagnostic logs. Please examine the log for more details.
+    - /home/ec2-user/ado-agent/_diag/Agent_20250205-082502-utc.log
+Value cannot be null. (Parameter 'Invalid configuration provided for url. Terminating unattended configuration.')
 
 =========
 
