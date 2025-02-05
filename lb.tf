@@ -21,14 +21,6 @@ output "lb" {
 
 
 =================||
-/home/ec2-user/ado-agent/_work/_tasks/SonarQubeAnalyze_6d01813a-9589-4b15-8491-8164aeb38055/7.1.1/sonar-scanner/bin/sonar-scanner
-##[error]Error: LinkageError occurred while loading main class org.sonarsource.scanner.cli.Main
-	java.lang.UnsupportedClassVersionError: org/sonarsource/scanner/cli/Main has been compiled by a more recent version of the Java Runtime (class file version 61.0), this version of the Java Runtime only recognizes class file versions up to 55.0
-Error: LinkageError occurred while loading main class org.sonarsource.scanner.cli.Main
-
-##[error][ERROR] SonarQube Server: Error while executing task Analyze: The process '/home/ec2-user/ado-agent/_work/_tasks/SonarQubeAnalyze_6d01813a-9589-4b15-8491-8164aeb38055/7.1.1/sonar-scanner/bin/sonar-scanner' failed with exit code 1
-##[error]The process '/home/ec2-user/ado-agent/_work/_tasks/SonarQubeAnalyze_6d01813a-9589-4b15-8491-8164aeb38055/7.1.1/sonar-scanner/bin/sonar-scanner' failed with exit code 1
-
 
 
 =========
