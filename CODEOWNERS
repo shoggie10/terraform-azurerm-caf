@@ -1,0 +1,9 @@
+# CODEOWNERS
+[Root]
+.vscode/**/* @bokf/cloud
+.editorconfig @bokf/cloud
+.gitignore @bokf/cloud
+CODEOWNERS @bokf/cloud
+GETTING_STARTED @bokf/cloud
+README.md @bokf/cloud
+*.tf @bokf/cloud
