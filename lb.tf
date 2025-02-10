@@ -42,127 +42,20 @@ https://us05web.zoom.us/j/86526167418?pwd=eugwcO1uniIUdwitbn3ActMoO5CCjG.1
 -----------------------------------------------------
 
 ## examples
-provider "azurerm" {
-  #4.0+ version of AzureRM Provider requires a subscription ID  
-  subscription_id = "b987518f-1b04-4491-915c-e21dabc7f2d3"
-  features {
-
-  }
-}
-
-locals {
-  tags = {
-    environment         = "dev"
-    application_id      = "0000"
-    asset_class         = "standard"
-    data_classification = "confidential"
-    managed_by          = "it_cloud"
-    requested_by        = "me@email.com"
-    cost_center         = "1234"
-    source_code         = "https://gitlab.com/company/test"
-    deployed_by         = "test-workspace"
-    application_role    = ""
-  }
-}
-
-data "azurerm_resource_group" "this" {
-  name = "wayne-tech-hub"
-}
-
-data "azurerm_cosmosdb_account" "this" {
-  name                = "cdbwaynetechhubdev175368"
-  resource_group_name = data.azurerm_resource_group.this.name
-}
-
-data "azuread_user" "this" {
-  user_principal_name = "salonge@bokf.com"
-}
 
 
-
-module "this" {
-  source = "../" 
-
-
-  mongo_database_name   = "mongo_database1"
-  resource_group_name   = "wayne-tech-hub"
-  cosmosdb_account_name = data.azurerm_cosmosdb_account.this.name
-  mongo_collection_name     = "wayne-tech-hub-mongo-collection"
-
-
-  db_throughput             = 400
-  db_max_throughput         = 1000
-  collection_throughput     = 400
-  collection_max_throughput = 1000
-  index_keys                = ["_id", "email"]
-  index_unique              = true
-
-}
-
+=======================================
 ======================================
 ## .gitlab-ci.yml
-include:
-  - project: bokf/templates/gitlab
-    file: terraform_module/0.1.0.yml
+
+
+=======================================
 ======================================
 # .terraform-docs.yml
-version: "=0.17.0"
 
-formatter: markdown table
 
-header-from: main.tf
-footer-from: ""
 
-sections:
-  hide: []
-  show: []
-
-  hide-all: false # deprecated in v0.13.0, removed in v0.15.0
-  show-all: true # deprecated in v0.13.0, removed in v0.15.0
-
-content: |-
-  # terraform--cosmosdb-mongo-database
-  description goes here
-  {{ .Requirements }}
-
-  ## Usage Example
-  ```hcl
-  {{ include "examples/main.tf" }}
-  ```
-
-  {{ .Providers }}
-  {{ .Modules }}
-  {{ .Resources }}
-  {{ .Inputs }}
-  {{ .Outputs }}
-
-output:
-  file: "README.md"
-  mode: replace
-  template: |-
-    <!-- BEGIN_TF_DOCS -->
-    {{ .Content }}
-    <!-- END_TF_DOCS -->
-
-output-values:
-  enabled: false
-  from: ""
-
-sort:
-  enabled: true
-  by: name
-
-settings:
-  anchor: true
-  color: true
-  default: true
-  description: false
-  escape: true
-  html: true
-  indent: 2
-  required: true
-  sensitive: true
-  type: true
+=================================
 ==================||=========
 # CHANGELOG.md
 
@@ -173,379 +66,45 @@ settings:
 =============================
 # GETTING_STARTED.md
 
-# Getting Started
 
-This project template contains all the necessary files to easily get started with building a Terraform Module.
 
-First, read through the module best practices from Hashicorp:
-
-* [Module Structure](https://www.terraform.io/docs/modules/index.html#standard-module-structure)
-* [Publish](https://www.terraform.io/docs/cloud/registry/publish.html)
-
-Next, you'll need to update the following files and sections with your module.
-
-1. __`versions.tf`__:
-   1. If you need to restrict usage of this module to specific provider or terraform versions, add the constraints here
-   2. Remove the example code
-2. __`globals.tf`__:
-   1. Add references to other deployments (data blocks) and/or local variables that will be helpful in step 4
-   2. Remove the example code
-3. __`variables.tf`__:
-   1. Create input variables that can/need to be passed into this module, you will reference these in step 4
-   2. Remove the example code
-4. __`main.tf`__:
-   1. Create your main code here, which will manage other resources and/or module calls
-      NOTE: Instead of placing in the main.tf file, similar to a Terraform Application, you can create individual .tf files for multiple resources to simplify future changes
-   2. Remove the example code
-5. __`outputs.tf`__:
-   1. Create any output values that should be made available to the project/module calling this module
-   2. Remove the example code
-6. __`README.md`__:
-   1. Follow the instructions in [this file](./TERRAFORM_DOCS_INSTRUCTIONS.md).
-7. __`examples`__:
-   1. Create a directory for each example/test against this module. It is best practice to cover all "logic" in the module (i.e. if you have a conditional statement, there should be a example for each condition)
-   2. Remove the example_a directory & file
-8. __`CHANGELOG.md`__:
-   1. Create a new change log entry (see [Change Log](#change-log) section)
-9. __`CODEOWNERS`__:
-   1. Remove the example code
-   2. Create entries and/or sections for the files, directories, or patterns and the groups that are required for approval during a Merge Request (MR). See [GitLab Docs](https://docs.gitlab.com/ee/user/project/code_owners.html) for more information and syntax
-
-## Directory Structure
-
-The following displays the directory structure of this template and the purpose for specific files/directories 
-
-      .
-      ├── .vscode                      # Settings for Visual Studio Code
-      ├── examples                     # Directory containing example module usage/calls for testing and user onboarding
-         └── <name>                    # Sub-directory for the example name (i.e. s3-standard, s3-lifecycle)
-            └── main.tf                # Example terraform call to the module
-      ├── .editorconfig                # File to help with editor differences by OS
-      ├── .gitignore                   # Files/Directories to ignore for Git Version Control
-      ├── CHANGELOG.md                 # Log of all changes grouped by version
-      ├── CODEOWNERS                   # File containing directories/files and specific users or groups that must approve
-      ├── README.md                    # Main repo README file
-      ├── globals.tf                   # Contains local variables and data blocks for reference across the module
-      ├── main.tf                      # Main module code goes here (i.e. resource aws_s3_bucket)
-      ├── outputs.tf                   # Variables to provide as output (accessible to the calling project/module)
-      ├── variables.tf                 # Input variables to provide to the module
-      └── versions.tf                  # Constraints for provider/resource versions (i.e. AWS provider ~> 3.0)
-
-## Change Log
-
-Terraform uses semantic versioning (`<major>.<minor>.<patch>`) and relies on version control software (VCS) tags to identify a new version to publish.
-
-A CHANGELOG file tracks all the changes by version in friendly format, with the format of:
-
-```
-   ## Unreleased
-      - <Change Type>
-         1. <Description>
-         2. <Description>
-
-   ## Version ##.##.## - MON DD, YYYY
-      - <Change Type>
-         1. <Description>
-               - Module(s): <module>, <module>
-         2. <Description>
-               - Module(s): <module>, <module>
-```
-
-Where the following placeholders are used as:
-
-| Type         | Description                                                                    |
-|--------------|--------------------------------------------------------------------------------|
-| type         | Type of change, with acceptable values of <br />* **Added**: New features <br />* **Changed**: Updates to existing features <br />* **Deprecated**: Soon-to-be removed features <br />* **Removed**: Now removed features <br />* **Fixed**: Bug fixes <br />* **Security**: Vulnerability fixes                                           |
-| module       | List of file(s) the change applies to                                          |
-| description  | Description of the change made                                                 |
-
-Changes are displayed in descending order (most recent first), with an UNRELEASED section at the very top for changes that are pending.
+=================================
 ==================================
 # globals.tf
-data "azurerm_client_config" "current" {}
 
-data "azurerm_cosmosdb_account" "this" {
-  name                = var.cosmosdb_account_name
-  resource_group_name = var.resource_group_name
-}
 
-locals {
-  database_throughput   = var.db_throughput != null ? var.db_throughput : var.db_max_throughput
-  collection_throughput = var.collection_throughput != null ? var.collection_throughput : var.collection_max_throughput
-}
-
+==================================
 ==================================
 # main.tf
 
-locals {
-  # These are the various naming standards
-  tfModule          = "Example"                                                                                       ## This should be the service name please update without fail and do not remove these two definitions.
-  tfModule_extended = var.terraform_module != "" ? join(" ", [var.terraform_module, local.tfModule]) : local.tfModule ## This is to send multiple tags if the main module have submodule calls.
-}
-
-resource "azurerm_cosmosdb_mongo_database" "this" {
-  name                = var.mongo_database_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
-  resource_group_name = var.resource_group_name
-  throughput          = var.db_throughput != null ? null : var.db_max_throughput
-
-  autoscale_settings {
-    max_throughput = var.db_max_throughput
-  }
-}
-
-resource "azurerm_cosmosdb_mongo_collection" "this" {
-  name                   = var.mongo_collection_name
-  resource_group_name    = var.resource_group_name
-  account_name           = data.azurerm_cosmosdb_account.this.name
-  database_name          = azurerm_cosmosdb_mongo_database.this.name
-  shard_key              = var.shard_key
-  throughput             = var.collection_throughput != null ? null : var.collection_max_throughput
-  analytical_storage_ttl = var.analytical_storage_ttl != null ? var.analytical_storage_ttl : null
-
-  index {
-    keys   = var.index_keys
-    unique = var.index_unique != null ? var.index_unique : false
-  }
-
-}
-
-module "rbac" {
-  source = "app.terraform.io/bokf/common/azure"
-
-  for_each = var.role_assignments
-
-  resource_id   = azurerm_cosmosdb_mongo_collection.this.id
-  resource_name = azurerm_cosmosdb_mongo_collection.this.name
-
-  role_based_permissions = {
-    assignment = {
-      role_definition_id_or_name = each.value.role_definition_id_or_name
-      principal_id               = each.value.principal_id
-    }
-  }
-  wait_for_rbac = false
-}
 
 
+==================================
 ==================================
 # outputs.tf
-output "cosmosdb_mongo_database_id" {
-  description = "The ID of the Cosmos DB MongoDB database."
-  value       = azurerm_cosmosdb_mongo_database.this.id
-}
 
-output "cosmosdb_mongo_collection_id" {
-  description = "The ID of the Cosmos DB MongoDB collection."
-  value       = azurerm_cosmosdb_mongo_collection.this.id
-}
 
-output "cosmosdb_mongo_database_name" {
-  description = "The name of the Cosmos DB MongoDB database."
-  value       = azurerm_cosmosdb_mongo_database.this.name
-}
 
-output "cosmosdb_mongo_collection_name" {
-  description = "The name of the Cosmos DB MongoDB collection."
-  value       = azurerm_cosmosdb_mongo_collection.this.name
-}
-
+===================================
 ==================================
 # README.md
-<!-- BEGIN_TF_DOCS -->
-# terraform-`<provider>`-`<name>`
-`<description of module>`
-## Requirements
 
-| Name | Version |
-|------|---------|
-| terraform | `<Versions Supported>` |
-| `<provider>` | `<Versions Supported>` |
 
-## Usage Example
-
-## Providers
-
-| Name | Version |
-|------|---------|
-| `<provider>` | `<Versions Supported>` |
-## Modules
-
-| Name | Source | Version |
-|------|--------|---------|
-| `<provider>` | `<source>` | `<version>` |
-## Resources
-
-| Name | Type |
-|------|------|
-| `<resource>` | `<type>` |
-## Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| `<variable>` | `<description>` | `<type>` | `<default value>` | `<Required Yes/No>` |
-
-## Outputs
-
-| Name | Description |
-|------|-------------|
-| `<output>` | `<description>` |
-<!-- END_TF_DOCS -->
-
+==================================
 ==================================
 # TERRAFORM_DOCS_INSTRUCTIONS.md
 
-# Using Terraform Docs
-[__`terraform-docs`__](https://terraform-docs.io/) is a Homebrew package used to automatically generate README files for terraform modules.
 
-## Install terraform-docs
-1. From a terminal, run `brew install terraform-docs`.
-
-## Create configuration file
-1. In the content section of [this YAML file](./.terraform-docs.yml), add the module's name, a short description, and the relative path to the example file.
-2. Remove TODO statements from YAML file.
-
-## Run terraform-docs
-1. From the root directory of the terraform module, run `terraform-docs -c .terraform-docs.yml .`. This will generate a README file for the terraform module containing all relevant information.
+==================================
 ==================================
 # variables.tf
-variable "mongo_database_name" {
-  description = "Name of the CosmosDB MongoDB database to create"
-  type        = string
 
-  validation {
-    condition     = can(regex("^[a-zA-Z0-9_-]+$", var.mongo_database_name))
-    error_message = "Database name must contain only alphanumeric characters, dashes, and underscores."
-  }
-}
-
-variable "mongo_collection_name" {
-  description = "Name of the CosmosDB MongoDB collection to create"
-  type        = string
-}
-
-variable "cosmosdb_account_name" {
-  description = "The name of the CosmosDB account"
-  type        = string
-}
-
-variable "resource_group_name" {
-  description = "The name of the resource group"
-  type        = string
-}
-
-variable "shard_key" {
-  description = "The shard key for the MongoDB collection"
-  type        = string
-  default     = null
-}
-
-variable "indexes" {
-  description = "List of indexes to create on the MongoDB collection"
-  type = list(object({
-    keys    = list(string)
-    options = map(string)
-  }))
-  default = []
-}
-
-variable "db_throughput" {
-  description = "The throughput for the database. If null, the database will be autoscaled."
-  type        = number
-  default     = null
-  validation {
-    condition     = var.db_throughput >= 400
-    error_message = "Throughput must be a positive number greater than or equal to 400."
-  }
-}
-
-variable "db_max_throughput" {
-  description = "The maximum throughput for the MongoDB database when autoscaling."
-  type        = number
-  default     = 400
-}
-variable "collection_throughput" {
-  description = "The throughput for the MongoDB collection (e.g., RU/s)"
-  type        = number
-  default     = null
-}
-
-variable "collection_max_throughput" {
-  description = "The maximum throughput for the MongoDB collection when autoscaling."
-  type        = number
-  default     = 400
-}
-
-variable "analytical_storage_ttl" {
-  description = "The TTL (time-to-live) for analytical storage in the MongoDB collection."
-  type        = number
-  default     = null
-}
-
-variable "index_keys" {
-  description = "The keys for indexing in the MongoDB collection."
-  type        = list(string)
-}
-
-variable "index_unique" {
-  description = "Whether the index should be unique."
-  type        = bool
-  default     = false
-}
-
-
-variable "role_assignments" {
-  type = map(object({
-    role_definition_id_or_name = string
-    principal_id               = string
-  }))
-  default     = {}
-  description = <<DESCRIPTION
-A map of role assignments to create on the resource. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
-
-- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
-- `principal_id` - The ID of the principal to assign the role to.
-DESCRIPTION
-  nullable    = false
-}
-
-variable "tags" {
-  description = "A map of tags to assign to the resources"
-  type        = map(string)
-  default     = {}
-}
-
-variable "terraform_module" {
-  description = "Used to inform of a parent module"
-  type        = string
-  default     = ""
-}
-
-### 
-variable "autoscale_throughput" {
-  description = "Enable autoscale throughput for the database"
-  type        = bool
-  default     = false
-}
-
-variable "max_throughput" {
-  description = "Maximum throughput for autoscale settings"
-  type        = number
-  default     = null
-}
 
 
 ==================================
+==================================
 # versions.tf
-## Please refer to version template document for setting this configuration.
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "< 6.0.0"
-    }
-  }
-}
+
 
 ==================================
 ==================================
