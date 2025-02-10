@@ -42,55 +42,7 @@ https://us05web.zoom.us/j/86526167418?pwd=eugwcO1uniIUdwitbn3ActMoO5CCjG.1
 -----------------------------------------------------
 
 ## examples
-provider "azurerm" {
-  #4.0+ version of AzureRM Provider requires a subscription ID  
-  subscription_id = "b987518f-1b04-4491-915c-e21dabc7f2d3"
-  features {
 
-  }
-}
-
-
-locals {
-  tags = {
-    environment         = "dev"
-    application_id      = "0000"
-    asset_class         = "standard"
-    data_classification = "confidential"
-    managed_by          = "it_cloud"
-    requested_by        = "me@email.com"
-    cost_center         = "1234"
-    source_code         = "https://gitlab.com/company/test"
-    deployed_by         = "test-workspace"
-    application_role    = ""
-  }
-}
-
-data "azurerm_resource_group" "this" {
-  name = "wayne-tech-hub"
-}
-
-data "azurerm_cosmosdb_account" "this" {
-  name                = "postgresql-cdbwaynetechhubdev259678"
-  resource_group_name = data.azurerm_resource_group.this.name
-}
-
-data "azuread_user" "this" {
-  user_principal_name = "salonge@bokf.com"
-}
-
-
-module "this" {
-  source = "../" ## This is source code call for each module
-
-  postgresql_cluster_name            = "postgresql_cluster1"
-  postgresql_node_configuration_name = "postgresql_node1"
-  location                           = "eastus"
-  resource_group_name                = "wayne-tech-hub"
-  administrator_login_password       = "H@Sh1CoR3!2024"
-  cosmosdb_account_name = data.azurerm_cosmosdb_account.this.name
-
-}
 
 
 
@@ -125,12 +77,7 @@ module "this" {
 =================================
 ==================================
 # globals.tf
-data "azurerm_client_config" "current" {}
 
-data "azurerm_cosmosdb_account" "this" {
-  name                = var.cosmosdb_account_name
-  resource_group_name = var.resource_group_name
-}
 
 
 
@@ -138,44 +85,6 @@ data "azurerm_cosmosdb_account" "this" {
 ==================================
 ==================================
 # main.tf
-locals {
-  # These are the various naming standards
-  tfModule          = "Example"                                                                                       ## This should be the service name please update without fail and do not remove these two definitions.
-  tfModule_extended = var.terraform_module != "" ? join(" ", [var.terraform_module, local.tfModule]) : local.tfModule ## This is to send multiple tags if the main module have submodule calls.
-}
-
-resource "azurerm_cosmosdb_postgresql_cluster" "this" {
-  name                          = var.postgresql_cluster_name
-  resource_group_name           = var.resource_group_name
-  location                      = var.location
-  administrator_login_password  = var.administrator_login_password
-  node_count                    = var.node_count
-
-  tags                          = var.tags
-}
-
-resource "azurerm_cosmosdb_postgresql_node_configuration" "this" {
-  name       = var.postgresql_node_configuration_name   
-  cluster_id = azurerm_cosmosdb_postgresql_cluster.this.id
-  value      = var.value   
-}
-
-module "rbac" {
-  source = "app.terraform.io/bokf/common/azure"
-
-  for_each = var.role_assignments
-
-  resource_id   = azurerm_cosmosdb_postgresql_cluster.this.id
-  resource_name = azurerm_cosmosdb_postgresql_cluster.this.name
-
-  role_based_permissions = {
-    assignment = {
-      role_definition_id_or_name = each.value.role_definition_id_or_name
-      principal_id               = each.value.principal_id
-    }
-  }
-  wait_for_rbac = false
-}
 
 
 
@@ -184,27 +93,6 @@ module "rbac" {
 ==================================
 ==================================
 # outputs.tf
-# outputs.tf
-output "postgresql_cluster_id" {
-  value       = azurerm_cosmosdb_postgresql_cluster.this.id
-  description = "The ID of the CosmosDB PostgreSQL cluster"
-}
-
-output "postgresql_node_configuration_id" {
-  value       = azurerm_cosmosdb_postgresql_node_configuration.this.id
-  description = "The ID of the PostgreSQL database"
-}
-
-output "postgresql_cluster_name" {
-  value       = azurerm_cosmosdb_postgresql_cluster.this.name
-  description = "The name of the CosmosDB PostgreSQL cluster"
-}
-output "postgresql_node_configuration_name" {
-  value       = azurerm_cosmosdb_postgresql_node_configuration.this.name
-  description = "The name of the PostgreSQL database"
-}
-
-
 
 
 
@@ -221,79 +109,7 @@ output "postgresql_node_configuration_name" {
 ==================================
 ==================================
 # variables.tf
-variable "postgresql_cluster_name" {
-  description = "Name of the CosmosDB PostgreSQL database"
-  type        = string
-}
-variable "resource_group_name" {
-  description = "The name of the resource group"
-  type        = string
-}
 
-variable "cosmosdb_account_name" {
-  description = "The name of the CosmosDB account"
-  type        = string
-}
-
-variable "location" {
-  description = "The Azure region where the resources will be created"
-  type        = string
-}
-
-variable "administrator_login_password" {
-  description = "The administrator password for the PostgreSQL cluster"
-  type        = string
-  sensitive   = true
-  validation {
-    condition     = length(var.administrator_login_password) >= 8
-    error_message = "Password must be at least 8 characters long."
-  }
-}
-
-variable "postgresql_node_configuration_name" {
-  description = "(Required) The name of the Node Configuration on Azure Cosmos DB for PostgreSQL Cluster. Changing this forces a new resource to be created."
-  type = string
-  default = "array_nulls"
-}
-
-variable "value" {
-  description = "(Required) The value of the Node Configuration on Azure Cosmos DB for PostgreSQL Cluster."
-  type = string
-  default = "on"
-}
-
-variable "tags" {
-  description = "A map of tags to assign to the resources"
-  type        = map(string)
-  default     = {}
-}
-
-variable "node_count" {
-  description = "node_count - (Required) The worker node count of the Azure Cosmos DB for PostgreSQL Cluster. Possible value is between 0 and 20 except 1."
-  type = number
-  default = 0
-}
-
-variable "role_assignments" {
-  type = map(object({
-    role_definition_id_or_name = string
-    principal_id               = string
-  }))
-  default     = {}
-  description = <<DESCRIPTION
-A map of role assignments to create on the resource. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
-
-- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
-- `principal_id` - The ID of the principal to assign the role to.
-DESCRIPTION
-  nullable    = false
-}
-
-variable "terraform_module" {
-  description = "Used to inform of a parent module"
-  type        = string
-  default     = ""
-}
 
 
 
@@ -303,15 +119,6 @@ variable "terraform_module" {
 ==================================
 ==================================
 # versions.tf
-## Please refer to version template document for setting this configuration.
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "< 5.0.0"
-    }
-  }
-}
 
 
 
