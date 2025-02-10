@@ -42,6 +42,65 @@ https://us05web.zoom.us/j/86526167418?pwd=eugwcO1uniIUdwitbn3ActMoO5CCjG.1
 -----------------------------------------------------
 
 ## examples
+provider "azurerm" {
+  #4.0+ version of AzureRM Provider requires a subscription ID  
+  subscription_id = "b987518f-1b04-4491-915c-e21dabc7f2d3"    #"0b5a3199-58bb-40ef-bcce-76a53aa594c2"
+
+  #resource_provider_registrations = "none"
+
+  features {
+
+  }
+}
+
+locals {
+  tags = {
+    environment         = "dev"
+    application_id      = "0000"
+    asset_class         = "standard"
+    data_classification = "confidential"
+    managed_by          = "it_cloud"
+    requested_by        = "me@email.com"
+    cost_center         = "1234"
+    source_code         = "https://gitlab.com/company/test"
+    deployed_by         = "test-workspace"
+    application_role    = ""
+  }
+}
+
+
+data "azurerm_resource_group" "this" {
+  name = "wayne-tech-hub"
+}
+
+# data "azurerm_cosmosdb_account" "this" {
+#   name                = "cdbwaynetechhubdev259678"
+#   resource_group_name = data.azurerm_resource_group.this.name
+# }
+
+data "azuread_user" "this" {
+  user_principal_name = "salonge@bokf.com"   # "SXA7BU_PA@bokf.onmicrosoft.com"
+}
+
+module "this" {
+  source                          = "../"
+
+
+  #data_factory_name               = "adf-test-001"
+  application_name = "datafactory1"
+  resource_group_name             = "wayne-tech-hub"
+  location                        = data.azurerm_resource_group.this.location
+  tags = local.tags
+
+
+  global_parameters = {
+    "testbool" = {
+      type  = "Bool"
+      value = true
+    }
+  }
+
+}
 
 
 
@@ -81,6 +140,25 @@ https://us05web.zoom.us/j/86526167418?pwd=eugwcO1uniIUdwitbn3ActMoO5CCjG.1
 =================================
 ==================================
 # globals.tf
+data "azurerm_client_config" "current" {}
+
+data "azurerm_resource_group" "this" {
+  name = var.resource_group_name
+}
+
+resource "random_integer" "this" {
+  min = "100"
+  max = "999"
+}
+
+locals {
+  data_factory_name  = "adf${var.application_name}${var.tags.environment}${random_integer.this.result}"
+  tfModule          = "data-factory"                                                                                     ## This should be the service name please update without fail and do not remove these two definitions.
+  tfModule_extended = var.terraform_module != "" ? join(" ", [var.terraform_module, local.tfModule]) : local.tfModule ## This is to send multiple tags if the main module have submodule calls.
+  key_vault_name    = "kv-${var.tags.application_id}-${lower(substr(var.application_name, 0, 7))}-${var.tags.environment}-${random_integer.this.result}"
+}
+
+
 
 
 
@@ -89,12 +167,69 @@ https://us05web.zoom.us/j/86526167418?pwd=eugwcO1uniIUdwitbn3ActMoO5CCjG.1
 ==================================
 ==================================
 # main.tf
+# Create Azure Data Factory
+resource "azurerm_data_factory" "this" {
+  name                             = local.data_factory_name
+  location                         = var.location
+  resource_group_name              = var.resource_group_name
+  managed_virtual_network_enabled  = var.managed_virtual_network_enabled
+  public_network_enabled           = var.public_network_enabled
+  customer_managed_key_id          = var.customer_managed_key_id
+  customer_managed_key_identity_id = var.customer_managed_key_identity_id
+  tags                             = module.tags.tags
+
+
+  dynamic "github_configuration" {
+    for_each = var.github_configuration != null ? [var.github_configuration] : []
+    content {
+      git_url         = github_configuration.value.git_url
+      account_name    = github_configuration.value.account_name
+      branch_name     = github_configuration.value.branch_name
+      repository_name = github_configuration.value.repository_name
+      root_folder     = github_configuration.value.root_folder
+    }
+  }
+
+  dynamic "global_parameter" {
+    for_each = var.global_parameters
+    content {
+      name  = global_parameter.key
+      type  = global_parameter.value.type
+      value = global_parameter.value.value
+    }
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+# Optional Azure Integration Runtime
+resource "azurerm_data_factory_integration_runtime_azure" "this" {
+  for_each = var.azure_integration_runtime
+
+  name                    = each.key
+  data_factory_id         = azurerm_data_factory.this.id
+  location                = var.location
+  description             = each.value.description
+  compute_type            = each.value.compute_type
+  core_count              = each.value.core_count
+  time_to_live_min        = each.value.time_to_live_min
+  cleanup_enabled         = each.value.cleanup_enabled
+  virtual_network_enabled = each.value.virtual_network_enabled
+}
+
 
 
 
 ======||
 # tags.tf
+module "tags" {
+  source  = "app.terraform.io/bokf/tag/cloud"
+  version = "0.3.2"
 
+  tags = var.tags
+}
 ====||=
 variables.encyption.tf
 
@@ -111,7 +246,22 @@ variables.network.tf
 
 ==================================
 ==================================
+# outputs.tf
+output "id" {
+  description = "The ID of the new Datafactory resource."
+  value       = azurerm_data_factory.this.id
+}
 
+output "name" {
+  description = "The name of the newly created Azure Data Factory"
+  value       = azurerm_data_factory.this.name
+}
+
+
+output "global_paramaters" {
+  description = "A map showing any created Global Parameters."
+  value       = { for gp in azurerm_data_factory.this.global_parameter : gp.name => gp }
+}
 
 
 
@@ -128,6 +278,122 @@ variables.network.tf
 ==================================
 ==================================
 # variables.tf
+# Required Input Standard Variables 
+variable "application_name" {
+  type        = string
+  description = "The name of the resource."
+}
+
+variable "resource_group_name" {
+  type        = string
+  description = "The resource group where the resources will be deployed."
+}
+
+variable "location" {
+  type        = string
+  description = <<DESCRIPTION
+Azure region where the resource should be deployed.
+If null, the location will be inferred from the resource group location.
+DESCRIPTION
+  nullable    = false
+}
+
+
+
+variable "tags" {
+  type        = map(string)
+  description = <<-EOT
+  Required BOKF tags are listed below with sample values. These values are validated by the underlying Tags module.
+
+    environment         = "dev"
+    application_id      = "0000"
+    asset_class         = "standard"
+    data_classification = "confidential"
+    managed_by          = "it_cloud"
+    cost_center         = "1234"
+    source_code         = "https://gitlab.com/company/test"
+    deployed_by         = "test-workspace"
+    application_role    = "app"
+
+  EOT
+}
+
+
+variable "public_network_enabled" {
+  type        = bool
+  description = "(Optional) Is the Data Factory visible to the public network? Defaults to true"
+  default     = true
+}
+
+variable "managed_virtual_network_enabled" {
+  type        = bool
+  description = "Is Managed Virtual Network enabled?"
+  default     = true
+}
+
+variable "customer_managed_key_id" {
+  type        = string
+  description = "Specifies the Azure Key Vault Key ID to be used as the Customer Managed Key (CMK) for double encryption. Required with user assigned identity."
+  default     = null
+}
+
+variable "customer_managed_key_identity_id" {
+  type        = string
+  description = "Specifies the ID of the user assigned identity associated with the Customer Managed Key. Must be supplied if customer_managed_key_id is set."
+  default     = null
+}
+
+variable "github_configuration" {
+  description = "An input object to define the settings for connecting to GitHub. NOTE! You must log in to the Data Factory management UI to complete the authentication to the GitHub repository."
+  type = object({
+    git_url         = optional(string) # - OPTIONAL: Specifies the GitHub Enterprise host name. Defaults to "https://github.com"
+    account_name    = optional(string) # - REQUIRED: Specifies the GitHub account name. Defaults to ''
+    repository_name = optional(string) # - REQUIRED: Specifies the name of the git repository. 
+    branch_name     = optional(string) # - OPTIONAL: Specifies the branch of the repository to get code from. Defaults to 'main'
+    root_folder     = optional(string) # - OPTIONAL: Specifies the root folder within the repository. Defaults to '/' for top level.
+  })
+  default = null
+}
+
+variable "global_parameters" {
+  type        = any
+  description = "An input object to define a global parameter. Accepts multiple entries."
+  default     = {}
+}
+
+variable "azure_integration_runtime" {
+  type = map(object({
+    description             = optional(string, "Azure Integrated Runtime")
+    compute_type            = optional(string, "General")
+    virtual_network_enabled = optional(string, true)
+    core_count              = optional(number, 8)
+    time_to_live_min        = optional(number, 0)
+    cleanup_enabled         = optional(bool, true)
+  }))
+  description = <<EOF
+  Map Object to define any Azure Integration Runtime nodes that required.
+  key of each object is the name of a new node.
+  configuration parameters within the object allow customisation.
+  EXAMPLE:
+  azure_integration_runtime = {
+    az-ir-co-01 {
+      "compute_type" .  = "ComputeOptimized"
+      "cleanup_enabled" = true
+      core_count        = 16
+    },
+    az-ir-gen-01 {},
+    az-ir-gen-02 {},
+  }
+
+EOF
+  default     = {}
+}
+
+variable "terraform_module" {
+  description = "Used to inform of a parent module"
+  type        = string
+  default     = ""
+}
 
 
 
@@ -140,6 +406,15 @@ variables.network.tf
 ==================================
 ==================================
 # versions.tf
+## Please refer to version template document for setting this configuration.
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "< 5.0.0"
+    }
+  }
+}
 
 
 
