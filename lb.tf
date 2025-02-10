@@ -41,303 +41,515 @@ https://us05web.zoom.us/j/86526167418?pwd=eugwcO1uniIUdwitbn3ActMoO5CCjG.1
 
 -----------------------------------------------------
 
-## Required Module Specific Variables
+## examples
+provider "azurerm" {
+  #4.0+ version of AzureRM Provider requires a subscription ID  
+  subscription_id = "b987518f-1b04-4491-915c-e21dabc7f2d3"
+  features {
 
-variable "consistency_level" {
-  description = "(Required) The Consistency Level to use for this CosmosDB Account. Valid values are (BoundedStaleness, Eventual, Session, Strong or ConsistentPrefix)"
-  type        = string
-  validation {
-    condition     = contains(["BoundedStaleness", "Eventual", "Session", "Strong", "ConsistentPrefix"], var.consistency_level)
-    error_message = "Valid values for cosmosdb kind are (BoundedStaleness, Eventual, Session, Strong or ConsistentPrefix)."
   }
+}
+
+locals {
+  tags = {
+    environment         = "dev"
+    application_id      = "0000"
+    asset_class         = "standard"
+    data_classification = "confidential"
+    managed_by          = "it_cloud"
+    requested_by        = "me@email.com"
+    cost_center         = "1234"
+    source_code         = "https://gitlab.com/company/test"
+    deployed_by         = "test-workspace"
+    application_role    = ""
+  }
+}
+
+data "azurerm_resource_group" "this" {
+  name = "wayne-tech-hub"
+}
+
+data "azurerm_cosmosdb_account" "this" {
+  name                = "cdbwaynetechhubdev175368"
+  resource_group_name = data.azurerm_resource_group.this.name
+}
+
+data "azuread_user" "this" {
+  user_principal_name = "salonge@bokf.com"
+}
+
+
+
+module "this" {
+  source = "../" 
+
+
+  mongo_database_name   = "mongo_database1"
+  resource_group_name   = "wayne-tech-hub"
+  cosmosdb_account_name = data.azurerm_cosmosdb_account.this.name
+  mongo_collection_name     = "wayne-tech-hub-mongo-collection"
+
+
+  db_throughput             = 400
+  db_max_throughput         = 1000
+  collection_throughput     = 400
+  collection_max_throughput = 1000
+  index_keys                = ["_id", "email"]
+  index_unique              = true
+
+}
+
+======================================
+## .gitlab-ci.yml
+include:
+  - project: bokf/templates/gitlab
+    file: terraform_module/0.1.0.yml
+======================================
+# .terraform-docs.yml
+version: "=0.17.0"
+
+formatter: markdown table
+
+header-from: main.tf
+footer-from: ""
+
+sections:
+  hide: []
+  show: []
+
+  hide-all: false # deprecated in v0.13.0, removed in v0.15.0
+  show-all: true # deprecated in v0.13.0, removed in v0.15.0
+
+content: |-
+  # terraform--cosmosdb-mongo-database
+  description goes here
+  {{ .Requirements }}
+
+  ## Usage Example
+  ```hcl
+  {{ include "examples/main.tf" }}
+  ```
+
+  {{ .Providers }}
+  {{ .Modules }}
+  {{ .Resources }}
+  {{ .Inputs }}
+  {{ .Outputs }}
+
+output:
+  file: "README.md"
+  mode: replace
+  template: |-
+    <!-- BEGIN_TF_DOCS -->
+    {{ .Content }}
+    <!-- END_TF_DOCS -->
+
+output-values:
+  enabled: false
+  from: ""
+
+sort:
+  enabled: true
+  by: name
+
+settings:
+  anchor: true
+  color: true
+  default: true
+  description: false
+  escape: true
+  html: true
+  indent: 2
+  required: true
+  sensitive: true
+  type: true
+==================||=========
+# CHANGELOG.md
+
+
+=============================
+# CODEOWNERS
+
+=============================
+# GETTING_STARTED.md
+
+# Getting Started
+
+This project template contains all the necessary files to easily get started with building a Terraform Module.
+
+First, read through the module best practices from Hashicorp:
+
+* [Module Structure](https://www.terraform.io/docs/modules/index.html#standard-module-structure)
+* [Publish](https://www.terraform.io/docs/cloud/registry/publish.html)
+
+Next, you'll need to update the following files and sections with your module.
+
+1. __`versions.tf`__:
+   1. If you need to restrict usage of this module to specific provider or terraform versions, add the constraints here
+   2. Remove the example code
+2. __`globals.tf`__:
+   1. Add references to other deployments (data blocks) and/or local variables that will be helpful in step 4
+   2. Remove the example code
+3. __`variables.tf`__:
+   1. Create input variables that can/need to be passed into this module, you will reference these in step 4
+   2. Remove the example code
+4. __`main.tf`__:
+   1. Create your main code here, which will manage other resources and/or module calls
+      NOTE: Instead of placing in the main.tf file, similar to a Terraform Application, you can create individual .tf files for multiple resources to simplify future changes
+   2. Remove the example code
+5. __`outputs.tf`__:
+   1. Create any output values that should be made available to the project/module calling this module
+   2. Remove the example code
+6. __`README.md`__:
+   1. Follow the instructions in [this file](./TERRAFORM_DOCS_INSTRUCTIONS.md).
+7. __`examples`__:
+   1. Create a directory for each example/test against this module. It is best practice to cover all "logic" in the module (i.e. if you have a conditional statement, there should be a example for each condition)
+   2. Remove the example_a directory & file
+8. __`CHANGELOG.md`__:
+   1. Create a new change log entry (see [Change Log](#change-log) section)
+9. __`CODEOWNERS`__:
+   1. Remove the example code
+   2. Create entries and/or sections for the files, directories, or patterns and the groups that are required for approval during a Merge Request (MR). See [GitLab Docs](https://docs.gitlab.com/ee/user/project/code_owners.html) for more information and syntax
+
+## Directory Structure
+
+The following displays the directory structure of this template and the purpose for specific files/directories 
+
+      .
+      ├── .vscode                      # Settings for Visual Studio Code
+      ├── examples                     # Directory containing example module usage/calls for testing and user onboarding
+         └── <name>                    # Sub-directory for the example name (i.e. s3-standard, s3-lifecycle)
+            └── main.tf                # Example terraform call to the module
+      ├── .editorconfig                # File to help with editor differences by OS
+      ├── .gitignore                   # Files/Directories to ignore for Git Version Control
+      ├── CHANGELOG.md                 # Log of all changes grouped by version
+      ├── CODEOWNERS                   # File containing directories/files and specific users or groups that must approve
+      ├── README.md                    # Main repo README file
+      ├── globals.tf                   # Contains local variables and data blocks for reference across the module
+      ├── main.tf                      # Main module code goes here (i.e. resource aws_s3_bucket)
+      ├── outputs.tf                   # Variables to provide as output (accessible to the calling project/module)
+      ├── variables.tf                 # Input variables to provide to the module
+      └── versions.tf                  # Constraints for provider/resource versions (i.e. AWS provider ~> 3.0)
+
+## Change Log
+
+Terraform uses semantic versioning (`<major>.<minor>.<patch>`) and relies on version control software (VCS) tags to identify a new version to publish.
+
+A CHANGELOG file tracks all the changes by version in friendly format, with the format of:
+
+```
+   ## Unreleased
+      - <Change Type>
+         1. <Description>
+         2. <Description>
+
+   ## Version ##.##.## - MON DD, YYYY
+      - <Change Type>
+         1. <Description>
+               - Module(s): <module>, <module>
+         2. <Description>
+               - Module(s): <module>, <module>
+```
+
+Where the following placeholders are used as:
+
+| Type         | Description                                                                    |
+|--------------|--------------------------------------------------------------------------------|
+| type         | Type of change, with acceptable values of <br />* **Added**: New features <br />* **Changed**: Updates to existing features <br />* **Deprecated**: Soon-to-be removed features <br />* **Removed**: Now removed features <br />* **Fixed**: Bug fixes <br />* **Security**: Vulnerability fixes                                           |
+| module       | List of file(s) the change applies to                                          |
+| description  | Description of the change made                                                 |
+
+Changes are displayed in descending order (most recent first), with an UNRELEASED section at the very top for changes that are pending.
+==================================
+# globals.tf
+data "azurerm_client_config" "current" {}
+
+data "azurerm_cosmosdb_account" "this" {
+  name                = var.cosmosdb_account_name
+  resource_group_name = var.resource_group_name
+}
+
+locals {
+  database_throughput   = var.db_throughput != null ? var.db_throughput : var.db_max_throughput
+  collection_throughput = var.collection_throughput != null ? var.collection_throughput : var.collection_max_throughput
+}
+
+==================================
+# main.tf
+
+locals {
+  # These are the various naming standards
+  tfModule          = "Example"                                                                                       ## This should be the service name please update without fail and do not remove these two definitions.
+  tfModule_extended = var.terraform_module != "" ? join(" ", [var.terraform_module, local.tfModule]) : local.tfModule ## This is to send multiple tags if the main module have submodule calls.
+}
+
+resource "azurerm_cosmosdb_mongo_database" "this" {
+  name                = var.mongo_database_name
+  account_name        = data.azurerm_cosmosdb_account.this.name
+  resource_group_name = var.resource_group_name
+  throughput          = var.db_throughput != null ? null : var.db_max_throughput
+
+  autoscale_settings {
+    max_throughput = var.db_max_throughput
+  }
+}
+
+resource "azurerm_cosmosdb_mongo_collection" "this" {
+  name                   = var.mongo_collection_name
+  resource_group_name    = var.resource_group_name
+  account_name           = data.azurerm_cosmosdb_account.this.name
+  database_name          = azurerm_cosmosdb_mongo_database.this.name
+  shard_key              = var.shard_key
+  throughput             = var.collection_throughput != null ? null : var.collection_max_throughput
+  analytical_storage_ttl = var.analytical_storage_ttl != null ? var.analytical_storage_ttl : null
+
+  index {
+    keys   = var.index_keys
+    unique = var.index_unique != null ? var.index_unique : false
+  }
+
+}
+
+module "rbac" {
+  source = "app.terraform.io/bokf/common/azure"
+
+  for_each = var.role_assignments
+
+  resource_id   = azurerm_cosmosdb_mongo_collection.this.id
+  resource_name = azurerm_cosmosdb_mongo_collection.this.name
+
+  role_based_permissions = {
+    assignment = {
+      role_definition_id_or_name = each.value.role_definition_id_or_name
+      principal_id               = each.value.principal_id
+    }
+  }
+  wait_for_rbac = false
+}
+
+
+==================================
+# outputs.tf
+output "cosmosdb_mongo_database_id" {
+  description = "The ID of the Cosmos DB MongoDB database."
+  value       = azurerm_cosmosdb_mongo_database.this.id
+}
+
+output "cosmosdb_mongo_collection_id" {
+  description = "The ID of the Cosmos DB MongoDB collection."
+  value       = azurerm_cosmosdb_mongo_collection.this.id
+}
+
+output "cosmosdb_mongo_database_name" {
+  description = "The name of the Cosmos DB MongoDB database."
+  value       = azurerm_cosmosdb_mongo_database.this.name
+}
+
+output "cosmosdb_mongo_collection_name" {
+  description = "The name of the Cosmos DB MongoDB collection."
+  value       = azurerm_cosmosdb_mongo_collection.this.name
+}
+
+==================================
+# README.md
+<!-- BEGIN_TF_DOCS -->
+# terraform-`<provider>`-`<name>`
+`<description of module>`
+## Requirements
+
+| Name | Version |
+|------|---------|
+| terraform | `<Versions Supported>` |
+| `<provider>` | `<Versions Supported>` |
+
+## Usage Example
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| `<provider>` | `<Versions Supported>` |
+## Modules
+
+| Name | Source | Version |
+|------|--------|---------|
+| `<provider>` | `<source>` | `<version>` |
+## Resources
+
+| Name | Type |
+|------|------|
+| `<resource>` | `<type>` |
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| `<variable>` | `<description>` | `<type>` | `<default value>` | `<Required Yes/No>` |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| `<output>` | `<description>` |
+<!-- END_TF_DOCS -->
+
+==================================
+# TERRAFORM_DOCS_INSTRUCTIONS.md
+
+# Using Terraform Docs
+[__`terraform-docs`__](https://terraform-docs.io/) is a Homebrew package used to automatically generate README files for terraform modules.
+
+## Install terraform-docs
+1. From a terminal, run `brew install terraform-docs`.
+
+## Create configuration file
+1. In the content section of [this YAML file](./.terraform-docs.yml), add the module's name, a short description, and the relative path to the example file.
+2. Remove TODO statements from YAML file.
+
+## Run terraform-docs
+1. From the root directory of the terraform module, run `terraform-docs -c .terraform-docs.yml .`. This will generate a README file for the terraform module containing all relevant information.
+==================================
+# variables.tf
+variable "mongo_database_name" {
+  description = "Name of the CosmosDB MongoDB database to create"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9_-]+$", var.mongo_database_name))
+    error_message = "Database name must contain only alphanumeric characters, dashes, and underscores."
+  }
+}
+
+variable "mongo_collection_name" {
+  description = "Name of the CosmosDB MongoDB collection to create"
+  type        = string
+}
+
+variable "cosmosdb_account_name" {
+  description = "The name of the CosmosDB account"
+  type        = string
 }
 
 variable "resource_group_name" {
-  description = "(Required) Name of the resource group where the cosmosdb belongs."
+  description = "The name of the resource group"
   type        = string
 }
 
-## Optional Module Specific Variables
-
-variable "additional_ip_addresses" {
-  description = "(Optional) One or more IP Addresses, or CIDR Blocks which should be able to access CosmosDb. Additional Ip's can be whitelisted when 'private endpoint is not enabled'"
-  type        = list(any)
-  default     = []
-}
-
-variable "additional_subnet_ids" {
-  description = "(Optional) Subnet/s to be allowed in the firewall to access CosmosDb"
-  type        = list(any)
-  default     = []
-}
-
-variable "allowed_origins" {
-  description = <<EOT
-  (Optional) Configures the allowed origins for this Cosmos DB account in CORS Feature:
-  A list of origin domains that will be allowed by CORS.
-  EOT
-  type        = list(string)
-  default     = []
-}
-
-variable "backup_type" {
-  description = "(Optional) The type of the backup. Possible values are Continuous and Periodic. Defaults to Periodic."
+variable "shard_key" {
+  description = "The shard key for the MongoDB collection"
   type        = string
-  default     = "Periodic"
+  default     = null
 }
 
-variable "capabilities" {
-  description = <<EOT
-  (Optional) Configures the capabilities to enable for this Cosmos DB account:
-  Possible values are
-  AllowSelfServeUpgradeToMongo36, DisableRateLimitingResponses,
-  EnableAggregationPipeline, EnableCassandra, EnableGremlin,EnableMongo, EnableTable, EnableServerless,
-  MongoDBv3.4 and mongoEnableDocLevelTTL.
-  EOT
-  type        = list(string)
-  default     = []
+variable "indexes" {
+  description = "List of indexes to create on the MongoDB collection"
+  type = list(object({
+    keys    = list(string)
+    options = map(string)
+  }))
+  default = []
 }
 
-variable "database_settings" {
-  description = "(Optional) Supported API for the databases in the account and a list of databases to provision. Allowed values of API type are Sql, Cassandra, MongoDB, Gremlin, Table. If 'use_autoscale' is set, 'throughput' becomes 'max_throughput' with a minimum value of 1000."
-  type = object({
-    api_type = string
-    databases = list(object({
-      name          = string
-      throughput    = number
-      use_autoscale = bool #If set, throughput will become max_throughput
-    }))
-  })
-  default = {
-    api_type  = "Sql"
-    databases = []
-  }
+variable "db_throughput" {
+  description = "The throughput for the database. If null, the database will be autoscaled."
+  type        = number
+  default     = null
   validation {
-    condition     = contains(["Sql", "Cassandra", "MongoDB", "Gremlin", "Table"], var.database_settings.api_type)
-    error_message = "Valid values for database API type are (Sql, Cassandra, MongoDB, Gremlin and Table)."
+    condition     = var.db_throughput >= 400
+    error_message = "Throughput must be a positive number greater than or equal to 400."
   }
 }
 
-variable "database_throughput" {
-  description = "(Optional) RU throughput value for the selected database."
+variable "db_max_throughput" {
+  description = "The maximum throughput for the MongoDB database when autoscaling."
+  type        = number
+  default     = 400
+}
+variable "collection_throughput" {
+  description = "The throughput for the MongoDB collection (e.g., RU/s)"
+  type        = number
+  default     = null
+}
+
+variable "collection_max_throughput" {
+  description = "The maximum throughput for the MongoDB collection when autoscaling."
   type        = number
   default     = 400
 }
 
-variable "enable_automatic_failover" {
-  description = "(Optional) Enable automatic failover for this Cosmos DB account. Valid values are (true, false)."
-  type        = bool
-  default     = false
-  validation {
-    condition     = can(regex("true|false", var.enable_automatic_failover))
-    error_message = "Valid values are true, false."
-  }
-}
-
-variable "enable_diagnostics" {
-  description = "(Optional) Enable Cosmosdb diagnostic setting. Valid values are (true, false)."
-  type        = bool
-  default     = false
-  validation {
-    condition     = can(regex("true|false", var.enable_diagnostics))
-    error_message = "Valid values are true, false."
-  }
-}
-
-variable "enable_multiple_write_locations" {
-  description = "(Optional) Enable multiple write locations for this Cosmos DB account. Valid values are (true, false)."
-  type        = bool
-  default     = false
-  validation {
-    condition     = can(regex("true|false", var.enable_multiple_write_locations))
-    error_message = "Valid values are true, false."
-  }
-}
-
-variable "enable_private_endpoint" {
-  description = "(Optional) Private Endpoint requirement. Valid values are (true, false). "
-  type        = bool
-  default     = false
-  validation {
-    condition     = can(regex("true|false", var.enable_private_endpoint))
-    error_message = "Valid values are true, false."
-  }
-}
-
-variable "enable_replication" {
-  description = "(Optional) Enable replication of this Cosmos DB account to a secondary location. Valid values are (true, false)."
-  type        = bool
-  default     = false
-  validation {
-    condition     = can(regex("true|false", var.enable_replication))
-    error_message = "Valid values are true, false."
-  }
-}
-
-variable "failover_location" {
-  description = "(Optional) The name of the Azure region to host replicated data. Valid values are (eastus2, centralus)."
-  type        = string
-  default     = ""
-  validation {
-    condition     = contains(["", "eastus2", "centralus"], var.failover_location)
-    error_message = "Valid values for failover_location are (eastus2 and centralus)."
-  }
-}
-
-variable "failover_priority" {
-  description = "(Optional) The failover priority of the region. A failover priority of 0 indicates a write region."
-  type        = string
-  default     = "0"
-}
-
-variable "index" {
-  description = "(Optional) cosmosdb unique index (ex: 01,02...etc)"
-  type        = string
-  default     = "01"
-}
-
-variable "interval_in_minutes" {
-  description = "(Optional) The interval in minutes between two backups. This is configurable only when type is Periodic. Possible values are between 60 and 1440."
+variable "analytical_storage_ttl" {
+  description = "The TTL (time-to-live) for analytical storage in the MongoDB collection."
   type        = number
-  default     = 60
-  validation {
-    condition     = var.interval_in_minutes >= 60 && var.interval_in_minutes <= 1440 && floor(var.interval_in_minutes) == var.interval_in_minutes
-    error_message = "Accepted values in between (minutes): 60 - 1440."
-  }
+  default     = null
 }
 
-variable "is_test_run" {
-  description = "(Optional) Is this a test run? Defaults to false. Only set to true to use in a test harness to disable certain networking features."
+variable "index_keys" {
+  description = "The keys for indexing in the MongoDB collection."
+  type        = list(string)
+}
+
+variable "index_unique" {
+  description = "Whether the index should be unique."
   type        = bool
   default     = false
 }
 
-variable "kind" {
-  description = "(Optional) Specifies the Kind of CosmosDB to create - possible values are 'GlobalDocumentDB' and 'MongoDB'."
-  type        = string
-  default     = "GlobalDocumentDB"
-  validation {
-    condition     = contains(["MongoDB", "GlobalDocumentDB"], var.kind)
-    error_message = "Valid values for cosmosdb kind are (GlobalDocumentDB or MongoDB)."
-  }
+
+variable "role_assignments" {
+  type = map(object({
+    role_definition_id_or_name = string
+    principal_id               = string
+  }))
+  default     = {}
+  description = <<DESCRIPTION
+A map of role assignments to create on the resource. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+
+- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+- `principal_id` - The ID of the principal to assign the role to.
+DESCRIPTION
+  nullable    = false
 }
 
-variable "local_authentication_disabled" {
-  description = <<EOT
-  (Optional) Disable local authentication and ensure only MSI and AAD can be used exclusively for authentication.
-  Defaults to false. Can be set only when using the SQL API.
-  Valid values are (true, false).
-  EOT
+variable "tags" {
+  description = "A map of tags to assign to the resources"
+  type        = map(string)
+  default     = {}
+}
+
+variable "terraform_module" {
+  description = "Used to inform of a parent module"
+  type        = string
+  default     = ""
+}
+
+### 
+variable "autoscale_throughput" {
+  description = "Enable autoscale throughput for the database"
   type        = bool
   default     = false
-  validation {
-    condition     = can(regex("true|false", var.local_authentication_disabled))
-    error_message = "Valid values are true, false."
-  }
 }
 
-variable "max_interval_in_seconds" {
-  description = "(Optional) When used with the Bounded Staleness consistency level, this value represents the time amount of staleness (in seconds) tolerated. Accepted range for this value is 5 - 86400 (1 day)."
-  type        = string
-  default     = "5"
-}
-
-variable "max_staleness_prefix" {
-  description = "(Optional) When used with the Bounded Staleness consistency level, this value represents the number of stale requests tolerated. Accepted range for this value is 10 – 2147483647."
-  type        = string
-  default     = "10"
-}
-
-variable "pe_subnet_id_primary" {
-  description = <<EOT
-  (Optional) Private endpoint Subnet id, required when Private_Endpoint is enabled
-  Subnet_ID usage: "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets/{subnetName}"
-  EOT
-  default     = ""
-}
-
-variable "pe_subnet_id_secondary" {
-  description = <<EOT
-  (Optional) Private endpoint Subnet id, required when Private_Endpoint is enabled and replicating to a secondary region
-  Subnet_ID usage: "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets/{subnetName}"
-  EOT
-  default     = ""
-}
-
-variable "retention_days" {
-  description = "(Optional) Cosmosdb retention daysl[Provide retention days if 'enable_diagnostics' is set to true]"
-  default     = 7
-}
-
-variable "retention_in_hours" {
-  description = "(Optional) The time in hours that each backup is retained. This is configurable only when type is Periodic. Possible values are between 8 and 720."
+variable "max_throughput" {
+  description = "Maximum throughput for autoscale settings"
   type        = number
-  default     = 8
-  validation {
-    condition     = var.retention_in_hours >= 8 && var.retention_in_hours <= 720 && floor(var.retention_in_hours) == var.retention_in_hours
-    error_message = "Accepted values in between (hours): 8 - 720."
+  default     = null
+}
+
+
+==================================
+# versions.tf
+## Please refer to version template document for setting this configuration.
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "< 6.0.0"
+    }
   }
 }
 
-variable "storage_redundancy" {
-  description = "(Optional) The storage redundancy is used to indicate the type of backup residency. This is configurable only when type is Periodic. Possible values are Geo, Local and Zone."
-  type        = string
-  default     = "Local"
-  validation {
-    condition     = contains(["Geo", "Local", "Zone"], var.storage_redundancy)
-    error_message = "Valid values for storage_redundancy are (Geo, Local and Zone)."
-  }
-}
-
-variable "is_msdn_cosmosdb" {
-  description = "Is this cosmos db to be used in an msdn subscription. Default is false."
-  type        = bool
-  default     = false
-}
-
-variable "dns_private_zone_rg" {
-  type        = string
-  description = "The resource group that the privatelink DNS zone record is in (Azure Private DNS)"
-  default     = "dnsproxy-prd"
-}
-
-variable "is_virtual_network_filter_enabled" {
-  description = "Is this cosmos db to be used in an msdn subscription. Default is false."
-  type        = bool
-  default     = true
-}
-
-variable "zone_redundant" {
-  description = "(Optional) Should Zone Redundancy in the primary region be enabled?"
-  type        = bool
-  default     = false
-}
-
-variable "failover_zone_redundant" {
-  description = "(Optional) Should Zone Redundancy in the failover region be enabled?"
-  type        = bool
-  default     = false
-}
-
-### ----
-# Outputs
-output "cosmosdb_id" {
-  description = "ID of the deployed CosmosDB account"
-  value       = azurerm_cosmosdb_account.db.id
-}
-
-output "cosmosdb_name" {
-  description = "Name of the deployed CosmosDB account"
-  value       = azurerm_cosmosdb_account.db.name
-}
-
-### locals
-locals {
-  cosmosdb_name = ""
-
-
-}
-
+==================================
+==================================
+==================================
 ------------------
 module "cosmosdb_account" {
   source = "./modules/cosmosdb_account"
