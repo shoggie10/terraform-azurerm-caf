@@ -42,69 +42,8 @@ https://us05web.zoom.us/j/86526167418?pwd=eugwcO1uniIUdwitbn3ActMoO5CCjG.1
 -----------------------------------------------------
 
 ## examples
-provider "azurerm" {
-  #4.0+ version of AzureRM Provider requires a subscription ID  
-  subscription_id = "b987518f-1b04-4491-915c-e21dabc7f2d3"
-  features {
-
-  }
-}
 
 
-locals {
-  tags = {
-    environment         = "dev"
-    application_id      = "0000"
-    asset_class         = "standard"
-    data_classification = "confidential"
-    managed_by          = "it_cloud"
-    requested_by        = "me@email.com"
-    cost_center         = "1234"
-    source_code         = "https://gitlab.com/company/test"
-    deployed_by         = "test-workspace"
-    application_role    = ""
-  }
-}
-
-data "azurerm_resource_group" "this" {
-  name = "wayne-tech-hub"
-}
-
-data "azurerm_cosmosdb_account" "this" {
-  name                = "cassandra-cdbwaynetechhubdev259678"
-  resource_group_name = data.azurerm_resource_group.this.name
-}
-
-data "azuread_user" "this" {
-  user_principal_name = "salonge@bokf.com"
-}
-
-
-
-module "this" {
-  source = "../" ## This is source code call for each module
-
-  cassandra_keyspace_name = "cassandra_database1"
-  cassandra_table_name    = "cassandra-table1"
-  resource_group_name     = "wayne-tech-hub"
-  cosmosdb_account_name   = data.azurerm_cosmosdb_account.this.name
-  #partition_key_type = "ascii"
-
-  keyspace_throughput = 1000
-  # keyspace_max_throughput = 4000
-  # table_name          = "example-table"
-  table_throughput     = 1000
-  table_max_throughput = 4000
-  default_ttl_seconds  = 3600
-  column_name          = "example_column"
-  column_type          = "text"
-  additional_column_name  = "example_column2"
-  additional_column_type  = "text"
-  partition_key_name   = "id"
-  cluster_key_name     = "timestamp"
-  cluster_key_order_by = "Asc"
-
-}
 
 
 =======================================
@@ -134,83 +73,13 @@ module "this" {
 =================================
 ==================================
 # globals.tf
-data "azurerm_client_config" "current" {}
 
-data "azurerm_cosmosdb_account" "this" {
-  name                = var.cosmosdb_account_name
-  resource_group_name = var.resource_group_name
-}
-
-locals {
-  keyspace_throughput = var.keyspace_throughput != null ? var.keyspace_throughput : var.keyspace_max_throughput
-  table_throughput    = var.table_throughput != null ? var.table_throughput : var.table_max_throughput
-}
 
 
 ==================================
 ==================================
 # main.tf
-locals {
-  # These are the various naming standards
-  tfModule          = "Example"                                                                                       ## This should be the service name please update without fail and do not remove these two definitions.
-  tfModule_extended = var.terraform_module != "" ? join(" ", [var.terraform_module, local.tfModule]) : local.tfModule ## This is to send multiple tags if the main module have submodule calls.
-}
 
-resource "azurerm_cosmosdb_cassandra_keyspace" "this" {
-  name                = var.cassandra_keyspace_name
-  resource_group_name = var.resource_group_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
-  throughput          = var.keyspace_max_throughput != null ? null : var.keyspace_throughput
-  autoscale_settings {
-    max_throughput = var.keyspace_max_throughput
-  }
-}
-
-resource "azurerm_cosmosdb_cassandra_table" "this" {
-  name                 = var.cassandra_table_name
-  cassandra_keyspace_id   = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.DocumentDB/databaseAccounts/${data.azurerm_cosmosdb_account.this.name}/cassandraKeyspaces/${var.cassandra_keyspace_name}"
-  throughput             = var.table_max_throughput != null ? null : var.table_throughput
-  default_ttl            = var.default_ttl_seconds != null ? var.default_ttl_seconds : null
-  analytical_storage_ttl = var.analytical_storage_ttl != null ? var.analytical_storage_ttl : null
-  
-  schema {
-    column {
-      name = var.column_name
-      type = var.column_type
-    }
-
-    column {
-      name = var.additional_column_name
-      type = var.additional_column_type
-    }
-
-    partition_key {
-      name = var.partition_key_name
-    }
-
-    cluster_key {
-      name = var.cluster_key_name
-      order_by = var.cluster_key_order_by
-    }
-  }
-}
-
-module "rbac" {
-  source = "app.terraform.io/bokf/common/azure"
-
-  for_each = var.role_assignments
-
-  resource_id   = azurerm_cosmosdb_cassandra_table.this.id
-  resource_name = azurerm_cosmosdb_cassandra_table.this.name
-
-  role_based_permissions = {
-    assignment = {
-      role_definition_id_or_name = each.value.role_definition_id_or_name
-      principal_id               = each.value.principal_id
-    }
-  }
-  wait_for_rbac = false
-}
 
 
 
@@ -218,25 +87,7 @@ module "rbac" {
 ==================================
 ==================================
 # outputs.tf
-output "cassandra_keyspace_id" {
-  value       = azurerm_cosmosdb_cassandra_keyspace.this.id
-  description = "The ID of the CosmosDB Cassandra keyspace"
-}
 
-output "cassandra_table_id" {
-  value       = azurerm_cosmosdb_cassandra_table.this.id
-  description = "The ID of the CosmosDB Cassandra table"
-}
-
-output "cassandra_keyspace_name" {
-  value       = azurerm_cosmosdb_cassandra_keyspace.this.name
-  description = "The ID of the CosmosDB Cassandra keyspace"
-}
-
-output "cassandra_table_name" {
-  value       = azurerm_cosmosdb_cassandra_table.this.name
-  description = "The ID of the CosmosDB Cassandra table"
-}
 
 
 
@@ -253,152 +104,8 @@ output "cassandra_table_name" {
 ==================================
 ==================================
 # variables.tf
-variable "resource_group_name" {
-  description = "The name of the resource group"
-  type        = string
-}
-
-variable "cassandra_keyspace_name" {
-  description = "Name of the CosmosDB Cassandra keyspace to create"
-  type        = string
-}
-
-variable "cosmosdb_account_name" {
-  description = "The name of the CosmosDB account"
-  type        = string
-}
-
-variable "cassandra_table_name" {
-  description = "Name of the CosmosDB Cassandra table to create"
-  type        = string
-}
 
 
-variable "keyspace_throughput" {
-  description = "The throughput for the Cassandra keyspace (e.g., RU/s)"
-  type        = number
-  default     = null
-}
-
-variable "table_throughput" {
-  description = "The throughput for the Cassandra table (e.g., RU/s)"
-  type        = number
-  default     = null
-}
-
-variable "table_max_throughput" {
-  description = "The maximum throughput for autoscaling the table."
-  type        = number
-  default     = 4000
-}
-
-variable "column_name" {
-  description = "The name of the partition key column"
-  type        = string
-  # validation {
-  #   condition     = contains(var.columns[*].name, var.column_name)
-  #   error_message = "Partition key name must match one of the defined column names."
-  # }
-}
-variable "column_type" {
-  description = "The data type of the partition key column (e.g., 'ascii', 'text', 'int')"
-  type        = string
-  # validation {
-  #   condition     = contains(["ascii", "text", "int", "uuid", "timestamp"], var.column_type)
-  #   error_message = "Partition key type must be a valid Cassandra type (e.g., 'ascii', 'text', 'int')."
-  # }
-}
-
-variable "partition_key_name" {
-  description = "The name of the partition key column"
-  type        = string
-  # validation {
-  #   condition     = contains(var.columns[*].name, var.partition_key_name)
-  #   error_message = "Partition key name must match one of the defined column names."
-  # }
-}
-
-variable "cluster_key_name" {
-  description = "The clustering key name for the Cassandra table"
-  type = string
-  # validation {
-  #   condition = var.cluster_key_order_by == "ASC" || var.cluster_key_name == "DESC"
-  #   error_message = "clustering key order must be either 'ASC' or 'DESC'." 
-  # }
-}
-
-variable "cluster_key_order_by" {
-  description = "The clustering key order (ASC or DESC)"
-  type = string
-  #default = "ASC"
-}
-
-variable "additional_column_name" {
-  description = "The name of an additional column in the table"
-  type        = string
-  default     = null
-}
-
-variable "additional_column_type" {
-  description = "The data type of the additional column (e.g., 'ascii', 'text', 'int')"
-  type        = string
-  default     = null
-}
-
-
-
-variable "role_assignments" {
-  type = map(object({
-    role_definition_id_or_name = string
-    principal_id               = string
-  }))
-  default     = {}
-  description = <<DESCRIPTION
-A map of role assignments to create on the resource. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
-
-- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
-- `principal_id` - The ID of the principal to assign the role to.
-DESCRIPTION
-  nullable    = false
-}
-
-variable "tags" {
-  description = "A map of tags to assign to the resources"
-  type        = map(string)
-  default     = {}
-}
-
-variable "terraform_module" {
-  description = "Used to inform of a parent module"
-  type        = string
-  default     = ""
-}
-
-variable "default_ttl_seconds" {
-  description = "The TTL (time-to-live) for the table."
-  type        = number
-  default     = null
-}
-
-variable "analytical_storage_ttl" {
-  description = "The TTL for analytical storage."
-  type        = number
-  default     = null
-}
-
-variable "enable_autoscale" {
-  description = "Flag to enable autoscale throughput"
-  type        = bool
-  default     = false
-}
-variable "keyspace_max_throughput" {
-  description = "Maximum throughput for autoscale settings"
-  type        = number
-  default     = null
-}
-
-
-#
 
 
 
