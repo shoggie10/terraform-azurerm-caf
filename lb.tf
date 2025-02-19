@@ -21,8 +21,77 @@ output "lb" {
 
 
 =================||
-https://us05web.zoom.us/j/84213210972?pwd=sLTVaoR4aU3xnkEVnn8TgOLFQIifZb.1
+# Create the Key Vault
+module "key_vault" {
+  source  = "app.terraform.io/xxxx/key-vault/azure"
+  version = "< 0.2.0"
 
+  application_name                = "cosmosdbcmk"
+  enabled_for_template_deployment = true
+  resource_group_name             = var.resource_group_name
+
+  network_acls = {
+    bypass                       = length(var.private_endpoints) != 0 ? "None" : "AzureServices"
+    default_action               = length(var.private_endpoints) == 0 && length(var.ip_range_filter) == 0 && length(local.cmk.virtual_network_subnet_ids) == 0 ? "Allow" : "Deny"
+    ip_rules                     = var.ip_range_filter
+    virtual_network_subnet_ids   = local.cmk.virtual_network_subnet_ids
+  }
+
+  tags = var.tags
+}
+
+# Create the Cosmos DB account's managed identity
+resource "azurerm_user_assigned_identity" "cosmosdb_identity" {
+  name                = "${local.cosmosdb_account_name}-identity"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+}
+
+# Assign RBAC roles for the Key Vault
+module "key_vault_rbac" {
+  source  = "app.terraform.io/xxxx/common/azure"
+  resource_name = module.key_vault.display_name
+  resource_id   = module.key_vault.id
+
+  role_based_permissions = {
+    terraform = {
+      role_definition_id_or_name = "Key Vault Administrator"
+      principal_id               = data.azurerm_client_config.current.object_id
+    }
+
+    cosmosdb_account_managed_identity_read = {
+      role_definition_id_or_name = "Key Vault Reader"
+      principal_id               = azurerm_user_assigned_identity.cosmosdb_identity.principal_id
+    }
+
+    cosmosdb_account_managed_identity = {
+      role_definition_id_or_name = "Key Vault Crypto User"
+      principal_id               = azurerm_user_assigned_identity.cosmosdb_identity.principal_id
+    }
+  }
+}
+
+# RBAC role assignments to propagate
+resource "time_sleep" "wait_for_rbac" {
+  depends_on = [module.key_vault_rbac]
+
+  create_duration = "30s"
+}
+
+# Create the Key Vault Key
+module "key_vault_key" {
+  source  = "app.terraform.io/xxxx/key-vault-key/azure"
+  version = "< 0.2.0"
+
+  depends_on = [time_sleep.wait_for_rbac]
+
+  key_vault_resource_id = module.key_vault.id
+  name                  = "${local.cosmosdb_account_name}-encryption"
+  type                  = "RSA"
+  size                  = 3072
+  opts                  = ["encrypt", "decrypt", "sign", "unwrapKey", "wrapKey"]
+  tags                  = var.tags
+}
 
 
 
