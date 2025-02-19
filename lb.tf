@@ -21,11 +21,7 @@ output "lb" {
 
 
 =================||
-│ Error: checking for presence of Sql Database: (Name "sql_database1" / Database Account Name "cdbwaynetechhubdev384685" / Resource Group "wayne-tech-hub"): documentdb.SQLResourcesClient#GetSQLDatabase: Failure responding to request: StatusCode=405 -- Original Error: autorest/azure: Service returned an error. Status=405 Code="MethodNotAllowed" Message="Requests for API sql are not supported for this account.\r\nActivityId: 202f0a84-b172-403f-a38f-7cdfd3b832cc, Microsoft.Azure.Documents.Common/2.14.0"
-│ 
-│   with module.this.azurerm_cosmosdb_sql_database.this,
-│   on ../main.tf line 8, in resource "azurerm_cosmosdb_sql_database" "this":
-│    8: resource "azurerm_cosmosdb_sql_database" "this" {
+
 
 
 
