@@ -21,67 +21,7 @@ output "lb" {
 
 
 =================||
-data "azurerm_client_config" "current" {}
 
-data "azurerm_resource_group" "this" {
-  name = var.resource_group_name
-}
-
-resource "random_integer" "this" {
-  min = "100000"
-  max = "999999"
-}
-
-locals {
-  cosmosdb_account_name  = "cdb${var.application_name}${var.tags.environment}${random_integer.this.result}"
-  cmk_keyvault_name      = element(split("/", module.key_vault.id), 8)   # module.key_vault.display_name
-  key_vault_key_name     = element(split("/", module.key_vault_key.resource_versionless_id), 10)
-  normalized_cmk_key_url = "https://${local.cmk_keyvault_name}.vault.azure.net/keys/${local.key_vault_key_name}"
-
-  consistent_prefix_consistency = "ConsistentPrefix"
-  continuous_backup_policy      = "Continuous"
-  default_geo_location = toset([{
-    failover_priority = 0
-    zone_redundant    = true
-    location          = var.location
-  }])
-
-  # Ensure the User-Assigned Managed Identity is correctly referenced
-  managed_identities = {
-    system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
-      this = {
-        type                       = var.managed_identities.system_assigned && length(var.managed_identities.user_assigned_resource_ids) > 0 ? "SystemAssigned, UserAssigned" : length(var.managed_identities.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned"
-        user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
-      }
-    } : {}
-    system_assigned = var.managed_identities.system_assigned ? {
-      this = {
-        type = "SystemAssigned"
-      }
-    } : {}
-    user_assigned = length(var.managed_identities.user_assigned_resource_ids) > 0 ? {
-      this = {
-        type                       = "UserAssigned"
-        user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
-      }
-    } : {}
-  }
-
-  normalized_geo_locations             = coalesce(var.geo_locations, local.default_geo_location)
-  normalized_cmk_default_identity_type = var.customer_managed_key != null ? "UserAssignedIdentity=${var.customer_managed_key.user_assigned_identity.resource_id}" : null
-  periodic_backup_policy               = "Periodic"
-  private_endpoint_scope_type          = "PrivateEndpoint"
-  serverless_capability                = "EnableServerless"
-  normalized_ip_range_filter           = length(toset(local.trimmed_ip_range_filter)) > 0 ? join(",", toset(local.trimmed_ip_range_filter)) : null
-  trimmed_ip_range_filter              = [for value in var.ip_range_filter : trimspace(value)]
-
-  cmk = {
-    virtual_network_subnet_ids = []   # a list of subnet_id [], not a string
-  }
-}
-
-
-###   default_identity_type                 = "UserAssignedIdentity=${azurerm_user_assigned_identity.cosmosdb_identity.id}"
 
 
 
