@@ -21,7 +21,29 @@ output "lb" {
 
 
 =================||
-https://us05web.zoom.us/j/87920393065?pwd=EDauEwJ9fhGTzWlx2bpYDbhHLSyVTE.1
+variable "capabilities" {
+  type = set(object({
+    name = string
+  }))
+  nullable    = false
+  default     = []
+  description = <<DESCRIPTION
+  Defaults to []. The capabilities which should be enabled for this Cosmos DB account.
+
+  - name - (Required) - The capability to enable - Possible values are AllowSelfServeUpgradeToMongo36, DisableRateLimitingResponses, EnableAggregationPipeline, EnableCassandra, EnableGremlin, EnableMongo, EnableMongo16MBDocumentSupport, EnableMongoRetryableWrites, EnableMongoRoleBasedAccessControl, EnablePartialUniqueIndex, EnableServerless, EnableTable, EnableTtlOnCustomPath, EnableUniqueCompoundNestedDocs, MongoDBv3.4 and mongoEnableDocLevelTTL.
+
+  Example inputs:
+  ```hcl
+  capabilities = [
+    {
+      name = "EnableCassandra"  # Enable Cassandra API
+    }
+  ]
+
+
+
+
+
 
 
 
