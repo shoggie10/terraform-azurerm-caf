@@ -21,7 +21,294 @@ output "lb" {
 
 
 =================||
-https://us05web.zoom.us/j/83041973210?pwd=8msXI0l1ZSDBn33bGddrbNy43mZ3i8.1
+# The following `main.tf` includes only the core CosmosDB module, without references to specific APIs, making it independent so that separate API modules can be created.
+resource "azurerm_cosmosdb_account" "this" {
+  name                = local.cosmosdb_account_name
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  offer_type          = "Standard"
+  kind                = var.kind == "GlobalDocumentDB" ? "GlobalDocumentDB" : "MongoDB" 
+  #kind                = "GlobalDocumentDB"
+
+
+  is_virtual_network_filter_enabled  = var.is_virtual_network_filter_enabled
+  access_key_metadata_writes_enabled = var.access_key_metadata_writes_enabled
+  automatic_failover_enabled         = var.automatic_failover_enabled
+  multiple_write_locations_enabled   = var.backup.type == local.periodic_backup_policy ? var.multiple_write_locations_enabled : false
+  analytical_storage_enabled         = var.analytical_storage_enabled
+
+  #default_identity_type                 = local.normalized_cmk_default_identity_type 
+
+  #default_identity_type = azurerm_user_assigned_identity.cosmosdb_identity.id
+  default_identity_type                 = "UserAssignedIdentity=${azurerm_user_assigned_identity.cosmosdb_identity.id}"
+  free_tier_enabled                     = var.free_tier_enabled
+  ip_range_filter                       = var.ip_range_filter    
+  key_vault_key_id                      = local.normalized_cmk_key_url
+  local_authentication_disabled         = var.local_authentication_disabled
+  minimal_tls_version                   = "Tls12"
+  mongo_server_version                  = var.mongo_server_version != null ? var.mongo_server_version : null
+  network_acl_bypass_for_azure_services = var.network_acl_bypass_for_azure_services
+  network_acl_bypass_ids                = var.network_acl_bypass_ids
+  partition_merge_enabled               = var.partition_merge_enabled
+  public_network_access_enabled         = var.public_network_access_enabled
+  tags                                  = module.tags.tags
+
+  consistency_policy {
+    consistency_level       = var.consistency_policy.consistency_level
+    max_interval_in_seconds = var.consistency_policy.consistency_level == local.consistent_prefix_consistency ? var.consistency_policy.max_interval_in_seconds : null
+    max_staleness_prefix    = var.consistency_policy.consistency_level == local.consistent_prefix_consistency ? var.consistency_policy.max_staleness_prefix : null
+  }
+  dynamic "geo_location" {
+    for_each = local.normalized_geo_locations
+
+    content {
+      failover_priority = geo_location.value.failover_priority
+      location          = geo_location.value.location
+      zone_redundant    = geo_location.value.zone_redundant
+    }
+  }
+  dynamic "analytical_storage" {
+    for_each = var.analytical_storage_config != null ? [1] : []
+
+    content {
+      schema_type = var.analytical_storage_config.schema_type
+    }
+  }
+  backup {
+    type                = var.backup.type
+    interval_in_minutes = var.backup.type == local.periodic_backup_policy ? var.backup.interval_in_minutes : null
+    retention_in_hours  = var.backup.type == local.periodic_backup_policy ? var.backup.retention_in_hours : null
+    storage_redundancy  = var.backup.type == local.periodic_backup_policy ? var.backup.storage_redundancy : null
+    tier                = var.backup.type == local.continuous_backup_policy ? var.backup.tier : null
+  }
+  dynamic "capabilities" {
+    for_each = var.capabilities
+
+    content {
+      name = capabilities.value.name
+    }
+  }
+
+###
+  # capabilities {
+  #   name = "EnableCassandra"  
+  # }
+
+  capacity {
+    total_throughput_limit = var.capacity.total_throughput_limit
+  }
+  dynamic "cors_rule" {
+    for_each = var.cors_rule != null ? [1] : []
+
+    content {
+      allowed_headers    = var.cors_rule.allowed_headers
+      allowed_methods    = var.cors_rule.allowed_methods
+      allowed_origins    = var.cors_rule.allowed_origins
+      exposed_headers    = var.cors_rule.exposed_headers
+      max_age_in_seconds = var.cors_rule.max_age_in_seconds
+    }
+  }
+  # dynamic "identity" {
+  #   for_each = local.managed_identities.system_assigned_user_assigned
+
+  #   content {
+  #     type         = identity.value.type   #"UserAssigned"
+  #     identity_ids = identity.value.user_assigned_resource_ids   #[azurerm_user_assigned_identity.cosmosdb_identity.id]
+  #   }
+  # }
+
+  identity {
+    type = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.cosmosdb_identity.id]
+  }
+ 
+  dynamic "virtual_network_rule" {
+    for_each = var.virtual_network_rules
+
+    content {
+      id                                   = virtual_network_rule.value.subnet_id
+      ignore_missing_vnet_service_endpoint = false
+    }
+  }
+  lifecycle {
+    precondition {
+      condition     = var.backup.type == local.continuous_backup_policy && var.multiple_write_locations_enabled ? false : true
+      error_message = "Continuous backup mode and multiple write locations cannot be enabled together."
+    }
+    precondition {
+      condition     = var.analytical_storage_enabled && var.partition_merge_enabled ? false : true
+      error_message = "Analytical storage and partition merge cannot be enabled together."
+    }
+    # precondition {
+    #   condition     = !(var.public_network_access_enabled && lookup(var.tags, "data_classification", "") != "public")
+    #   error_message = "Public network access can only be enabled if the data_classification tag is set to 'Public'."
+    # }
+
+    # precondition {
+    #   condition     = (var.public_network_access_enabled == true) || (length(var.virtual_network_rules) > 0 || length(var.ip_range_filter) > 0 || var.private_endpoints_enabled)  # (var.public_network_access_enabled == false)
+    #   error_message = "When the public network access is disabled, you must provide either virtual network rules, IP range filters, or enable private endpoint."
+    # }
+  }
+  #depends_on = [ azurerm_user_assigned_identity.cosmosdb_identity ]
+}
+
+
+# TO-DO
+# resource "time_sleep" "wait_180_seconds_for_destroy" {
+#   #count = module.diagnostic_settings.diagnostic_settings_enabled ? 1 : 0   #assuming diagnostic_settings has an output called diagnostic_settings_enabled
+#   count = module.enable_diag_settings ? 1 : 0
+
+#   destroy_duration = "180s"
+#   triggers = {
+#     account_id = azurerm_cosmosdb_account.this.id
+#   }
+# }
+
+=====||====
+provider "azurerm" {
+  #4.0+ version of AzureRM Provider requires a subscription ID  
+  subscription_id = "b987518f-1b04-4491-915c-e21dabc7f2d3" #"0b5a3199-58bb-40ef-bcce-76a53aa594c2"
+
+  #resource_provider_registrations = "none"
+
+  features {
+
+  }
+}
+
+
+locals {
+  tags = {
+    environment         = "dev"
+    application_id      = "0000"
+    asset_class         = "standard"
+    data_classification = "public" #"confidential"
+    managed_by          = "it_cloud"
+    requested_by        = "me@email.com"
+    cost_center         = "1234"
+    source_code         = "https://gitlab.com/company/test"
+    deployed_by         = "test-workspace"
+    application_role    = ""
+  }
+}
+
+
+data "azurerm_resource_group" "this" {
+  name = "wayne-tech-hub"
+}
+
+# data "azurerm_cosmosdb_account" "this" {
+#   name                = "cdbwaynetechhubdev259678"
+#   resource_group_name = data.azurerm_resource_group.this.name
+# }
+
+data "azuread_user" "this" {
+  user_principal_name = "salonge@xxxx.com" # "SXA7BU_PA@xxxx.onmicrosoft.com"
+}
+
+
+
+module "this" {
+  source = "../"
+
+  application_name    = "waynetechhub"
+  resource_group_name = data.azurerm_resource_group.this.name
+  location            = data.azurerm_resource_group.this.location
+
+  tags = local.tags
+
+
+  consistency_policy = {
+    consistency_level       = "ConsistentPrefix"   #"Session"
+    max_interval_in_seconds = 300
+    max_staleness_prefix    = 100000
+  }
+
+
+  geo_locations = [
+    {
+      location          = "eastus2"
+      failover_priority = 0
+      zone_redundant    = false
+    }
+    #,
+    # {
+    #   location          = "centralus"
+    #   failover_priority = 1
+    #    zone_redundant = false
+
+    # }
+  ]
+
+  capabilities = [
+    {
+      name = "EnableCassandra"
+    },
+    {
+      name = "EnableMongo"
+    }
+  ]
+
+}
+=====||===
+data "azurerm_client_config" "current" {}
+
+data "azurerm_resource_group" "this" {
+  name = var.resource_group_name
+}
+
+resource "random_integer" "this" {
+  min = "100000"
+  max = "999999"
+}
+
+locals {
+  cosmosdb_account_name  = "cdb${var.application_name}${var.tags.environment}${random_integer.this.result}"
+  cmk_keyvault_name      = element(split("/", module.key_vault.id), 8)   # module.key_vault.display_name
+  key_vault_key_name     = element(split("/", module.key_vault_key.resource_versionless_id), 10)
+  normalized_cmk_key_url = "https://${local.cmk_keyvault_name}.vault.azure.net/keys/${local.key_vault_key_name}"
+
+  consistent_prefix_consistency = "ConsistentPrefix"   #"Session"
+  continuous_backup_policy      = "Continuous"
+  default_geo_location = toset([{
+    failover_priority = 0
+    zone_redundant    = true
+    location          = var.location
+  }])
+
+  # Ensure the User-Assigned Managed Identity is correctly referenced
+  managed_identities = {
+    system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
+      this = {
+        type                       = var.managed_identities.system_assigned && length(var.managed_identities.user_assigned_resource_ids) > 0 ? "SystemAssigned, UserAssigned" : length(var.managed_identities.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned"
+        user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
+      }
+    } : {}
+    system_assigned = var.managed_identities.system_assigned ? {
+      this = {
+        type = "SystemAssigned"
+      }
+    } : {}
+    user_assigned = length(var.managed_identities.user_assigned_resource_ids) > 0 ? {
+      this = {
+        type                       = "UserAssigned"
+        user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
+      }
+    } : {}
+  }
+
+  normalized_geo_locations             = coalesce(var.geo_locations, local.default_geo_location)
+  normalized_cmk_default_identity_type = var.customer_managed_key != null ? "UserAssignedIdentity=${var.customer_managed_key.user_assigned_identity.resource_id}" : null
+  periodic_backup_policy               = "Periodic"
+  private_endpoint_scope_type          = "PrivateEndpoint"
+  serverless_capability                = "EnableServerless"
+  normalized_ip_range_filter           = length(toset(local.trimmed_ip_range_filter)) > 0 ? join(",", toset(local.trimmed_ip_range_filter)) : null
+  trimmed_ip_range_filter              = [for value in var.ip_range_filter : trimspace(value)]
+
+  cmk = {
+    virtual_network_subnet_ids = []   # a list of subnet_id [], not a string
+  }
+}
 
 
 
