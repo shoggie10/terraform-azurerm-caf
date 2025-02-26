@@ -21,9 +21,37 @@ output "lb" {
 
 
 =================||
+https://us05web.zoom.us/j/89873967071?pwd=qCSHvwLNnKmlhRalScxITrPqGzF68O.1
+
+
+
+
+
+
 
 
 =====||====
+
+variables.tf > 
+
+variable "kind" {
+  description = "(Optional) Specifies the kind of CosmosDB to create - possible values are 'GlobalDocumentDB' and 'MongoDB'."
+  type        = string
+  default     = "GlobalDocumentDB"  # Default to GlobalDocumentDB
+  validation {
+    condition     = contains(["MongoDB", "GlobalDocumentDB"], var.kind)
+    error_message = "Valid values for Cosmosdb kind are (GlobalDocumentDB or MongoDB)."
+  }
+}
+
+examples/main.tf > 
+locals {
+  # Extract capability names into a list
+  capability_names = [for cap in var.capabilities : cap.name]
+
+  # kind based on capabilities
+  kind = contains(local.capability_names, "EnableMongo") ? "MongoDB" : "GlobalDocumentDB"
+}
 
 =====||===
 
