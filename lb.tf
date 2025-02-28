@@ -21,60 +21,7 @@ output "lb" {
 
 
 =================||
-Managing Docker Images
-Pushing Docker Images to Artifactory
-To push a Docker image to Artifactory, you can use either your IDE or terminal. Follow these steps to build, tag, and push your custom Docker image to Artifactory:
-
-Log in to your Artifactory virtual repository:
-
-Run the following command to authenticate Docker with your Artifactory instance:
-bash
-Copy
-docker login SERVER_NAME.jfrog.io
-Replace SERVER_NAME with your actual Artifactory server name.
-
-Build the Docker image:
-
-Use the docker build command to create your Docker image and tag it for your Artifactory repository:
-bash
-Copy
-docker build --tag SERVER_NAME.jfrog.io/VIRTUAL_REPO_NAME/my-docker-image:latest .
-Replace SERVER_NAME with your Artifactory server name and VIRTUAL_REPO_NAME with your virtual repository name.
-
-Push the image to Artifactory:
-
-Once the image is built, push it to your Artifactory repository:
-bash
-Copy
-docker push SERVER_NAME.jfrog.io/VIRTUAL_REPO_NAME/my-docker-image:latest
-This will upload the Docker image to Artifactory for use by other developers or systems.
-
-Pulling Docker Images from Artifactory
-To pull an image from Artifactory, follow these steps:
-
-Copy the repository name:
-
-Identify the Docker image you want to pull and copy the repository name (e.g., my-docker-image).
-Run the docker pull command:
-
-Pull the image using the following command:
-bash
-Copy
-docker pull <your-jfrog-repo>.jfrog.io/<dockerhub-image>:<tag>
-Replace:
-
-<your-jfrog-repo> with your JFrog Artifactory repository URL (e.g., SERVER_NAME.jfrog.io).
-<dockerhub-image>:<tag> with the image name and version tag from Artifactory (e.g., my-docker-image:latest).
-Version Control and Tagging
-It’s important to maintain consistent versioning for your Docker images. Here are some best practices:
-
-Use semantic versioning: Tag your Docker images with version numbers that follow semantic versioning (e.g., v1.0.0, v1.0.1, latest).
-Example tags: v1.0.0, v1.1.0, latest
-Push and pull specific versions: You can use tags to push or pull specific versions of Docker images as needed. For example:
-bash
-Copy
-docker push SERVER_NAME.jfrog.io/VIRTUAL_REPO_NAME/my-docker-image:v1.0.0
-docker pull SERVER_NAME.jfrog.io/VIRTUAL_REPO_NAME/my-docker-image:v1.0.0
+https://us05web.zoom.us/j/82734992508?pwd=zEa8vVbFBIK5NjWffGkIbKaGL5zEfc.1
 
 
 
