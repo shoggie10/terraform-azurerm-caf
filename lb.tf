@@ -21,8 +21,44 @@ output "lb" {
 
 
 =================||
-https://us05web.zoom.us/j/82734992508?pwd=zEa8vVbFBIK5NjWffGkIbKaGL5zEfc.1
+CI/CD Integration
+To streamline your Docker image workflows and automate processes, integrate JFrog Artifactory with your existing CI/CD tools:
 
+Integrate with CI/CD Tools:
+
+Integrate JFrog Artifactory with popular CI/CD tools like Jenkins, GitLab, or GitHub Actions to automate the build, test, and deployment pipelines.
+This integration allows you to push and pull Docker images automatically based on triggers like code commits or pull requests.
+Use the JFrog CLI:
+
+Leverage the JFrog CLI to automate Docker image operations such as building, pushing, and pulling images.
+The JFrog CLI simplifies these tasks with streamlined commands, making the CI/CD pipeline more efficient and easier to manage.
+Best Practices
+To optimize your Docker image management in Artifactory, follow these best practices:
+
+Use Virtual Repositories:
+
+Virtual repositories simplify the management of Docker images by aggregating multiple local and remote repositories under a single URL. This reduces complexity and ensures a cleaner structure.
+Scan Images for Vulnerabilities:
+
+Regularly use JFrog Xray to scan Docker images for known vulnerabilities, ensuring that you maintain a secure environment by identifying potential threats before deployment.
+Use Semantic Versioning for Docker Image Tags:
+
+Adopt semantic versioning (e.g., v1.0.0, v1.1.0, latest) for your Docker image tags. This practice helps in managing versions effectively and allows for clear version control of your images.
+Troubleshooting
+If you encounter issues during the Docker-Artifact integration process, here are some common problems and solutions:
+
+Docker Login Fails:
+
+Problem: Docker fails to log in to Artifactory.
+Solution: Verify your credentials and ensure the ~/.docker/config.json file is correctly configured with the appropriate authentication token or API key.
+Proxy Issues:
+
+Problem: Unable to push or pull images due to proxy-related issues.
+Solution: Check the Forcepoint Proxy settings and ensure that the environment variables (HTTP_PROXY, HTTPS_PROXY, NO_PROXY) are correctly set in both the shell configuration file and Docker daemon settings.
+Image Push/Pull Fails:
+
+Problem: Docker fails to push or pull images from Artifactory.
+Solution: Verify that the repository URL is correct and that you have the necessary permissions for the repository. Check that the repository exists and is accessible.
 
 
 
