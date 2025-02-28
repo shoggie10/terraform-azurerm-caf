@@ -21,68 +21,13 @@ output "lb" {
 
 
 =================||
-Steps to Configure Forcepoint Proxy for Docker
-Obtain Forcepoint Proxy Information:
+Overview of Forcepoint Proxy
+The Forcepoint Proxy serves as an intermediary between Docker and external services, such as Docker Hub or private registries. It enhances security and performance by offering the following benefits:
 
-Get the Forcepoint Proxy URL and port from your network administrator.
-If proxy authentication is required, obtain the username and password for the proxy.
-Set Environment Variables (for Linux):
-
-Open a terminal and edit your shell configuration file (e.g., ~/.bashrc or ~/.bash_profile).
-Add the following lines to set the proxy environment variables:
-bash
-Copy
-export HTTP_PROXY=http://<proxy-url>:<port>
-export HTTPS_PROXY=http://<proxy-url>:<port>
-export NO_PROXY=localhost,127.0.0.1,.local
-If proxy authentication is required, use the following format:
-bash
-Copy
-export HTTP_PROXY=http://<username>:<password>@<proxy-url>:<port>
-export HTTPS_PROXY=http://<username>:<password>@<proxy-url>:<port>
-Save the file and reload it by running:
-bash
-Copy
-source ~/.bashrc  # or source ~/.bash_profile
-Configure Docker Daemon Proxy Settings:
-
-Create or edit the Docker daemon proxy configuration file:
-bash
-Copy
-sudo nano /etc/systemd/system/docker.service.d/http-proxy.conf
-Add the following lines to configure Docker to use the Forcepoint proxy:
-ini
-Copy
-[Service]
-Environment="HTTP_PROXY=http://<forcepoint-proxy-url>:<port>"
-Environment="HTTPS_PROXY=http://<forcepoint-proxy-url>:<port>"
-Environment="NO_PROXY=localhost,127.0.0.1,.local"
-Reload Docker Daemon and Restart Docker:
-
-After saving the configuration, reload the Docker daemon and restart Docker for the changes to take effect:
-bash
-Copy
-sudo systemctl daemon-reload
-sudo systemctl restart docker
-For Docker Desktop (Windows/Mac):
-If you are using Docker Desktop on Windows or Mac, follow these steps to configure the proxy:
-
-Open Docker Desktop.
-Go to Settings > Resources > Proxies.
-Enable Manual Proxy Configuration.
-Enter the Forcepoint Proxy details:
-HTTP Proxy: http://<forcepoint-proxy-url>:<port>
-HTTPS Proxy: http://<forcepoint-proxy-url>:<port>
-No Proxy: localhost,127.0.0.1,.local
-Click Apply & Restart to save the settings.
-Verify Proxy Configuration:
-To verify that Docker is correctly configured to use the Forcepoint proxy, run the following command:
-
-bash
-Copy
-docker pull hello-world
-If the proxy configuration is correct, Docker will pull the hello-world image successfully.
-
+Content Filtering: Inspects and blocks potentially harmful Docker images or downloads.
+Authentication and Authorization: Controls access to Docker registries, ensuring only authorized users or systems can interact with them.
+Caching: Stores frequently accessed images to improve performance and reduce download times.
+Logging and Reporting: Tracks Docker activities for auditing, compliance, and troubleshooting.
 
 
 
