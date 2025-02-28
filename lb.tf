@@ -21,21 +21,31 @@ output "lb" {
 
 
 =================||
+Add Local Docker Repository
+This repository will store your custom Docker images that you will create in a later step.
 
-2. System Requirements
-CPU: Minimum 4 cores (Recommended: 8+ cores for optimal performance).
-RAM: Minimum 8GB (Recommended: 16GB+ for larger builds or more concurrent tasks).
-Storage: Minimum 100GB (Recommended: 500GB+, depending on artifact size and usage).
-Disk Type: SSD (Recommended: NVMe for better performance, especially with large Docker images).
-Access: Access to a JFrog Artifactory instance.
-Docker: Docker installed on your local machine or within your CI/CD environment.
-Network: Network access to DockerHub and JFrog Artifactory for image pulling/pushing.
-Credentials: Valid credentials for JFrog Artifactory (can be retrieved via CyberArk if applicable).
-3. Required Software and Tools
-JFrog Artifactory: A repository manager for managing Docker images and other artifacts.
-Docker: A containerization platform for building, pushing, and pulling Docker images.
-CyberArk: Used for securely managing and retrieving JFrog Artifactory credentials (if applicable).
-Forcepoint Proxy: Used for network-level proxy configuration when accessing JFrog Artifactory through a proxy (if applicable).
+Expand the "Create a Repository" menu and select the Local menu item.
+You will be presented with different choices for package types. Select the Docker package type.
+Enter the Repository Key as "docker-dev-local" and leave the other settings as default.
+Click the "Create Local Repository" button to complete this step.
+Add Remote Docker Repository
+This repository will act as a caching proxy for storing third-party Docker images, such as those from Docker Hub or other external registries.
+
+Similar to the previous step, expand the "Create a Repository" menu and select the Remote menu item.
+Again, choose the Docker package type.
+Enter the Repository Key as "docker-hub-remote" and keep the default settings.
+After creation, you should now see your new remote Docker repository in the Remote repository list.
+Add Virtual Docker Repository
+This repository will be set up to allow you to push your custom Docker images to your local repository and pull from either the local or remote repositories.
+
+Expand the "Create a Repository" menu and select the Virtual menu item.
+Select the Docker package type.
+You will need to do the following:
+Enter the Repository Key as "docker".
+Scroll down the settings page and add the local and remote Docker repositories (from steps 2 and 3) to the list. Move them from Available Repositories to Selected Repositories using the arrow buttons. The order of these repositories will determine the order used to resolve dependencies when building your Docker image.
+Set the Default Deployment Repository: Select the local repository you created in step 2 (i.e., docker-dev-local) as the Default Deployment Repository. This repository will receive the Docker images you push. Keep the rest of the default settings.
+Click the "Create Virtual Repository" button, and skip the client setup prompt. Your new virtual Docker repository should now appear in the Virtual repository list.
+
 
 
 
