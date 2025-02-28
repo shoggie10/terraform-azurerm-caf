@@ -81,7 +81,20 @@ In the Platform Configurations menu, select the Repositories option to access th
 =====||===
 
 
+Introduction
+The Docker Integration with JFrog Artifactory Guide explains how to integrate Docker, a platform for building and distributing containerized applications, with JFrog Artifactory, a powerful repository manager. By connecting Docker to Artifactory, you can centralize Docker image storage, manage image versions, and enforce access control to ensure secure distribution.
 
+This guide provides detailed, step-by-step instructions for setting up and configuring JFrog Artifactory as a Docker registry. It covers the following setups:
+
+Self-hosted JFrog Artifactory: Instructions for configuring and managing Artifactory when running on your own infrastructure.
+Cloud-based JFrog Artifactory: Instructions for configuring Artifactory in the cloud environment, accessed via Okta Single Sign-On (SSO) for seamless authentication.
+You will learn how to:
+
+Create and manage local, remote, and virtual Docker repositories.
+Set up Docker clients to authenticate with Artifactory.
+Integrate Artifactory with your CI/CD pipelines to automate Docker image builds and deployments.
+Secure access with API keys, access tokens, Role-Based Access Control (RBAC), and Forcepoint Proxy.
+Whether you're using a self-hosted or cloud-based setup, this guide will ensure you can effectively manage Docker images, integrate with your workflows, and maintain secure access.
 
 
 
