@@ -22,7 +22,20 @@ output "lb" {
 
 =================||
 
-
+2. System Requirements
+CPU: Minimum 4 cores (Recommended: 8+ cores for optimal performance).
+RAM: Minimum 8GB (Recommended: 16GB+ for larger builds or more concurrent tasks).
+Storage: Minimum 100GB (Recommended: 500GB+, depending on artifact size and usage).
+Disk Type: SSD (Recommended: NVMe for better performance, especially with large Docker images).
+Access: Access to a JFrog Artifactory instance.
+Docker: Docker installed on your local machine or within your CI/CD environment.
+Network: Network access to DockerHub and JFrog Artifactory for image pulling/pushing.
+Credentials: Valid credentials for JFrog Artifactory (can be retrieved via CyberArk if applicable).
+3. Required Software and Tools
+JFrog Artifactory: A repository manager for managing Docker images and other artifacts.
+Docker: A containerization platform for building, pushing, and pulling Docker images.
+CyberArk: Used for securely managing and retrieving JFrog Artifactory credentials (if applicable).
+Forcepoint Proxy: Used for network-level proxy configuration when accessing JFrog Artifactory through a proxy (if applicable).
 
 
 
