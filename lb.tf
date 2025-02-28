@@ -79,22 +79,17 @@ Click the gear icon (settings) in the top-left corner to open the Platform Confi
 In the Platform Configurations menu, select the Repositories option to access the repository management page.
 
 =====||===
+Working with Cloud-Based Artifactory
+From this point, you can configure repositories and manage Docker images as you would with a self-hosted instance.
+The main difference is that you will use your cloud-based Artifactory URL, which will look something like:
+arduino
+Copy
+https://<your-company-name>.jfrog.io/artifactory/
+Access and Permissions
+Access to JFrog Artifactory is managed via Okta and roles configured in Artifactory's Role-Based Access Control (RBAC) system.
+If you don’t have the appropriate permissions to access certain repositories or features, you will need to contact your Artifactory administrator to request access.
+Permissions for users and groups are assigned based on roles such as Administrator, Developer, Deployer, and others.
 
-
-Introduction
-The Docker Integration with JFrog Artifactory Guide explains how to integrate Docker, a platform for building and distributing containerized applications, with JFrog Artifactory, a powerful repository manager. By connecting Docker to Artifactory, you can centralize Docker image storage, manage image versions, and enforce access control to ensure secure distribution.
-
-This guide provides detailed, step-by-step instructions for setting up and configuring JFrog Artifactory as a Docker registry. It covers the following setups:
-
-Self-hosted JFrog Artifactory: Instructions for configuring and managing Artifactory when running on your own infrastructure.
-Cloud-based JFrog Artifactory: Instructions for configuring Artifactory in the cloud environment, accessed via Okta Single Sign-On (SSO) for seamless authentication.
-You will learn how to:
-
-Create and manage local, remote, and virtual Docker repositories.
-Set up Docker clients to authenticate with Artifactory.
-Integrate Artifactory with your CI/CD pipelines to automate Docker image builds and deployments.
-Secure access with API keys, access tokens, Role-Based Access Control (RBAC), and Forcepoint Proxy.
-Whether you're using a self-hosted or cloud-based setup, this guide will ensure you can effectively manage Docker images, integrate with your workflows, and maintain secure access.
 
 
 
