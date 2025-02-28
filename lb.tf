@@ -21,30 +21,7 @@ output "lb" {
 
 
 =================||
-Add Local Docker Repository
-This repository will store your custom Docker images that you will create in a later step.
 
-Expand the "Create a Repository" menu and select the Local menu item.
-You will be presented with different choices for package types. Select the Docker package type.
-Enter the Repository Key as "docker-dev-local" and leave the other settings as default.
-Click the "Create Local Repository" button to complete this step.
-Add Remote Docker Repository
-This repository will act as a caching proxy for storing third-party Docker images, such as those from Docker Hub or other external registries.
-
-Similar to the previous step, expand the "Create a Repository" menu and select the Remote menu item.
-Again, choose the Docker package type.
-Enter the Repository Key as "docker-hub-remote" and keep the default settings.
-After creation, you should now see your new remote Docker repository in the Remote repository list.
-Add Virtual Docker Repository
-This repository will be set up to allow you to push your custom Docker images to your local repository and pull from either the local or remote repositories.
-
-Expand the "Create a Repository" menu and select the Virtual menu item.
-Select the Docker package type.
-You will need to do the following:
-Enter the Repository Key as "docker".
-Scroll down the settings page and add the local and remote Docker repositories (from steps 2 and 3) to the list. Move them from Available Repositories to Selected Repositories using the arrow buttons. The order of these repositories will determine the order used to resolve dependencies when building your Docker image.
-Set the Default Deployment Repository: Select the local repository you created in step 2 (i.e., docker-dev-local) as the Default Deployment Repository. This repository will receive the Docker images you push. Keep the rest of the default settings.
-Click the "Create Virtual Repository" button, and skip the client setup prompt. Your new virtual Docker repository should now appear in the Virtual repository list.
 
 
 
@@ -66,6 +43,68 @@ Click the "Create Virtual Repository" button, and skip the client setup prompt. 
 
 
 =========
+
+Steps to Configure Forcepoint Proxy for Docker
+Obtain Forcepoint Proxy Information:
+
+Get the Forcepoint Proxy URL and port from your network administrator.
+If proxy authentication is required, obtain the username and password for the proxy.
+Set Environment Variables (for Linux):
+
+Open a terminal and edit your shell configuration file (e.g., ~/.bashrc or ~/.bash_profile).
+Add the following lines to set the proxy environment variables:
+bash
+Copy
+export HTTP_PROXY=http://<proxy-url>:<port>
+export HTTPS_PROXY=http://<proxy-url>:<port>
+export NO_PROXY=localhost,127.0.0.1,.local
+If proxy authentication is required, use the following format:
+bash
+Copy
+export HTTP_PROXY=http://<username>:<password>@<proxy-url>:<port>
+export HTTPS_PROXY=http://<username>:<password>@<proxy-url>:<port>
+Save the file and reload it by running:
+bash
+Copy
+source ~/.bashrc  # or source ~/.bash_profile
+Configure Docker Daemon Proxy Settings:
+
+Create or edit the Docker daemon proxy configuration file:
+bash
+Copy
+sudo nano /etc/systemd/system/docker.service.d/http-proxy.conf
+Add the following lines to configure Docker to use the Forcepoint proxy:
+ini
+Copy
+[Service]
+Environment="HTTP_PROXY=http://<forcepoint-proxy-url>:<port>"
+Environment="HTTPS_PROXY=http://<forcepoint-proxy-url>:<port>"
+Environment="NO_PROXY=localhost,127.0.0.1,.local"
+Reload Docker Daemon and Restart Docker:
+
+After saving the configuration, reload the Docker daemon and restart Docker for the changes to take effect:
+bash
+Copy
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+For Docker Desktop (Windows/Mac):
+If you are using Docker Desktop on Windows or Mac, follow these steps to configure the proxy:
+
+Open Docker Desktop.
+Go to Settings > Resources > Proxies.
+Enable Manual Proxy Configuration.
+Enter the Forcepoint Proxy details:
+HTTP Proxy: http://<forcepoint-proxy-url>:<port>
+HTTPS Proxy: http://<forcepoint-proxy-url>:<port>
+No Proxy: localhost,127.0.0.1,.local
+Click Apply & Restart to save the settings.
+Verify Proxy Configuration:
+To verify that Docker is correctly configured to use the Forcepoint proxy, run the following command:
+
+bash
+Copy
+docker pull hello-world
+If the proxy configuration is correct, Docker will pull the hello-world image successfully.
 
 
 
