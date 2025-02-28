@@ -61,7 +61,22 @@ Let me know if you need more specific guidance on the installation process!
 
 
 =====||====
+Cloud-Based JFrog Artifactory Integration via Okta
+Login to Your Cloud Environment via Okta
+Access JFrog Artifactory via Okta:
 
+Navigate to your Okta dashboard (usually provided by your IT or security team).
+Log in to Okta using your company credentials.
+Once logged in, locate the JFrog Artifactory application in your Okta menu or dashboard.
+Click on the JFrog Artifactory application to be redirected to your cloud-based Artifactory instance. This will automatically log you in using Single Sign-On (SSO).
+Verify Login:
+
+After clicking on the Artifactory application, you should be taken to the JFrog Artifactory dashboard without needing to manually enter a username or password, as Okta manages your credentials.
+If prompted, confirm that you have access to the necessary repositories and tools within Artifactory.
+Navigate to Platform Configurations
+After logging in to JFrog Artifactory, you will be directed to the cloud-based Artifactory dashboard.
+Click the gear icon (settings) in the top-left corner to open the Platform Configurations screen.
+In the Platform Configurations menu, select the Repositories option to access the repository management page.
 
 =====||===
 
