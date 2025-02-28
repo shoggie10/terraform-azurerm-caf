@@ -21,13 +21,7 @@ output "lb" {
 
 
 =================||
-I would like to create a Getting Started Document for using Artifactory with Docker
 
-So that I can provide easy to use instructions for other users on how to resolve Docker through Artifactory
-
-Need to include the forcepoint proxy configuration since Docker requires a separate setup.
-
-~/.docker/config.json file
 
 
 =====||====
