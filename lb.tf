@@ -21,8 +21,6 @@ output "lb" {
 
 
 =================||
-The Docker Integration with JFrog Artifactory Guide explains how to integrate Docker (a platform for building and distributing containers) with JFrog Artifactory (a repository manager). By connecting Docker to Artifatcory, one can centralize Docker image storage, manage versions, and ensure proper access control. 
-This guide walks through the step-by-step instructions for setting up and using JFrog Artifactory as a Docker registry. It covers creating local, remote, and virtual Docker repositories, configuring Docker clients, integrating with Forcepoint Proxy, and managing Docker images. Additionally, it includes security best practices, and troubleshooting tips.
 
 
 
