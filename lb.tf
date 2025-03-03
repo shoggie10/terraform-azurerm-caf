@@ -19,7 +19,352 @@ output "lb" {
   value = module.lb
 }
 ====================||===========
-https://us05web.zoom.us/j/84359971277?pwd=hhab88NcCtGHe5XAXZgj0lujdXfbk5.1
+# AWS IMAGES
+.aws_images_prd_variables: &aws_images_prd_variables
+  applicationId: 3546
+  dataClassification: confidential
+  assetClass: standard
+  shareTo: "[\"xxxxxxxxxx\", \"2xxxxxxxxx\"]"
+  securityGroup: sg-04ff9ef3a27a1676b
+  managedBy: "it_cloud"
+  costCenter: "xxxx"
+  environment: "tst"
+  crowdstrikeToken: $crowdstrikeToken
+  rapid7Token: $rapid7Token
+  sentinelWorkspaceID: $sentinelWorkspaceID
+  sentinelPrimaryKey: $sentinelPrimaryKey
+  servicePrincipalClientId: $servicePrincipalClientId
+  servicePrincipalSecret: $servicePrincipalSecret
+  resourceGroup: $resourceGroup
+  tenantId: $tenantId
+  subscriptionId: $subscriptionId
+  correlationId: $correlationId
+
+# TODO: this is not *actually* creating a deployment to prod. however, until we have the ability to deploy images to prod shared services,
+# these are "prod" images
+.aws_image_deploy_prd:
+  variables:
+    <<: *aws_images_prd_variables
+  script: |
+    echo "===== Building ${GOLDEN_TEMPLATE_FILE} ====="
+    export environment=${CI_ENVIRONMENT_NAME}
+    export buildDate=$(date "+%Y-%m-%d-%H.%M.%SZ")
+    export buildRegion=`curl http://169.254.169.254/latest/dynamic/instance-identity/document|grep region|awk -F\" '{print $4}'`
+    export SN_CLOUD_INTEGRATION_USER=${SN_CLOUD_INTEGRATION_USER}
+    export SN_CLOUD_INTEGRATION_PASSWORD=${SN_CLOUD_INTEGRATION_PASSWORD}
+    export SN_CLOUD_INTEGRATION_CALLER_ID=${SN_CLOUD_INTEGRATION_CALLER_ID}
+    export SN_CLOUD_ASSIGNMENT_GROUP=${SN_CLOUD_ASSIGNMENT_GROUP}
+    export SN_GITLAB_CMDB_CI=${SN_GITLAB_CMDB_CI}
+    export SERVICE_NOW_DOMAIN=${SERVICE_NOW_DOMAIN}
+    export rhn_username=${RHN_USERNAME}
+    export rhn_password=${RHN_PASSWORD}
+    echo "Building image for $buildDate"
+
+    packer init images/aws/
+    packer build -debug \
+    -var account_id_list="${shareTo}" \
+    -var buildDate=$buildDate \
+    -only=amazon-ebs.${amiName} \
+    images/aws/
+    export AmiId=$( cat manifest.json | awk 'match($0, /ami-.*/) { print substr($0, RSTART, RLENGTH-2) }' )
+    parameter_path="/xxxx/golden-ami/${amiName}/LatestAMI"
+    echo $parameter_path
+    aws ssm put-parameter --name $parameter_path --value $AmiId --type String --description="programmatically placed by themis image repo on $buildDate" --overwrite
+
+    export region="us-east-2"
+    aws ssm put-parameter --name=/xxxx/azurearc/servicePrincipalClientId --region=$region --value=$servicePrincipalClientId --description="programmatically placed by themis image repo on $buildDate" --type String --overwrite
+    aws ssm put-parameter --name=/xxxx/azurearc/servicePrincipalSecret --region=$region --value=$servicePrincipalSecret --description="programmatically placed by themis image repo on $buildDate" --type String --overwrite
+    aws ssm put-parameter --name=/xxxx/azurearc/resourceGroup --region=$region --value=$resourceGroup --description="programmatically placed by themis image repo on $buildDate" --type String --overwrite
+    aws ssm put-parameter --name=/xxxx/azurearc/tenantId --region=$region --value=$tenantId  --description="programmatically placed by themis image repo on $buildDate" --type String --overwrite
+    aws ssm put-parameter --name=/xxxx/azurearc/subscriptionId --region=$region --value=$subscriptionId --description="programmatically placed by themis image repo on $buildDate" --type String --overwrite
+    aws ssm put-parameter --name=/xxxx/azurearc/correlationId --region=$region --value=$correlationId --description="programmatically placed by themis image repo on $buildDate" --type String --overwrite
+    
+    echo "ssm parameter attempt complete"
+  tags:
+    - aws
+    - packer
+
+
+.delete_old_amis_template:
+  stage: cleanup
+  image: amazon/aws-cli
+  script:
+    - |
+      #!/bin/bash
+      set -e
+      export buildRegion=`curl http://169.254.169.254/latest/dynamic/instance-identity/document|grep region|awk -F\" '{print $4}'`
+      # Configure AWS CLI with Access Key and Secret Access Key
+      aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+      aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+      aws configure set default.region $buildRegion
+      
+      # Get the current date in seconds since epoch
+      current_date=$(date +%s)
+      
+      # Calculate the date 60 days ago in seconds since epoch
+      sixty_days_ago=$((current_date - 60*24*60*60))
+      
+      # Get all AMIs owned by the current account
+      ami_list=$(aws ec2 describe-images --owners self --query 'Images[*].[ImageId,CreationDate]' --output text)
+      
+      # Loop through the AMIs and delete those older than 60 days
+      while read -r ami_id creation_date; do
+        # Convert creation date to seconds since epoch
+        ami_date=$(date -d "$creation_date" +%s)
+        
+        if [ $ami_date -lt $sixty_days_ago ]; then
+          echo "Deleting AMI: $ami_id (Created on: $creation_date)"
+          aws ec2 deregister-image --image-id "$ami_id"
+        fi
+      done <<< "$ami_list"
+
+
+
+# TODO - Setup a Private Packer Runner to deploy Azure Images before uncommenting this section.
+# AZURE IMAGES
+# .azure_images_prd_variables: &azure_images_prd_variables
+#   applicationId: 3546
+#   dataClassification: confidential
+#   assetClass: standard
+#   managedBy: "it_cloud"
+#   costCenter: "7891"
+#   environment: "tst"
+#   crowdstrikeToken: $crowdstrikeToken
+#   rapid7Token: $rapid7Token
+#   sentinelWorkspaceID: $sentinelWorkspaceID
+#   sentinelPrimaryKey: $sentinelPrimaryKey
+#   servicePrincipalClientId: $servicePrincipalClientId
+#   servicePrincipalSecret: $servicePrincipalSecret
+#   resourceGroup: $resourceGroup
+#   tenantId: $tenantId
+#   subscriptionId: $subscriptionId
+#   correlationId: $correlationId
+
+# # AZURE IMAGES
+# .azure_image_deploy_prd:
+#   variables:
+#     <<: *azure_images_prd_variables
+#   script: |
+#     echo "===== Building ${GOLDEN_TEMPLATE_FILE} ====="
+#     export SN_CLOUD_INTEGRATION_USER=${SN_CLOUD_INTEGRATION_USER}
+#     export SN_CLOUD_INTEGRATION_PASSWORD=${SN_CLOUD_INTEGRATION_PASSWORD}
+#     export SN_CLOUD_INTEGRATION_CALLER_ID=${SN_CLOUD_INTEGRATION_CALLER_ID}
+#     export SN_CLOUD_ASSIGNMENT_GROUP=${SN_CLOUD_ASSIGNMENT_GROUP}
+#     export SN_GITLAB_CMDB_CI=${SN_GITLAB_CMDB_CI}
+#     export SERVICE_NOW_DOMAIN=${SERVICE_NOW_DOMAIN}
+#     export rhn_username=${RHN_USERNAME}
+#     export rhn_password=${RHN_PASSWORD}
+#     echo "Building image for $buildDate"
+
+#     packer init images/azure/
+#     packer build -debug \
+#     images/azure/
+    
+#     echo "Azure Packer Build Complete"
+#   tags:
+#     - azure
+#     - packer
+
+
+# .delete_old_azure_images_template:
+#   stage: cleanup
+#   image: mcr.microsoft.com/azure-cli
+#   script:
+#     - |
+#       #!/bin/bash
+#       set -e
+      
+#       # Login to Azure
+#       az login --service-principal -u $servicePrincipalClientId -p $servicePrincipalSecret --tenant $tenantId
+
+#       # Set the subscription
+#       az account set --subscription $subscriptionId
+      
+#       # Get the current date in seconds since epoch
+#       current_date=$(date +%s)
+      
+#       # Calculate the date 60 days ago in seconds since epoch
+#       sixty_days_ago=$((current_date - 60*24*60*60))
+      
+#       # Get all images in the subscription
+#       image_list=$(az image list --query "[].{name:name, id:id, createdDate:tags.createdDate}" -o tsv)
+      
+#       # Loop through the images and delete those older than 90 days
+#       while IFS=$'\t' read -r name id creation_date; do
+#         # Convert creation date to seconds since epoch
+#         image_date=$(date -d "$creation_date" +%s)
+        
+#         if [ $image_date -lt $sixty_days_ago ]; then
+#           echo "Deleting image: $name (Created on: $creation_date)"
+#           az image delete --ids "$id"
+#         fi
+#       done <<< "$image_list"
+
+
+# VSPHERE IMAGES
+.vsphere_btc_images_dev_variables: &vsphere_btc_images_dev_variables
+  applicationId: xxxx # Dev vCenter
+  assetClass: standard
+  managedBy: it_cloud
+  environment: dev
+  rhn_username: $RHN_USERNAME
+  rhn_password: $RHN_PASSWORD
+  crowdstrikeToken: $crowdstrikeToken
+  rapid7Token: $rapid7Token
+  sentinelWorkspaceID: $sentinelWorkspaceID
+  sentinelPrimaryKey: $sentinelPrimaryKey
+  vsphere_endpoint: BTCVMWVCD501V.xxxx.com
+  vsphere_username: $VSPHERE_USERNAME
+  vsphere_password: $VSPHERE_PASSWORD
+  disable_tls: "true"
+  vsphere_datacenter: BTCDEV
+  vsphere_cluster: UCS-Dev # seemed like the most relevant cluster
+  vsphere_datastore: btc-vmw-tst-20-New # had highest available storage
+  vsphere_network: Dev-DPG-VLAN910 # had most available IPs, also remember this being a "catch-all" VLAN from my days on the systems team
+  vsphere_folder: Packer Test
+  vsphere_ssh_password: $VSPHERE_SSH_PASSWORD
+
+.vsphere_btc_image_deploy_dev:
+  variables:
+    <<: *vsphere_btc_images_dev_variables
+  script: |
+    echo "===== Initializing Packer ===="
+    packer init images/vsphere/
+    
+    echo "===== Building ${GOLDEN_TEMPLATE_FILE} ====="
+
+    packer build -debug \
+    -only=vsphere-iso.${imageName} \
+    images/vsphere/
+  tags:
+    - xxxx
+    - btc
+    - dev
+    - packer
+    - vsphere
+
+# DOCKER CONTAINERS
+.container_test_variables: &container_test_variables
+  DOCKER_REGISTRY: xxxx-lg-doc-golden.jfrog.io
+  DOCKER_PULL_REGISTRY: xxxx-docker.jfrog.io
+
+.container_prod_variables: &container_prod_variables
+  DOCKER_REGISTRY: xxxx-lg-doc-golden.jfrog.io
+  DOCKER_PULL_REGISTRY: xxxx-docker.jfrog.io
+
+.docker_login: &docker_login
+  before_script: 
+    - docker info
+    - echo "===== Running docker login for ${DOCKER_REGISTRY} ====="
+    - |
+      if [[ ! -z "${DOCKER_JFROG_CICD_KEY}" ]]; then
+        echo "$DOCKER_JFROG_CICD_KEY" | docker login $DOCKER_REGISTRY --username $DOCKER_JFROG_CICD_USER --password-stdin
+      elif [[ ! -z "${DOCKER_JFROG_CICD_READ_KEY}" ]]; then
+        echo "$DOCKER_JFROG_CICD_READ_KEY" | docker login $DOCKER_REGISTRY --username $DOCKER_JFROG_CICD_READ_USER --password-stdin
+      fi      
+    - echo "===== Running docker login for ${DOCKER_PULL_REGISTRY} ====="
+    - |
+      if [[ ! -z "${DOCKER_JFROG_CICD_KEY}" ]]; then
+        echo "$DOCKER_JFROG_CICD_READ_KEY" | docker login $DOCKER_PULL_REGISTRY --username $DOCKER_JFROG_CICD_READ_USER --password-stdin
+      fi
+
+.aws_container_deploy_tst:
+  <<: *docker_login
+  variables:
+    <<: *container_test_variables
+    WIZ_VERSION: 0.16.8
+  script:
+    - echo "===== Building ${GOLDEN_TEMPLATE_FILE} ====="
+    - export VERSION_FIX=$(date +"%y%m%d-%H%M")
+    - |
+      if [[ ! -z "${SUFFIX}" ]]; then
+        export TAG=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_FIX}-${SUFFIX}
+      else
+        export TAG=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_FIX}
+      fi
+    - packer init containers/      
+    - |
+      packer build -debug \
+      -only=docker.${containerName} \
+      containers/
+    - curl -L -H "X-JFrog-Art-Api:$DOCKER_JFROG_CICD_READ_KEY" -O "https://xxxx.jfrog.io/artifactory/cloud-files/wiz/wizcli-${WIZ_VERSION}/wizcli"
+    - chmod +x wizcli
+    - ./wizcli auth --id $WIZ_ID --secret $WIZ_SECRET
+    - ./wizcli docker scan --image ${DOCKER_REGISTRY}/${IMAGE_NAME}:${TAG} --policy-hits-only --policy GITLAB_xxxx_CLOUD_THEMIS_IMAGE 
+  tags:
+    - aws
+    - packer
+  after_script:
+    - |
+      #!/bin/bash
+      #See https://jfrog.com/help/r/how-to-clean-up-old-docker-images/cleaning-up-old-and-unused-docker-images for details on this script
+      clean_docker() {
+          base_url="https://xxxx.jfrog.io/artifactory/"
+
+          # AQL query
+          aql_query='items.find({"name":{"$eq":"manifest.json"},"stat.downloaded":{"$before":"4w"}})'
+
+          # Perform AQL search
+          search_results=$(curl -s -X POST  \
+              -H "X-JFrog-Art-Api:$DOCKER_JFROG_CICD_KEY"
+              -H "Content-Type: text/plain" \
+              -d "$aql_query" \
+              "${base_url}api/search/aql")
+
+          # Extract and process results
+          echo "$search_results" | jq -r '.results[] | .repo + "/" + .path' | while read -r artifact_path; do
+              artifact_url="${base_url}${artifact_path}"
+              if [[ "$artifact_url" == *"/${containerName}/"* ]]; then
+                  curl -s -X DELETE -u "$username:$password" "$artifact_url"
+              fi
+          done
+      }
+
+      # Call the function
+      clean_docker
+  except:
+    refs:
+      - schedules
+
+.aws_container_deploy_prd:
+  <<: *docker_login
+  variables:
+    <<: *container_prod_variables
+    WIZ_VERSION: 0.16.8
+  script:
+    - echo "===== Building ${GOLDEN_TEMPLATE_FILE} ====="
+    - export VERSION_FIX=$(date +"%y%m%d-%H%M")
+    - export SN_CLOUD_INTEGRATION_USER=${SN_CLOUD_INTEGRATION_USER}
+    - export SN_CLOUD_INTEGRATION_PASSWORD=${SN_CLOUD_INTEGRATION_PASSWORD}
+    - export SN_CLOUD_INTEGRATION_CALLER_ID=${SN_CLOUD_INTEGRATION_CALLER_ID}
+    - export SN_CLOUD_ASSIGNMENT_GROUP=${SN_CLOUD_ASSIGNMENT_GROUP}
+    - export SN_GITLAB_CMDB_CI=${SN_GITLAB_CMDB_CI}
+    - export SERVICE_NOW_DOMAIN=${SERVICE_NOW_DOMAIN}
+    - |
+      if [[ ! -z "${SUFFIX}" ]]; then
+        export TAG=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_FIX}-${SUFFIX}
+      else
+        export TAG=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_FIX}
+      fi
+    - packer init containers/
+    - |
+      packer build -debug \
+      -only=docker.${containerName} \
+      containers/
+    - echo "===== Wiz Scanning ${GOLDEN_TEMPLATE_FILE} ====="
+    - curl -L -H "X-JFrog-Art-Api:$DOCKER_JFROG_CICD_READ_KEY" -O "https://xxxx.jfrog.io/artifactory/cloud-files/wiz/wizcli-${WIZ_VERSION}/wizcli"
+    - chmod +x wizcli
+    - ./wizcli auth --id $WIZ_ID --secret $WIZ_SECRET
+    - ./wizcli docker scan --image ${DOCKER_REGISTRY}/${IMAGE_NAME}:${TAG} --policy-hits-only --policy GITLAB_xxxx_CLOUD_THEMIS_IMAGE 
+    - echo "===== Pushing to Docker ${GOLDEN_TEMPLATE_FILE} =====" 
+    - docker image push --all-tags ${DOCKER_REGISTRY}/${IMAGE_NAME}
+  after_script:
+    - docker image prune -a -f --filter="label=GOLDEN_ENV=prd"
+    - docker image prune -a --force --filter "until=720h
+  tags:
+    - aws
+    - packer
+
 
 
 
