@@ -19,46 +19,14 @@ output "lb" {
   value = module.lb
 }
 ====================||===========
-https://us05web.zoom.us/j/84244405146?pwd=wbrGQ4agWAUorS9Knwoi6pL3y2Ub3Q.1
+https://us05web.zoom.us/j/87129018089?pwd=B08Hq0DoMF16IacaWKrk8NkUdYwvE9.1
 
 
 
 
 
 =================||
-Yes, JFrog Artifactory is available for download. JFrog offers multiple ways to get Artifactory based on your preferences, such as self-hosted solutions or cloud-based versions. Here's how you can download it:
 
-1. JFrog Artifactory Cloud
-JFrog provides a cloud-based version of Artifactory. This is the easiest option to get started with, as it doesn't require installation or maintenance on your own servers.
-You can sign up for the JFrog Artifactory Cloud here. The cloud version has a free tier with limited features and a paid version for more advanced needs.
-2. Self-Hosted JFrog Artifactory
-If you prefer to run Artifactory on your own infrastructure, JFrog offers several self-hosted installation options for Artifactory.
-You can download the latest version of Artifactory from JFrog's website:
-Visit JFrog Downloads
-Choose between various deployment options such as:
-Docker: You can run Artifactory in a Docker container.
-RPM: For Linux systems.
-ZIP: For various OS platforms like Windows or Linux.
-Debian: For Debian-based Linux distributions.
-Windows Installer: For easy installation on Windows.
-After downloading, follow the installation guides for your chosen platform from the JFrog documentation.
-3. Installation via Docker (Recommended for Simplicity)
-If you want to run Artifactory using Docker, you can use the following command to pull the official Artifactory Docker image and run it:
-
-bash
-Copy
-docker pull jfrog/artifactory-oss
-docker run -d -p 8081:8081 --name artifactory jfrog/artifactory-oss
-This will start a local instance of JFrog Artifactory running on port 8081.
-
-4. Installation on Kubernetes
-JFrog also supports Artifactory deployments on Kubernetes. You can use Helm charts to easily install Artifactory in your Kubernetes clusters. Find more information about this in the JFrog Artifactory Kubernetes installation documentation here.
-Summary
-Cloud Version: Available through sign-up for free or paid plans.
-Self-hosted Version: Available for download from JFrog’s website, with multiple platform options.
-Docker: Easily run Artifactory in Docker containers.
-Kubernetes: Artifactory can also be installed on Kubernetes clusters.
-Let me know if you need more specific guidance on the installation process!
 
 
 
@@ -66,34 +34,9 @@ Let me know if you need more specific guidance on the installation process!
 
 
 =====||====
-Cloud-Based JFrog Artifactory Integration via Okta
-Login to Your Cloud Environment via Okta
-Access JFrog Artifactory via Okta:
 
-Navigate to your Okta dashboard (usually provided by your IT or security team).
-Log in to Okta using your company credentials.
-Once logged in, locate the JFrog Artifactory application in your Okta menu or dashboard.
-Click on the JFrog Artifactory application to be redirected to your cloud-based Artifactory instance. This will automatically log you in using Single Sign-On (SSO).
-Verify Login:
-
-After clicking on the Artifactory application, you should be taken to the JFrog Artifactory dashboard without needing to manually enter a username or password, as Okta manages your credentials.
-If prompted, confirm that you have access to the necessary repositories and tools within Artifactory.
-Navigate to Platform Configurations
-After logging in to JFrog Artifactory, you will be directed to the cloud-based Artifactory dashboard.
-Click the gear icon (settings) in the top-left corner to open the Platform Configurations screen.
-In the Platform Configurations menu, select the Repositories option to access the repository management page.
 
 =====||===
-Working with Cloud-Based Artifactory
-From this point, you can configure repositories and manage Docker images as you would with a self-hosted instance.
-The main difference is that you will use your cloud-based Artifactory URL, which will look something like:
-arduino
-Copy
-https://<your-company-name>.jfrog.io/artifactory/
-Access and Permissions
-Access to JFrog Artifactory is managed via Okta and roles configured in Artifactory's Role-Based Access Control (RBAC) system.
-If you don’t have the appropriate permissions to access certain repositories or features, you will need to contact your Artifactory administrator to request access.
-Permissions for users and groups are assigned based on roles such as Administrator, Developer, Deployer, and others.
 
 
 
@@ -103,67 +46,6 @@ Permissions for users and groups are assigned based on roles such as Administrat
 
 =========
 
-Steps to Configure Forcepoint Proxy for Docker
-Obtain Forcepoint Proxy Information:
-
-Get the Forcepoint Proxy URL and port from your network administrator.
-If proxy authentication is required, obtain the username and password for the proxy.
-Set Environment Variables (for Linux):
-
-Open a terminal and edit your shell configuration file (e.g., ~/.bashrc or ~/.bash_profile).
-Add the following lines to set the proxy environment variables:
-bash
-Copy
-export HTTP_PROXY=http://<proxy-url>:<port>
-export HTTPS_PROXY=http://<proxy-url>:<port>
-export NO_PROXY=localhost,127.0.0.1,.local
-If proxy authentication is required, use the following format:
-bash
-Copy
-export HTTP_PROXY=http://<username>:<password>@<proxy-url>:<port>
-export HTTPS_PROXY=http://<username>:<password>@<proxy-url>:<port>
-Save the file and reload it by running:
-bash
-Copy
-source ~/.bashrc  # or source ~/.bash_profile
-Configure Docker Daemon Proxy Settings:
-
-Create or edit the Docker daemon proxy configuration file:
-bash
-Copy
-sudo nano /etc/systemd/system/docker.service.d/http-proxy.conf
-Add the following lines to configure Docker to use the Forcepoint proxy:
-ini
-Copy
-[Service]
-Environment="HTTP_PROXY=http://<forcepoint-proxy-url>:<port>"
-Environment="HTTPS_PROXY=http://<forcepoint-proxy-url>:<port>"
-Environment="NO_PROXY=localhost,127.0.0.1,.local"
-Reload Docker Daemon and Restart Docker:
-
-After saving the configuration, reload the Docker daemon and restart Docker for the changes to take effect:
-bash
-Copy
-sudo systemctl daemon-reload
-sudo systemctl restart docker
-For Docker Desktop (Windows/Mac):
-If you are using Docker Desktop on Windows or Mac, follow these steps to configure the proxy:
-
-Open Docker Desktop.
-Go to Settings > Resources > Proxies.
-Enable Manual Proxy Configuration.
-Enter the Forcepoint Proxy details:
-HTTP Proxy: http://<forcepoint-proxy-url>:<port>
-HTTPS Proxy: http://<forcepoint-proxy-url>:<port>
-No Proxy: localhost,127.0.0.1,.local
-Click Apply & Restart to save the settings.
-Verify Proxy Configuration:
-To verify that Docker is correctly configured to use the Forcepoint proxy, run the following command:
-
-bash
-Copy
-docker pull hello-world
-If the proxy configuration is correct, Docker will pull the hello-world image successfully.
 
 
 
