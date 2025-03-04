@@ -19,134 +19,20 @@ output "lb" {
   value = module.lb
 }
 ====================||===========
-.delete_old_amis_template:
-  stage: cleanup
-  image: amazon/aws-cli
-  script:
-    - |
-      #!/bin/bash
-      set -e
-      export buildRegion=curl http://169.254.169.254/latest/dynamic/instance-identity/document|grep region|awk -F\" '{print $4}'
-      # Configure AWS CLI with Access Key and Secret Access Key
-      aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-      aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-      aws configure set default.region $buildRegion
-      
-      # Get the current date in seconds since epoch
-      current_date=$(date +%s)
-      ENVIRONMENT="dev"
-      # Calculate the date 60 days ago in seconds since epoch
-      sixty_days_ago=$((current_date - 60*24*60*60))
-      
-      # Get all AMIs owned by the current account
-      ami_list=$(aws ec2 describe-images --owners self --filters "Name=tag:Environment,Values=${ENVIRONMENT}"  --query 'Images[*].[ImageId,CreationDate]' --output text)
-      
-      # Loop through the AMIs and delete those older than 60 days
-      while read -r ami_id creation_date; do
-        # Convert creation date to seconds since epoch
-        ami_date=$(date -d "$creation_date" +%s)
-        
-        if [ $ami_date -lt $sixty_days_ago ]; then
-          echo "Deleting AMI: $ami_id (Created on: $creation_date)"
-          aws ec2 deregister-image --image-id "$ami_id"
-        fi
-      done <<< "$ami_list"
+
+
+https://us05web.zoom.us/j/87207510646?pwd=1fkEsBLOTkb8hadE0SE4y0DKVXmDIG.1
 
 
 
 =================||
-# ----------------------------
-# Key Vault for ADF CMK
-# ----------------------------
-module "key_vault" {
-  source  = "app.terraform.io/xxxx/key-vault/azure"
-  version = "< 0.2.0" # Fix syntax: Remove extra ">"
-
-  # Key Vault Basics
-  application_name                = "adf-cmk"  
-  resource_group_name             = var.resource_group_name
-  enabled_for_template_deployment = true
-
-  # Network ACLs for ADF Access
-  network_acls = {
-    bypass         = length(var.private_endpoints) > 0 ? "None" : "AzureServices"
-    default_action = (length(var.private_endpoints) == 0 && length(var.ip_range_filter) == 0 && length(var.virtual_network_subnet_ids) == 0) ? "Allow" : "Deny"
-    ip_rules       = var.ip_range_filter
-    virtual_network_subnet_ids = var.virtual_network_subnet_ids
-  }
-
-  tags = var.tags
-}
-
-# ----------------------------
-# User-Assigned Identity for ADF
-# ----------------------------
-resource "azurerm_user_assigned_identity" "adf_identity" {
-  name                = "${local.data_factory_name}-cmk-identity"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-}
-
-# ----------------------------
-# Key Vault RBAC for ADF Identity
-# ----------------------------
-module "key_vault_rbac" {
-  source  = "app.terraform.io/xxxx/common/azure"
-  resource_name = module.key_vault.display_name
-  resource_id   = module.key_vault.id
-
-  role_based_permissions = {
-    # Grant Key Vault Administrator to Terraform SP
-    terraform = {
-      role_definition_id_or_name = "Key Vault Administrator"
-      principal_id               = data.azurerm_client_config.current.object_id
-    }
-
-    # Grant ADF Identity Access to Key Vault
-    adf_cmk = {
-      role_definition_id_or_name = "Key Vault Crypto User"
-      principal_id               = azurerm_user_assigned_identity.adf_identity.principal_id
-    }
-  }
-}
-
-# ----------------------------
-# Key Vault Key for ADF CMK
-# ----------------------------
-module "key_vault_key" {
-  source  = "app.terraform.io/xxxx/key-vault-key/azure"
-  version = "< 0.2.0" # Fix syntax: Remove extra ">"
-
-  key_vault_resource_id = module.key_vault.id
-  name                  = "${local.data_factory_name}-cmk"
-  type                  = "RSA"
-  size                  = 3072
-  opts                  = ["encrypt", "decrypt", "sign", "unwrapKey", "wrapKey"] # Required for ADF CMK
-  tags                  = var.tags
-}
-
-
-
 
 
 =====||====
-resource "azurerm_data_factory" "this" {
-  name                             = local.data_factory_name
-  location                         = var.location
-  resource_group_name              = var.resource_group_name
-  managed_virtual_network_enabled  = var.managed_virtual_network_enabled
-  public_network_enabled           = var.public_network_enabled
 
-  # CMK Configuration
-  customer_managed_key_id          = module.key_vault_key.key_vault_key_id
-  customer_managed_key_identity_id = azurerm_user_assigned_identity.adf_identity.id
 
-  identity {
-    type = "SystemAssigned"
-  }
 
-  tags = var.tags
-}
+
 
 =====||===
 
