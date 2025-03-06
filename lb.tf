@@ -20,8 +20,56 @@ output "lb" {
 }
 ====================||===========
 
-https://us05web.zoom.us/j/81884583779?pwd=fAAoBotDnT0N90hh10l4BEbcK5xUVi.1
+https://gitlab.com/xxxx/xxx/consumer-digital-banking-infra/-/blob/integration/tf/kms.tf?ref_type=heads#L207
 
+Client.InvalidKMSKey.InvalidState: The KMS key provided is in an incorrect state
+
+Affected autoscaling group ARN arn:aws:autoscaling:us-east-2:95xxxxxxxxxx:autoScalingGroup:3cxxxxxc-xxxx-4cdb-a6c7-7ecdxcbxxxxe:autoScalingGroupName/xxxx-3430-dev-us-east-2-asg-consumer-gitlab-runner
+
+The issue with the KMS key is that it is explicitly denying everything even if the condition is present "kms:ViaService": "ec2.<region>.amazonaws.com".
+
+If you really want to do explicit deny then you need to special case every single ViaService condition and it's inverse. Here is an example policy that MAY work, I have not tested it.
+
+{
+    "Version": "2012-10-17",
+    "Id": "key-policy",
+    "Statement": [
+        {
+            "Sid": "AllowEC2EBSVolumeEncryption",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "ec2.amazonaws.com"
+            },
+            "Action": [
+                "kms:CreateGrant",
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+                "kms:GenerateDataKeyWithoutPlaintext",
+                "kms:ReEncrypt*"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "kms:ViaService": "ec2.<region>.amazonaws.com"
+                }
+            }
+        },
+        {
+            "Sid": "DenyAllOtherUses",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "kms:*",
+            "Resource": "*",
+            "Condition": {
+                "StringNotEquals": {
+                    "kms:ViaService": "ec2.<region>.amazonaws.com"
+                }
+            }
+        }
+    ]
+}
 
 
 =================||
