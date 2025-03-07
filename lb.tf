@@ -20,7 +20,59 @@ output "lb" {
 }
 ====================||===========
 
-https://us05web.zoom.us/j/84132829000?pwd=5M9M2pfIk6LKqgFZ8E3d3UwyJxoZfk.1
+{
+    "Version": "2012-10-17",
+    "Id": "key-policy",
+    "Statement": [
+        {
+            "Sid": "AllowEC2EBSVolumeEncryption",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "ec2.amazonaws.com"
+            },
+            "Action": [
+                "kms:CreateGrant",
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+                "kms:GenerateDataKeyWithoutPlaintext",
+                "kms:ReEncrypt*"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "kms:ViaService": "ec2.<region>.amazonaws.com"
+                }
+            }
+        },
+        {
+            "Sid": "DenyAllOtherUses",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "kms:*",
+            "Resource": "*",
+            "Condition": {
+                "StringNotEquals": {
+                    "kms:ViaService": "ec2.<region>.amazonaws.com"
+                }
+            }
+        },
+        {
+            "Sid": "AllowAutoScalingUse",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "autoscaling.amazonaws.com"
+            },
+            "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
 
 
 
