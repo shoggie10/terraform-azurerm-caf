@@ -20,7 +20,8 @@ output "lb" {
 }
 ====================||===========
 
-https://us05web.zoom.us/j/85932844066?pwd=b2rodACYp8qIs1UBsnTcp1eH8JDbvN.1
+https://us05web.zoom.us/j/87410556903?pwd=VdWIDW7XtyjHQ4uBJkiEozGvubG3vE.1
+
 
 
 
