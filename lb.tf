@@ -60,65 +60,7 @@ https://us05web.zoom.us/j/85932844066?pwd=b2rodACYp8qIs1UBsnTcp1eH8JDbvN.1
 -----------------------------------------------------
 
 ## examples
-provider "azurerm" {
-  #4.0+ version of AzureRM Provider requires a subscription ID  
-  subscription_id = "b987518f-1b04-4491-915c-e21dabc7f2d3"    #"0b5a3199-58bb-40ef-bcce-76a53aa594c2"
 
-  #resource_provider_registrations = "none"
-
-  features {
-
-  }
-}
-
-locals {
-  tags = {
-    environment         = "dev"
-    application_id      = "0000"
-    asset_class         = "standard"
-    data_classification = "confidential"
-    managed_by          = "it_cloud"
-    requested_by        = "me@email.com"
-    cost_center         = "1234"
-    source_code         = "https://gitlab.com/company/test"
-    deployed_by         = "test-workspace"
-    application_role    = ""
-  }
-}
-
-
-data "azurerm_resource_group" "this" {
-  name = "wayne-tech-hub"
-}
-
-# data "azurerm_cosmosdb_account" "this" {
-#   name                = "cdbwaynetechhubdev259678"
-#   resource_group_name = data.azurerm_resource_group.this.name
-# }
-
-data "azuread_user" "this" {
-  user_principal_name = "salonge@bokf.com"   # "SXA7BU_PA@bokf.onmicrosoft.com"
-}
-
-module "this" {
-  source                          = "../"
-
-
-  #data_factory_name               = "adf-test-001"
-  application_name = "datafactory1"
-  resource_group_name             = "wayne-tech-hub"
-  location                        = data.azurerm_resource_group.this.location
-  tags = local.tags
-
-
-  global_parameters = {
-    "testbool" = {
-      type  = "Bool"
-      value = true
-    }
-  }
-
-}
 
 
 
@@ -128,6 +70,163 @@ module "this" {
 
 ================================||
 # customer-managed-key.tf
+# module "key_vault" {
+#   source  = "app.terraform.io/xxxx/key-vault/azure"
+#   version = "< 0.2.0"
+
+#   application_name                = "cosmosdbcmk"  
+#   enabled_for_template_deployment = true
+#   resource_group_name             = var.resource_group_name
+
+#   network_acls = {
+#     # Bypass must be set to AzureServices for CosmosDB CMK usage when not using Private Endpoints
+#     bypass = length(var.private_endpoints) != 0 ? "None" : "AzureServices"
+#     # Set to allow only if no PE, IP Rules, or VNet rules exist.
+#     default_action             = length(var.private_endpoints) == 0 && length(var.ip_range_filter) == 0 && length(local.cmk.virtual_network_subnet_ids) == 0 ? "Allow" : "Deny"
+#     ip_rules                   = var.ip_range_filter
+#     virtual_network_subnet_ids = local.cmk.virtual_network_subnet_ids
+#   }
+
+#   tags = var.tags
+# }
+
+
+# module "key_vault_rbac" {
+#   source  = "app.terraform.io/xxxx/common/azure"
+#   #version = "< 0.2.0"
+#   resource_name = module.key_vault.display_name
+#   resource_id = module.key_vault.id
+
+#   #depends_on = [azurerm_cosmosdb_account.this]
+
+
+#   role_based_permissions = {
+#     terraform = {
+#       role_definition_id_or_name = "Key Vault Administrator" # "Key Vault Contributor" 
+#       principal_id = data.azurerm_client_config.current.object_id
+#     }
+
+#     cosmosdb_account_managed_identity_read = {
+#       role_definition_id_or_name = "Key Vault Reader"
+#       principal_id               = azurerm_cosmosdb_account.this.identity[0].principal_id
+#     }
+
+    
+
+#     cosmosdb_account_managed_identity = {
+#       role_definition_id_or_name = "Key Vault Crypto User"   # "Key Vault Crypto Officer" 
+#       #principal_id = azurerm_cosmosdb_account.this.identity[0].principal_id
+#       principal_id = azurerm_cosmosdb_account.this.identity[0].principal_id
+#     }
+#   }
+#   #wait_for_rbac = true
+# }
+
+# module "key_vault_key" {
+#   source  = "app.terraform.io/xxxx/key-vault-key/azure"
+#   version = "< 0.2.0"
+#   #depends_on = [ module.key_vault_rbac ]
+
+#   key_vault_resource_id = module.key_vault.id
+#   name                  = "${local.cosmosdb_account_name}-encryption"
+#   type                  = "RSA"
+#   size                  = "3072"
+#   opts                  = ["encrypt", "decrypt", "sign", "unwrapKey", "wrapKey"]
+#   tags                  = var.tags
+# }
+
+
+# # create a user assigned managed identity (user_assigned_managed_identity is required as cosmosdb supports only UserAssigned identtity for cmk) 
+# resource "azurerm_user_assigned_identity" "cosmosdb_identity" {
+#   name = "${local.cosmosdb_account_name}-identity"   #"abcdefgh"  
+#   location = var.location
+#   resource_group_name = var.resource_group_name
+
+#   depends_on = [ azurerm_cosmosdb_account.this ]
+# }
+
+
+###
+# resource "azurerm_role_assignment" "key_vault_access" {
+#   scope                = azurerm_key_vault.this.id # Or the appropriate scope
+#   role_definition_name = "Key Vault Secrets User" # Or "Key Vault Crypto User"
+#   principal_id         = "730ce96a-7db7-4204-9611-4851956b3076"
+# }
+
+
+#################
+# Create the Key Vault
+module "key_vault" {
+  source  = "app.terraform.io/xxxx/key-vault/azure"
+  version = "< 0.2.0"
+
+  application_name                = "cosmosdbcassandra"
+  enabled_for_template_deployment = true
+  resource_group_name             = var.resource_group_name
+
+  network_acls = {
+    bypass                       = length(var.private_endpoints) != 0 ? "None" : "AzureServices"
+    default_action               = length(var.private_endpoints) == 0 && length(var.ip_range_filter) == 0 && length(local.cmk.virtual_network_subnet_ids) == 0 ? "Allow" : "Deny"
+    ip_rules                     = var.ip_range_filter
+    virtual_network_subnet_ids   = local.cmk.virtual_network_subnet_ids
+  }
+
+  tags = var.tags
+}
+
+# Create the Cosmos DB account's managed identity
+resource "azurerm_user_assigned_identity" "cosmosdb_identity" {
+  name                = "${local.cosmosdb_account_name}-identity"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+}
+
+# Assign RBAC roles for the Key Vault
+module "key_vault_rbac" {
+  source  = "app.terraform.io/xxxx/common/azure"
+  resource_name = module.key_vault.display_name
+  resource_id   = module.key_vault.id
+
+  role_based_permissions = {
+    terraform = {
+      role_definition_id_or_name = "Key Vault Administrator"
+      principal_id               = data.azurerm_client_config.current.object_id
+    }
+
+    cosmosdb_account_managed_identity_read = {
+      role_definition_id_or_name = "Key Vault Reader"
+      principal_id               = azurerm_user_assigned_identity.cosmosdb_identity.principal_id
+    }
+
+    cosmosdb_account_managed_identity = {
+      role_definition_id_or_name = "Key Vault Crypto User"
+      principal_id               = azurerm_user_assigned_identity.cosmosdb_identity.principal_id
+    }
+  }
+}
+
+# RBAC role assignments to propagate
+resource "time_sleep" "wait_for_rbac" {
+  depends_on = [module.key_vault_rbac]
+
+  create_duration = "30s"
+}
+
+# Create the Key Vault Key
+module "key_vault_key" {
+  source  = "app.terraform.io/xxxx/key-vault-key/azure"
+  version = "< 0.2.0"
+
+  #depends_on = [time_sleep.wait_for_rbac]
+
+  key_vault_resource_id = module.key_vault.id
+  name                  = "${local.cosmosdb_account_name}-encryption"
+  type                  = "RSA"
+  size                  = 3072
+  opts                  = ["encrypt", "decrypt", "sign", "unwrapKey", "wrapKey"]
+  tags                  = var.tags
+}
+
 
 
 
@@ -165,15 +264,66 @@ data "azurerm_resource_group" "this" {
 }
 
 resource "random_integer" "this" {
-  min = "100"
-  max = "999"
+  min = "100000"
+  max = "999999"
 }
 
 locals {
-  data_factory_name  = "adf${var.application_name}${var.tags.environment}${random_integer.this.result}"
-  tfModule          = "data-factory"                                                                                     ## This should be the service name please update without fail and do not remove these two definitions.
-  tfModule_extended = var.terraform_module != "" ? join(" ", [var.terraform_module, local.tfModule]) : local.tfModule ## This is to send multiple tags if the main module have submodule calls.
-  key_vault_name    = "kv-${var.tags.application_id}-${lower(substr(var.application_name, 0, 7))}-${var.tags.environment}-${random_integer.this.result}"
+  cosmosdb_account_name  = "cdb${var.application_name}${var.tags.environment}${random_integer.this.result}"
+  cmk_keyvault_name      = element(split("/", module.key_vault.id), 8)   # module.key_vault.display_name
+  key_vault_key_name     = element(split("/", module.key_vault_key.resource_versionless_id), 10)
+  normalized_cmk_key_url = "https://${local.cmk_keyvault_name}.vault.azure.net/keys/${local.key_vault_key_name}"
+
+  consistent_prefix_consistency = "ConsistentPrefix"   #"Session"
+  continuous_backup_policy      = "Continuous"
+  default_geo_location = toset([{
+    failover_priority = 0
+    zone_redundant    = true
+    location          = var.location
+  }])
+
+  # Ensure the User-Assigned Managed Identity is correctly referenced
+  managed_identities = {
+    system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
+      this = {
+        type                       = var.managed_identities.system_assigned && length(var.managed_identities.user_assigned_resource_ids) > 0 ? "SystemAssigned, UserAssigned" : length(var.managed_identities.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned"
+        user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
+      }
+    } : {}
+    system_assigned = var.managed_identities.system_assigned ? {
+      this = {
+        type = "SystemAssigned"
+      }
+    } : {}
+    user_assigned = length(var.managed_identities.user_assigned_resource_ids) > 0 ? {
+      this = {
+        type                       = "UserAssigned"
+        user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
+      }
+    } : {}
+  }
+
+  normalized_geo_locations             = coalesce(var.geo_locations, local.default_geo_location)
+  #normalized_cmk_default_identity_type = var.customer_managed_key != null ? "UserAssignedIdentity=${var.customer_managed_key.user_assigned_identity.resource_id}" : null
+  normalized_cmk_default_identity_type = "UserAssignedIdentity=${azurerm_user_assigned_identity.cosmosdb_identity.id}"
+
+  periodic_backup_policy               = "Periodic"
+  private_endpoint_scope_type          = "PrivateEndpoint"
+  serverless_capability                = "EnableServerless"
+  normalized_ip_range_filter           = length(toset(local.trimmed_ip_range_filter)) > 0 ? join(",", toset(local.trimmed_ip_range_filter)) : null
+  trimmed_ip_range_filter              = [for value in var.ip_range_filter : trimspace(value)]
+
+  cmk = {
+    virtual_network_subnet_ids = []   # a list of subnet_id [], not a string
+  }
+
+  ###
+  capability_names = [for cap in var.capabilities : cap.name]
+
+  # Determine kind based on capabilities
+  kind = contains(local.capability_names, "EnableCassandra") ? "GlobalDocumentDB" : "MongoDB"
+
+  backup_type = local.kind == "MongoDB" ? "Continuous" : "Periodic"
 }
 
 
@@ -185,69 +335,144 @@ locals {
 ==================================
 ==================================
 # main.tf
-# Create Azure Data Factory
-resource "azurerm_data_factory" "this" {
-  name                             = local.data_factory_name
-  location                         = var.location
-  resource_group_name              = var.resource_group_name
-  managed_virtual_network_enabled  = var.managed_virtual_network_enabled
-  public_network_enabled           = var.public_network_enabled
-  customer_managed_key_id          = var.customer_managed_key_id
-  customer_managed_key_identity_id = var.customer_managed_key_identity_id
-  tags                             = module.tags.tags
+
+resource "azurerm_cosmosdb_account" "this" {
+  name                               = local.cosmosdb_account_name
+  location                           = var.location
+  resource_group_name                = var.resource_group_name
+  offer_type                         = "Standard"
+  kind                               = "GlobalDocumentDB"   #var.api_type !="" ? var.api_type : "GlobalDocumentDB"
+  #kind                               = lookup(var.database_settings[var.selected_db], "kind", "GlobalDocumentDB")
 
 
-  dynamic "github_configuration" {
-    for_each = var.github_configuration != null ? [var.github_configuration] : []
+  is_virtual_network_filter_enabled  = var.is_virtual_network_filter_enabled
+  access_key_metadata_writes_enabled = var.access_key_metadata_writes_enabled
+  automatic_failover_enabled         = var.automatic_failover_enabled
+  multiple_write_locations_enabled   = var.backup.type == local.periodic_backup_policy ? var.multiple_write_locations_enabled : false
+  analytical_storage_enabled         = var.analytical_storage_enabled
+
+  default_identity_type                 = "UserAssignedIdentity=${azurerm_user_assigned_identity.cosmosdb_identity.id}"
+  ip_range_filter                       = var.ip_range_filter
+  key_vault_key_id                      = local.normalized_cmk_key_url
+  
+  minimal_tls_version                   = "Tls12"
+  network_acl_bypass_for_azure_services = var.network_acl_bypass_for_azure_services
+  network_acl_bypass_ids                = var.network_acl_bypass_ids
+  public_network_access_enabled         = var.public_network_access_enabled
+  tags = module.tags.tags
+
+
+  #free_tier_enabled                     = var.free_tier_enabled
+  #partition_merge_enabled               = var.partition_merge_enabled
+  #local_authentication_disabled         = var.local_authentication_disabled
+  
+
+  consistency_policy {
+    consistency_level       = var.consistency_policy.consistency_level
+    max_interval_in_seconds = var.consistency_policy.consistency_level == local.consistent_prefix_consistency ? var.consistency_policy.max_interval_in_seconds : null
+    max_staleness_prefix    = var.consistency_policy.consistency_level == local.consistent_prefix_consistency ? var.consistency_policy.max_staleness_prefix : null
+  }
+
+  dynamic "geo_location" {
+    for_each = local.normalized_geo_locations
+
     content {
-      git_url         = github_configuration.value.git_url
-      account_name    = github_configuration.value.account_name
-      branch_name     = github_configuration.value.branch_name
-      repository_name = github_configuration.value.repository_name
-      root_folder     = github_configuration.value.root_folder
+      failover_priority = geo_location.value.failover_priority
+      location          = geo_location.value.location
+      zone_redundant    = geo_location.value.zone_redundant
     }
   }
 
-  dynamic "global_parameter" {
-    for_each = var.global_parameters
+  # dynamic "analytical_storage" {
+  #   for_each = var.analytical_storage_config != null ? [1] : []
+
+  #   content {
+  #     schema_type = var.analytical_storage_config.schema_type
+  #   }
+  # }
+  backup {
+    type                = var.backup.type
+    interval_in_minutes = var.backup.type == local.periodic_backup_policy ? var.backup.interval_in_minutes : null
+    retention_in_hours  = var.backup.type == local.periodic_backup_policy ? var.backup.retention_in_hours : null
+    storage_redundancy  = var.backup.type == local.periodic_backup_policy ? var.backup.storage_redundancy : null
+    tier                = var.backup.type == local.continuous_backup_policy ? var.backup.tier : null
+  }
+
+  dynamic "capabilities" {
+    for_each = var.capabilities
+
     content {
-      name  = global_parameter.key
-      type  = global_parameter.value.type
-      value = global_parameter.value.value
+      name = capabilities.value.name
+    }
+  }
+
+  # dynamic "capabilities" {
+  #   for_each = lookup(var.database_settings[var.selected_db], "capabilities", [])
+  #   content {
+  #     name = capabilities.value
+  #   }
+  # }
+
+
+  capacity {
+    total_throughput_limit = var.capacity.total_throughput_limit
+  }
+
+  dynamic "cors_rule" {
+    for_each = var.cors_rule != null ? [1] : []
+
+    content {
+      allowed_headers    = var.cors_rule.allowed_headers
+      allowed_methods    = var.cors_rule.allowed_methods
+      allowed_origins    = var.cors_rule.allowed_origins
+      exposed_headers    = var.cors_rule.exposed_headers
+      max_age_in_seconds = var.cors_rule.max_age_in_seconds
     }
   }
 
   identity {
-    type = "SystemAssigned"
+    type = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.cosmosdb_identity.id]
   }
+
+
+
+  dynamic "virtual_network_rule" {
+    for_each = var.virtual_network_rules
+
+    content {
+      id                                   = virtual_network_rule.value.subnet_id
+      ignore_missing_vnet_service_endpoint = false
+    }
+  }
+  lifecycle {
+    precondition {
+      condition     = var.backup.type == local.continuous_backup_policy && var.multiple_write_locations_enabled ? false : true
+      error_message = "Continuous backup mode and multiple write locations cannot be enabled together."
+    }
+
+    # precondition {
+    #   condition     = var.analytical_storage_enabled && var.partition_merge_enabled ? false : true
+    #   error_message = "Analytical storage and partition merge cannot be enabled together."
+    # }
+    # precondition {
+    #   condition     = !(var.public_network_access_enabled && lookup(var.tags, "data_classification", "") != "public")
+    #   error_message = "Public network access can only be enabled if the data_classification tag is set to 'Public'."
+    # }
+
+    # precondition {
+    #   condition     = (var.public_network_access_enabled == true) || (length(var.virtual_network_rules) > 0 || length(var.ip_range_filter) > 0 || var.private_endpoints_enabled)  # (var.public_network_access_enabled == false)
+    #   error_message = "When the public network access is disabled, you must provide either virtual network rules, IP range filters, or enable private endpoint."
+    # }
+  }
+  #depends_on = [ azurerm_user_assigned_identity.cosmosdb_identity ]
+
 }
-
-# Optional Azure Integration Runtime
-resource "azurerm_data_factory_integration_runtime_azure" "this" {
-  for_each = var.azure_integration_runtime
-
-  name                    = each.key
-  data_factory_id         = azurerm_data_factory.this.id
-  location                = var.location
-  description             = each.value.description
-  compute_type            = each.value.compute_type
-  core_count              = each.value.core_count
-  time_to_live_min        = each.value.time_to_live_min
-  cleanup_enabled         = each.value.cleanup_enabled
-  virtual_network_enabled = each.value.virtual_network_enabled
-}
-
-
 
 
 ======||
 # tags.tf
-module "tags" {
-  source  = "app.terraform.io/bokf/tag/cloud"
-  version = "0.3.2"
 
-  tags = var.tags
-}
 ====||=
 variables.encyption.tf
 
@@ -265,21 +490,7 @@ variables.network.tf
 ==================================
 ==================================
 # outputs.tf
-output "id" {
-  description = "The ID of the new Datafactory resource."
-  value       = azurerm_data_factory.this.id
-}
 
-output "name" {
-  description = "The name of the newly created Azure Data Factory"
-  value       = azurerm_data_factory.this.name
-}
-
-
-output "global_paramaters" {
-  description = "A map showing any created Global Parameters."
-  value       = { for gp in azurerm_data_factory.this.global_parameter : gp.name => gp }
-}
 
 
 
@@ -297,16 +508,6 @@ output "global_paramaters" {
 ==================================
 # variables.tf
 # Required Input Standard Variables 
-variable "application_name" {
-  type        = string
-  description = "The name of the resource."
-}
-
-variable "resource_group_name" {
-  type        = string
-  description = "The resource group where the resources will be deployed."
-}
-
 variable "location" {
   type        = string
   description = <<DESCRIPTION
@@ -316,7 +517,20 @@ DESCRIPTION
   nullable    = false
 }
 
+variable "application_name" {
+  type        = string
+  description = "The name of the resource."
 
+  validation {
+    condition     = can(regex("^[a-z0-9]{3,12}$", var.application_name))
+    error_message = "The name must be between 3 and 12 characters, valid characters are lowercase letters and numbers."
+  }
+}
+
+variable "resource_group_name" {
+  type        = string
+  description = "The resource group where the resources will be deployed."
+}
 
 variable "tags" {
   type        = map(string)
@@ -337,83 +551,570 @@ variable "tags" {
 }
 
 
-variable "public_network_enabled" {
+# # Required and Optional Module Specific Input Variables
+# variable "local_authentication_disabled" {
+#   type        = bool
+#   nullable    = false
+#   default     = false # true??
+#   description = "Defaults to `false`. Ignored for non SQL APIs accounts. Disable local authentication and ensure only MSI and AAD can be used exclusively for authentication. Can be set only when using the SQL API."
+# }
+
+variable "analytical_storage_enabled" {
   type        = bool
-  description = "(Optional) Is the Data Factory visible to the public network? Defaults to true"
-  default     = true
+  nullable    = false
+  default     = false
+  description = "Defaults to `false`. Enable Analytical Storage option for this Cosmos DB account. Enabling and then disabling analytical storage forces a new resource to be created."
 }
 
-variable "managed_virtual_network_enabled" {
+
+variable "automatic_failover_enabled" {
   type        = bool
-  description = "Is Managed Virtual Network enabled?"
+  nullable    = false
   default     = true
+  description = "Defaults to `true`. Enable automatic failover for this Cosmos DB account."
 }
 
-variable "customer_managed_key_id" {
-  type        = string
-  description = "Specifies the Azure Key Vault Key ID to be used as the Customer Managed Key (CMK) for double encryption. Required with user assigned identity."
-  default     = null
+variable "access_key_metadata_writes_enabled" {
+  type        = bool
+  default     = false
+  description = "Defaults to `false`. Is write operations on metadata resources (databases, containers, throughput) via account keys enabled?"
 }
 
-variable "customer_managed_key_identity_id" {
-  type        = string
-  description = "Specifies the ID of the user assigned identity associated with the Customer Managed Key. Must be supplied if customer_managed_key_id is set."
-  default     = null
-}
 
-variable "github_configuration" {
-  description = "An input object to define the settings for connecting to GitHub. NOTE! You must log in to the Data Factory management UI to complete the authentication to the GitHub repository."
+# variable "free_tier_enabled" {
+#   type        = bool
+#   nullable    = false
+#   default     = false
+#   description = "Defaults to `false`. Enable the Free Tier pricing option for this Cosmos DB account. Defaults to false. Changing this forces a new resource to be created."
+# }
+
+# variable "multiple_write_locations_enabled" {
+#   type        = bool
+#   nullable    = false
+#   default     = false
+#   description = "Defaults to `false`. Ignored when `backup.type` is `Continuous`. Enable multi-region writes for this Cosmos DB account."
+# }
+
+# variable "partition_merge_enabled" {
+#   type        = bool
+#   nullable    = false
+#   default     = false
+#   description = "Defaults to `false`. Is partition merge on the Cosmos DB account enabled?"
+# }
+
+
+### 
+variable "consistency_policy" {
   type = object({
-    git_url         = optional(string) # - OPTIONAL: Specifies the GitHub Enterprise host name. Defaults to "https://github.com"
-    account_name    = optional(string) # - REQUIRED: Specifies the GitHub account name. Defaults to ''
-    repository_name = optional(string) # - REQUIRED: Specifies the name of the git repository. 
-    branch_name     = optional(string) # - OPTIONAL: Specifies the branch of the repository to get code from. Defaults to 'main'
-    root_folder     = optional(string) # - OPTIONAL: Specifies the root folder within the repository. Defaults to '/' for top level.
+    max_interval_in_seconds = optional(number, 5)
+    max_staleness_prefix    = optional(number, 100)
+    consistency_level       = optional(string, "ConsistentPrefix")
   })
-  default = null
-}
-
-variable "global_parameters" {
-  type        = any
-  description = "An input object to define a global parameter. Accepts multiple entries."
+  nullable    = false
   default     = {}
-}
+  description = <<DESCRIPTION
+  Defaults to `{}`. Used to define the consistency policy for this CosmosDB account
 
-variable "azure_integration_runtime" {
-  type = map(object({
-    description             = optional(string, "Azure Integrated Runtime")
-    compute_type            = optional(string, "General")
-    virtual_network_enabled = optional(string, true)
-    core_count              = optional(number, 8)
-    time_to_live_min        = optional(number, 0)
-    cleanup_enabled         = optional(bool, true)
-  }))
-  description = <<EOF
-  Map Object to define any Azure Integration Runtime nodes that required.
-  key of each object is the name of a new node.
-  configuration parameters within the object allow customisation.
-  EXAMPLE:
-  azure_integration_runtime = {
-    az-ir-co-01 {
-      "compute_type" .  = "ComputeOptimized"
-      "cleanup_enabled" = true
-      core_count        = 16
-    },
-    az-ir-gen-01 {},
-    az-ir-gen-02 {},
+  - `consistency_level`       - (Optional) - Defaults to `ConsistentPrefix`. The Consistency Level to use for this CosmosDB Account - can be either `BoundedStaleness`, `Eventual`, `Session`, `Strong` or `ConsistentPrefix`.
+
+  Example inputs:
+  ```hcl
+  consistency_policy = {
+    consistency_level       = "ConsistentPrefix"
+    max_interval_in_seconds = 10
+    max_interval_in_seconds = 100
+  }
+  ```
+  DESCRIPTION
+  validation {
+    condition     = contains(["BoundedStaleness", "Eventual", "Session", "Strong", "ConsistentPrefix"], var.consistency_policy.consistency_level)
+    error_message = "The 'consistency_level' value must be one of 'BoundedStaleness', 'Eventual', 'Session', 'Strong' or 'ConsistentPrefix'."
+  }
+  validation {
+    condition     = var.consistency_policy.consistency_level == "ConsistentPrefix" ? var.consistency_policy.max_staleness_prefix >= 10 && var.consistency_policy.max_staleness_prefix <= 2147483647 : true
+    error_message = "The 'max_staleness_prefix' value must be between 10 and 2147483647 when 'ConsistentPrefix' consistency level is set."
   }
 
-EOF
-  default     = {}
+  validation {
+    condition     = contains(["BoundedStaleness", "Eventual", "Session", "Strong", "ConsistentPrefix"], var.consistency_policy.consistency_level)
+    error_message = "The 'consistency_level' value must be one of 'BoundedStaleness', 'Eventual', 'Session', 'Strong' or 'ConsistentPrefix'."
+  }
 }
 
-variable "terraform_module" {
-  description = "Used to inform of a parent module"
+
+variable "geo_locations" {
+  type = set(object({
+    location          = string
+    failover_priority = number
+    zone_redundant    = optional(bool, true)
+  }))
+  default     = null
+  description = <<DESCRIPTION
+  Default to the region where the account was deployed with zone redundant enabled. Specifies a geo_location resource, used to define where data should be replicated with the failover_priority 0 specifying the primary location.
+
+  - `location`          - (Required) - The name of the Azure location where the CosmosDB Account is being created.
+  - `failover_priority` - (Required) - The failover priority of the region. A failover priority of 0 indicates a write region.
+  - `zone_redundant`    - (Optional) - Defaults to `true`. Whether or not the region is zone redundant.
+  
+  Example inputs:
+  ```hcl
+  geo_locations = [
+    {
+      location          = "eastus"
+      failover_priority = 0
+      zone_redundant    = true
+    },
+    {
+      location          = "westus"
+      failover_priority = 1
+      zone_redundant    = true
+    }
+  ]
+  ```
+  DESCRIPTION
+}
+
+variable "backup" {
+  type = object({
+    retention_in_hours  = optional(number, 8)
+    interval_in_minutes = optional(number, 240)
+    storage_redundancy  = optional(string, "Geo")
+    # type                = optional(string, "Continuous")
+    # tier                = optional(string, "Continuous30Days")
+    type                = optional(string, "Periodic")
+  })
+  nullable    = false
+  default     = {}
+  description = <<DESCRIPTION
+  Defaults to `{}`. Configures the backup policy for this Cosmos DB account.
+
+  - `type`                - (Optional) - Defaults to `Continuous`. The type of the backup. Possible values are `Continuous` and `Periodic`
+  - `tier`                - (Optional) - Defaults to `Continuous30Days`. Used when `type` is set to `Continuous`. The continuous backup tier. Possible values are `Continuous7Days` and `Continuous30Days`.
+  - `interval_in_minutes` - (Optional) - Defaults to `240`. Used when `type` is set to `Periodic`. The interval in minutes between two backups. Possible values are between `60` and `1440`
+  - `retention_in_hours`  - (Optional) - Defaults to `8`. Used when `type` is set to `Periodic`. The time in hours that each backup is retained. Possible values are between `8` and `720`
+  - `storage_redundancy`  - (Optional) - Defaults to `Geo`. Used when `type` is set to `Periodic`. The storage redundancy is used to indicate the type of backup residency. Possible values are `Geo`, `Local` and `Zone`
+
+  Example inputs:
+  ```hcl
+  # For Continuous Backup
+  backup = {
+    type = "Continuous"
+    tier = "Continuous30Days"
+  }
+
+  # For Periodic Backup
+  backup = {
+    type                = "Periodic"
+    storage_redundancy  = "Geo"
+    interval_in_minutes = 240
+    retention_in_hours  = 8
+  }
+  ```
+  DESCRIPTION
+
+  validation {
+    condition     = var.backup.type == "Continuous" ? contains(["Continuous7Days", "Continuous30Days"], var.backup.tier) : true
+    error_message = "The 'tier' value must be 'Continuous7Days' or 'Continuous30Days' when type is 'Continuous'."
+  }
+
+  validation {
+    condition     = var.backup.type == "Periodic" ? contains(["Geo", "Zone", "Local"], var.backup.storage_redundancy) : true
+    error_message = "The 'storage_redundancy' value must be 'Geo', 'Zone' or 'Local' when type is 'Periodic'."
+  }
+
+  validation {
+    condition     = var.backup.type == "Periodic" ? var.backup.interval_in_minutes >= 60 && var.backup.interval_in_minutes <= 1440 : true
+    error_message = "The 'interval_in_minutes' value must be between 60 and 1440 when type is 'Periodic'."
+  }
+
+  validation {
+    condition     = var.backup.type == "Periodic" ? var.backup.retention_in_hours >= 8 && var.backup.retention_in_hours <= 720 : true
+    error_message = "The 'retention_in_hours' value must be between 8 and 720 when type is 'Periodic'."
+  }
+}
+
+
+variable "capacity" {
+  type = object({
+    total_throughput_limit = optional(number, -1)
+  })
+  nullable    = false
+  default     = {}
+  description = <<DESCRIPTION
+  Defaults to `{}`. Configures the throughput limit for this Cosmos DB account.
+
+  - `total_throughput_limit` - (Optional) - Defaults to `-1`. The total throughput limit imposed on this Cosmos DB account (RU/s). Possible values are at least -1. -1 means no limit.
+
+  Example inputs:
+  ```hcl
+  capacity = {
+    total_throughput_limit = -1
+  }
+  ```
+  DESCRIPTION
+
+  validation {
+    condition     = var.capacity.total_throughput_limit >= -1
+    error_message = "The 'total_throughput_limit' value must be at least '-1'."
+  }
+}
+
+variable "analytical_storage_config" {
+  type = object({
+    schema_type = string
+  })
+  default     = null
+  description = <<DESCRIPTION
+  Defaults to `null`. Configuration related to the analytical storage of this account
+
+  - `schema_type` - (Required) - The schema type of the Analytical Storage for this Cosmos DB account. Possible values are FullFidelity and WellDefined.
+
+  Example inputs:
+  ```hcl
+  analytical_storage_config = {
+    schema_type = "WellDefined"
+  }
+  ```
+  DESCRIPTION
+
+  validation {
+    condition     = var.analytical_storage_config != null ? contains(["WellDefined", "FullFidelity"], var.analytical_storage_config.schema_type) : true
+    error_message = "The 'schema_type' value must be 'WellDefined' or 'FullFidelity'."
+  }
+}
+
+variable "cors_rule" {
+  type = object({
+    allowed_headers    = set(string)
+    allowed_methods    = set(string)
+    allowed_origins    = set(string)
+    exposed_headers    = set(string)
+    max_age_in_seconds = optional(number, null)
+  })
+  default     = null
+  description = <<DESCRIPTION
+  Defaults to `null`. Configures the CORS rule for this Cosmos DB account.
+
+  - `allowed_headers`    - (Required) - A list of headers that are allowed to be a part of the cross-origin request.
+  - `allowed_methods`    - (Required) - A list of HTTP headers that are allowed to be executed by the origin. Valid options are `DELETE`, `GET`, `HEAD`, `MERGE`, `POST`, `OPTIONS`, `PUT` or `PATCH`.
+  - `allowed_origins`    - (Required) - A list of origin domains that will be allowed by CORS.
+  - `exposed_headers`    - (Required) - A list of response headers that are exposed to CORS clients.
+  - `max_age_in_seconds` - (Optional) - Defaults to `null`. The number of seconds the client should cache a preflight response. Possible values are between `1` and `2147483647`
+
+  Example inputs:
+  ```hcl
+  cors_rule = {
+    allowed_headers = ["Custom-Header"]
+    allowed_methods = ["POST"]
+    allowed_origins = ["microsoft.com"]
+    exposed_headers = ["Custom-Header"]
+    max_age_in_seconds = 100
+  }
+  ```
+  DESCRIPTION
+
+  validation {
+    condition = var.cors_rule != null ? alltrue([
+      for value in var.cors_rule.allowed_methods :
+      contains(["DELETE", "GET", "HEAD", "MERGE", "POST", "OPTIONS", "PUT", "PATCH"], value)
+    ]) : true
+    error_message = "The 'allowed_methods' value must be 'DELETE', 'GET', 'HEAD', 'MERGE', 'POST', 'OPTIONS', 'PUT' or 'PATCH'."
+  }
+
+  validation {
+    condition     = var.cors_rule != null ? var.cors_rule.max_age_in_seconds == null || var.cors_rule.max_age_in_seconds >= 1 && var.cors_rule.max_age_in_seconds <= 2147483647 : true
+    error_message = "The 'max_age_in_seconds' value if set must be between 1 and 2147483647."
+  }
+}
+
+variable "capabilities" {
+  type = set(object({
+    name = string
+  }))
+  nullable    = false
+  default     = []
+  description = <<DESCRIPTION
+  Defaults to `[]`. The capabilities which should be enabled for this Cosmos DB account.
+
+  - `name` - (Required) - The capability to enable - Possible values are `AllowSelfServeUpgradeToMongo36`, `DisableRateLimitingResponses`, `EnableAggregationPipeline`, `EnableCassandra`, `EnableGremlin`, `EnableMongo`, `EnableMongo16MBDocumentSupport`, `EnableMongoRetryableWrites`, `EnableMongoRoleBasedAccessControl`, `EnablePartialUniqueIndex`, `EnableServerless`, `EnableTable`, `EnableTtlOnCustomPath`, `EnableUniqueCompoundNestedDocs`, `MongoDBv3.4` and `mongoEnableDocLevelTTL`.
+
+  Example inputs:
+  ```hcl
+  capabilities = [
+    {
+      name = "DisableRateLimitingResponses"
+    }
+  ]
+  ```
+  DESCRIPTION
+
+  validation {
+    condition = alltrue([
+      for capability in var.capabilities :
+      contains(["AllowSelfServeUpgradeToMongo36", "DisableRateLimitingResponses", "EnableAggregationPipeline", "EnableCassandra", "EnableGremlin", "EnableMongo", "EnableMongo16MBDocumentSupport", "EnableMongoRetryableWrites", "EnableMongoRoleBasedAccessControl", "EnablePartialUniqueIndex", "EnableServerless", "EnableTable", "EnableTtlOnCustomPath", "EnableUniqueCompoundNestedDocs", "MongoDBv3.4", "mongoEnableDocLevelTTL"], capability.name)
+    ])
+    error_message = "The 'name' value must be one of 'AllowSelfServeUpgradeToMongo36', 'DisableRateLimitingResponses', 'EnableAggregationPipeline', 'EnableCassandra', 'EnableGremlin', 'EnableMongo', 'EnableMongo16MBDocumentSupport', 'EnableMongoRetryableWrites', 'EnableMongoRoleBasedAccessControl', 'EnablePartialUniqueIndex', 'EnableServerless', 'EnableTable', 'EnableTtlOnCustomPath', 'EnableUniqueCompoundNestedDocs', 'MongoDBv3.4' or 'mongoEnableDocLevelTTL'."
+  }
+}
+
+variable "private_endpoints_enabled" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Defaults to `false`. (Optional) Enable Private Endpoint requirement. Valid values are (true, false)."
+
+  validation {
+    condition     = can(regex("true|false", var.private_endpoints_enabled))
+    error_message = "Valid values are true, false."
+  }
+
+}
+
+variable "kind" {
+  description = "(Optional) Specifies the kind of CosmosDB to create - possible values are 'GlobalDocumentDB' and 'MongoDB'."
+  type = string
+  default = "GlobalDocumentDB"
+  validation {
+    condition = contains(["GlobalDocumentDB"], var.kind)   #(["MongoDB", "GlobalDocumentDB"], var.kind)
+    error_message = "Valid values for Cosmosdb kind are (GlobalDocumentDB or MongoDB)."
+  }
+}
+
+# variable "database_settings" {
+#   description = "(Optional) Supported API for the databases in the account and a list of databases to provision. Allowed values of API type are Sql, Cassandra, MongoDB, Gremlin, Table. If 'use_autoscale' is set, 'throughput' becomes 'max_throughput' with a minimum value of 1000."
+#   type = object({
+#     api_type = string
+#     databases = list(object({
+#       name          = string
+#       throughput    = number
+#       use_autoscale = bool #If this is set, throughput will become max_throughput
+#     }))
+#   })
+#   default = {
+#     api_type  = "Cassandra"
+#     databases = []
+#   }
+#   validation {
+#     condition     = contains(["Cassandra", "Gremlin", "Table", "Postgresql"], var.database_settings.api_type)
+#     error_message = "Valid values for database API type are (Cassandra, Gremlin, Table, and Postgresql)."
+#   }
+# }
+
+# variable "database_settings" {
+#   type = map(any)
+#   default = {
+#     "Cassandra" = {
+#       kind        = "GlobalDocumentDB"
+#       capabilities = ["EnableCassandra"]
+#     }
+#     "Gremlin" = {
+#       kind        = "GlobalDocumentDB"
+#       capabilities = ["EnableGremlin"]
+#     }
+#   }
+# }
+
+# variable "api_type" {
+#   description = "The API type to use for the Cosmos DB account (Cassandra, Gremlin, Table, and Postgresql)"
+#   type = string
+#   default = "Cassandra"
+# }
+
+# variable "selected_db" {
+#   description = "The type of database to enable (Cassandra, Gremlin, MongoDB, SQL)"
+#   type        = string
+#   default     = "Cassandra"
+# }
+
+# variable "database_throughput" {
+#   description = "(Optional) RU throughput value for the selected database."
+#   type        = number
+#   default     = 400
+# }
+
+
+###
+
+# ### Diagnostic modules need to have appropriate  output that indicates diagnostic settings are enabled for this to work.
+variable "diagnostic_settings_enabled" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Defaults to `false`. (Optional) Enable CosmosDB diagnostic setting. Valid values are (true, false)."
+
+  validation {
+    condition     = can(regex("true|false", var.diagnostic_settings_enabled))
+    error_message = "Valid values are true, false."
+  }
+
+}
+
+
+
+
+# Optional Standard Variables
+# variable "is_test_run" {
+#   type        = bool
+#   nullable    = false
+#   default     = false
+#   description = "Defaults to `false`. (Optional) Is this a test run?. Only set to true to use in a test harness to disable certain networking features. Valid values are (true, false)."
+
+# }
+
+# variable "is_msdn_cosmosdb" {
+#   type        = bool
+#   nullable    = false
+#   default     = false
+#   description = "Defaults to `false`. (Optional) Is this Cosmos Db to be used in an msdn subscription. Valid values are (true, false)."
+# }
+
+# variable "additional_subnet_ids" {
+#   type        = list(any)
+#   nullable    = false
+#   default     = []
+#   description = "Defaults to `[]`. (Optional) Subnets to be allowed in the firewall to access CosmosDB."
+# }
+
+variable "is_virtual_network_filter_enabled" {
+  type        = bool
+  nullable    = false
+  default     = true
+  description = "Defaults to `false`. (Optional) Enable Virtual network filter_enabled. Valid values are (true, false)"
+}
+
+variable "mongo_server_version" {
+  type        = string
+  default     = null
+  description = "Defaults to `null`. (Optional) Mongo Server version if the CosmosDB is intended for MongoDB."
+}
+
+
+
+variable "enable_automatic_failover" {
+  description = "(Optional) Enable automatic failover for this Cosmos DB account. Valid values are (true, false)."
+  type        = bool
+  default     = false
+  validation {
+    condition     = can(regex("true|false", var.enable_automatic_failover))
+    error_message = "Valid values are true, false."
+  }
+}
+
+variable "multiple_write_locations_enabled" {
+  description = "(Optional) Enable multiple write locations for this Cosmos DB account. Valid values are (true, false)."
+  type        = bool
+  default     = false
+  validation {
+    condition     = can(regex("true|false", var.multiple_write_locations_enabled))
+    error_message = "Valid values are true, false."
+  }
+}
+
+variable "enable_replication" {
+  description = "(Optional) Enable replication of this Cosmos DB account to a secondary location. Valid values are (true, false)."
+  type        = bool
+  default     = false
+  validation {
+    condition     = can(regex("true|false", var.enable_replication))
+    error_message = "Valid values are true, false."
+  }
+}
+
+variable "failover_zone_redundant" {
+  description = "(Optional) Should Zone Redundancy in the failover region be enabled?"
+  type        = bool
+  default     = false
+}
+
+variable "failover_location" {
+  description = "(Optional) The name of the Azure region to host replicated data. Valid values are (eastus2, centralus)."
   type        = string
   default     = ""
+  validation {
+    condition     = contains(["", "eastus2", "centralus"], var.failover_location)
+    error_message = "Valid values for failover_location are (eastus and centralus)."
+  }
 }
 
+variable "failover_priority" {
+  description = "(Optional) The failover priority of the region. A failover priority of 0 indicates a write region."
+  type        = string
+  default     = "0"
+}
 
+variable "zone_redundant" {
+  description = "(Optional) Should Zone Redundancy in the primary region be enabled?"
+  type        = bool
+  default     = false
+}
+
+variable "allowed_origins" {
+  description = <<EOT
+  (Optional) Configures the allowed origins for this Cosmos DB account in CORS Feature:
+  A list of origin domains that will be allowed by CORS.
+  EOT
+  type        = list(string)
+  default     = []
+}
+
+variable "max_staleness_prefix" {
+  description = "(Optional) When used with the Bounded Staleness consistency level, this value represents the number of stale requests tolerated. Accepted range for this value is 10 – 2147483647."
+  type        = string
+  default     = "10"
+}
+
+variable "max_interval_in_seconds" {
+  description = "(Optional) When used with the Bounded Staleness consistency level, this value represents the time amount of staleness (in seconds) tolerated. Accepted range for this value is 5 - 86400 (1 day)."
+  type        = string
+  default     = "5"
+}
+
+variable "interval_in_minutes" {
+  description = "(Optional) The interval in minutes between two backups. This is configurable only when type is Periodic. Possible values are between 60 and 1440."
+  type        = number
+  default     = 60
+  validation {
+    condition     = var.interval_in_minutes >= 60 && var.interval_in_minutes <= 1440 && floor(var.interval_in_minutes) == var.interval_in_minutes
+    error_message = "Accepted values in between (minutes): 60 - 1440."
+  }
+}
+
+variable "retention_days" {
+  description = "(Optional) Cosmosdb retention daysl[Provide retention days if 'enable_diagnostics' is set to true]"
+  default     = 7
+}
+
+variable "retention_in_hours" {
+  description = "(Optional) The time in hours that each backup is retained. This is configurable only when type is Periodic. Possible values are between 8 and 720."
+  type        = number
+  default     = 8
+  validation {
+    condition     = var.retention_in_hours >= 8 && var.retention_in_hours <= 720 && floor(var.retention_in_hours) == var.retention_in_hours
+    error_message = "Accepted values in between (hours): 8 - 720."
+  }
+}
+
+variable "storage_redundancy" {
+  description = "(Optional) The storage redundancy is used to indicate the type of backup residency. This is configurable only when type is Periodic. Possible values are Geo, Local and Zone."
+  type        = string
+  default     = "Local"
+  validation {
+    condition     = contains(["Geo", "Local", "Zone"], var.storage_redundancy)
+    error_message = "Valid values for storage_redundancy are (Geo, Local and Zone)."
+  }
+}
+
+variable "user_assigned_identity_ids" {
+  description = "List of User Assigned Managed Identity IDs to be used with the Cosmos DB account."
+  type = list(string)
+  default = []
+}
+
+# variable "is_virtual_network_filter_enabled" {
+#   description = "Is this cosmos db to be used in an msdn subscription. Default is false."
+#   type        = bool
+#   default     = true
+# }
 
 
 
@@ -424,15 +1125,7 @@ variable "terraform_module" {
 ==================================
 ==================================
 # versions.tf
-## Please refer to version template document for setting this configuration.
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "< 5.0.0"
-    }
-  }
-}
+
 
 
 
@@ -449,309 +1142,44 @@ terraform {
 
 ===========||===================
 module "cosmosdb_account" {
-  source = "./modules/cosmosdb_account"
-
-  location                         = "East US"
-  resource_group_name              = "example-resource-group"
-  cosmosdb_name                    = "example-cosmosdb"
-  kind                             = "MongoDB"
-  enable_private_endpoint          = false
-  is_virtual_network_filter_enabled = false
-  enable_automatic_failover        = true
-  enable_multiple_write_locations = true
-  key_vault_name                   = "example-keyvault"
-  enable_systemassigned_identity   = true
-  zone_redundant                   = true
-  failover_location                = "West US"
-  failover_zone_redundant          = false
-  allowed_origins                  = ["https://example.com"]
-  additional_subnet_ids            = []
-  capabilities                     = ["EnableCassandra"]
-  consistency_level                = "Session"
-  max_interval_in_seconds          = 5
-  max_staleness_prefix             = 10000
-  backup_type                      = "Periodic"
-  interval_in_minutes              = 30
-  retention_in_hours               = 24
-  storage_redundancy               = "GeoRedundant"
-}
 
 
 
 
 ========================||========================
 Gremlin API Example:
-# Gremlin API Configuration Example
 
-resource "azurerm_cosmosdb_gremlin_database" "gremlin_db" {
-  name                = "gremlin-database"
-  resource_group_name = var.resource_group_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
-  throughput          = 400
-  tags                = var.tags
-}
-
-resource "azurerm_cosmosdb_gremlin_graph" "gremlin_graph" {
-  name                = "gremlin-graph"
-  resource_group_name = var.resource_group_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
-  database_name       = azurerm_cosmosdb_gremlin_database.gremlin_db.name
-
-  index_policy {
-    automatic      = true
-    indexing_mode  = "consistent"
-    included_paths = ["/*"]
-    excluded_paths = ["/\"_etag\"/?"]
-  }
-
-  conflict_resolution_policy {
-    mode                     = "LastWriterWins"
-    conflict_resolution_path = "/_ts"
-  }
-
-  unique_key {
-    paths = ["/definition/id1", "/definition/id2"]
-  }
-
-  tags = var.tags
-}
 --------------------------------------
 Cassandra API Example
-# Cassandra API Configuration Example
 
-resource "azurerm_cosmosdb_cassandra_keyspace" "cassandra_keyspace" {
-  name                = "cassandra-keyspace"
-  resource_group_name = var.resource_group_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
-  throughput          = 400
-}
-
-resource "azurerm_cosmosdb_cassandra_table" "cassandra_table" {
-  name                 = "cassandra-table"
-  resource_group_name  = var.resource_group_name
-  account_name         = data.azurerm_cosmosdb_account.this.name
-  keyspace_name        = azurerm_cosmosdb_cassandra_keyspace.cassandra_keyspace.name
-
-  schema {
-    partition_key {
-      name = "id"
-    }
-
-    clustering_key {
-      name     = "timestamp"
-      order_by = "ASC"
-    }
-
-    columns {
-      name = "id"
-      type = "uuid"
-    }
-
-    columns {
-      name = "timestamp"
-      type = "timestamp"
-    }
-
-    columns {
-      name = "value"
-      type = "text"
-    }
-  }
-
-  throughput = 400
-}
 ---------------------------------
 SQL API Example
-# SQL API Configuration Example
 
-resource "azurerm_cosmosdb_sql_database" "sql_db" {
-  name                = "sql-database"
-  resource_group_name = var.resource_group_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
-  throughput          = 400
-  tags                = var.tags
-}
-
-resource "azurerm_cosmosdb_sql_container" "sql_container" {
-  name                 = "sql-container"
-  resource_group_name  = var.resource_group_name
-  account_name         = data.azurerm_cosmosdb_account.this.name
-  database_name        = azurerm_cosmosdb_sql_database.sql_db.name
-  partition_key_path   = "/id"
-  throughput           = 400
-
-  unique_key {
-    paths = ["/definition/id1", "/definition/id2"]
-  }
-
-  tags = var.tags
-}
 -------------------------------------------------
 MongoDB API Example
-# MongoDB API Configuration Example
 
-resource "azurerm_cosmosdb_mongo_database" "mongo_db" {
-  name                = "mongo-database"
-  resource_group_name = var.resource_group_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
-  throughput          = 400
-  tags                = var.tags
-}
-
-resource "azurerm_cosmosdb_mongo_collection" "mongo_collection" {
-  name                 = "mongo-collection"
-  resource_group_name  = var.resource_group_name
-  account_name         = data.azurerm_cosmosdb_account.this.name
-  database_name        = azurerm_cosmosdb_mongo_database.mongo_db.name
-  partition_key_path   = "/_id"
-  throughput           = 400
-
-  unique_key {
-    paths = ["/definition/id1", "/definition/id2"]
-  }
-
-  tags = var.tags
-}
 ---------------------------------------------
 Table API Example
-# Table API Configuration Example
 
-resource "azurerm_cosmosdb_table" "table_db" {
-  name                = "table-database"
-  resource_group_name = var.resource_group_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
-  throughput          = 400
-  tags                = var.tags
-}
-
-resource "azurerm_cosmosdb_table_entity" "table_entity" {
-  table_name          = azurerm_cosmosdb_table.table_db.name
-  partition_key       = "partitionKey"
-  row_key             = "rowKey"
-  properties = {
-    "property1" = "value1"
-    "property2" = "value2"
-  }
-}
 -----------------------------------------------
 PostgreSQL API Example
-# PostgreSQL API Configuration Example
-
-resource "azurerm_cosmosdb_postgresql_cluster" "postgresql_cluster" {
-  name                = "postgresql-cluster"
-  resource_group_name = var.resource_group_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
-  administrator_login = var.admin_login
-  administrator_password = var.admin_password
-  version             = "13"
-  sku_name            = "GP_Gen5_2"
-  storage_mb          = 5120
-  backup_retention_days = 30
-  geo_redundant_backup_enabled = true
-  tags                = var.tags
-}
-
-resource "azurerm_cosmosdb_postgresql_database" "postgresql_db" {
-  name                = "postgresql-database"
-  resource_group_name = var.resource_group_name
-  account_name        = azurerm_cosmosdb_postgresql_cluster.postgresql_cluster.name
-  charset             = "UTF8"
-  collation           = "en_US.UTF8"
-  throughput          = 400
-}
-
-resource "azurerm_cosmosdb_postgresql_table" "postgresql_table" {
-  name                = "postgresql-table"
-  resource_group_name = var.resource_group_name
-  account_name        = azurerm_cosmosdb_postgresql_cluster.postgresql_cluster.name
-  database_name       = azurerm_cosmosdb_postgresql_database.postgresql_db.name
-  schema              = "public"
-  columns = [
-    { name = "id", type = "SERIAL PRIMARY KEY" },
-    { name = "name", type = "VARCHAR(100)" },
-    { name = "created_at", type = "TIMESTAMP" }
-  ]
-  throughput           = 400
-}
-
 
 
 
 ======================||==========================
 ========================||========================
 # main.tf
----
-resource "azurerm_cosmosdb_gremlin_database" "this" {
-  name                = var.gremlin_database_name
-  resource_group_name = var.resource_group_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
-  throughput          = var.database_throughput
-
-  tags = var.tags
-}
-
-resource "azurerm_cosmosdb_gremlin_graph" "this" {
-  name                = var.gremlin_graph_name
-  resource_group_name = var.resource_group_name
-  account_name        = data.azurerm_cosmosdb_account.this.name
-  database_name       = azurerm_cosmosdb_gremlin_database.this.name
-
-  index_policy {
-    automatic      = true
-    indexing_mode  = "consistent"
-    included_paths = ["/*"]
-    excluded_paths = ["/\"_etag\"/?"]
-  }
-
-  conflict_resolution_policy {
-    mode                     = "LastWriterWins"
-    conflict_resolution_path = "/_ts"
-  }
-
-  unique_key {
-    paths = ["/definition/id1", "/definition/id2"]
-  }
-
-  tags = var.tags
-}
-
-module "rbac" {
-  source = "app.terraform.io/xxxx/common/azure"
-
-  for_each = var.role_assignments
-
-  resource_id   = azurerm_cosmosdb_gremlin_graph.this.id
-  resource_name = azurerm_cosmosdb_gremlin_graph.this.name
-
-  role_based_permissions = {
-    assignment = {
-      role_definition_id_or_name = each.value.role_definition_id_or_name
-      principal_id               = each.value.principal_id
-    }
-  }
-  wait_for_rbac = false
-}
 
 
 
 ---
-  dynamic "autoscale_settings" {
-    for_each = var.enable_autoscale ? [1] : []
-    content {
-      max_throughput = var.max_throughput
-    }
-  }
+
 
 
 ###=======================================
 # globals.tf
 ---
-data "azurerm_client_config" "current" {}
 
-data "azurerm_cosmosdb_account" "this" {
-  name                = var.cosmosdb_account_name
-  resource_group_name = var.resource_group_name
-}
 
 
 
@@ -760,76 +1188,9 @@ data "azurerm_cosmosdb_account" "this" {
 ###=======================================
 # variables.tf
 ---
-variable "gremlin_database_name" {
-  description = "Name of the Gremlin database to create"
-  type        = string
-}
-
-variable "gremlin_graph_name" {
-  description = "Name of the Gremlin graph to create"
-  type        = string
-}
-
-variable "resource_group_name" {
-  description = "Name of the resource group the Cosmos DB account resides in"
-  type        = string
-}
-
-variable "cosmosdb_account_name" {
-  description = "Name of the Cosmos DB account"
-  type        = string
-}
-
-variable "database_throughput" {
-  description = "Throughput for the Gremlin database (e.g., RU/s)"
-  type        = number
-  default     = null
-}
-
-variable "tags" {
-  description = "A map of tags to assign to the resources"
-  type        = map(string)
-  default     = {}
-}
-
-variable "role_assignments" {
-  type = map(object({
-    role_definition_id_or_name = string
-    principal_id               = string
-  }))
-  default     = {}
-  description = <<DESCRIPTION
-A map of role assignments to create on the resource. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
-
-- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
-- `principal_id` - The ID of the principal to assign the role to.
-DESCRIPTION
-  nullable    = false
-}
-
-variable "terraform_module" {
-  description = "Used to inform of a parent module"
-  type        = string
-  default     = ""
-}
-
-
 
 
 ---
-Updated variables.tf (Autoscale Throughput):
-
-variable "enable_autoscale" {
-  description = "Flag to enable autoscale throughput"
-  type        = bool
-  default     = false
-}
-
-variable "max_throughput" {
-  description = "Maximum throughput for autoscale settings"
-  type        = number
-  default     = null
-}
 
 
 
@@ -838,30 +1199,12 @@ variable "max_throughput" {
 ###=======================================
 # outputs.tf
 ---
-output "gremlin_database_id" {
-  value       = azurerm_cosmosdb_gremlin_database.this.id
-  description = "The ID of the Gremlin database"
-}
-
-output "gremlin_graph_id" {
-  value       = azurerm_cosmosdb_gremlin_graph.this.id
-  description = "The ID of the Gremlin graph"
-}
 
 
 
 
 ---
 ### Output Additional Attributes: Include outputs for additional resource details, such as schema and throughput.
-output "cassandra_keyspace_throughput" {
-  value       = azurerm_cosmosdb_cassandra_keyspace.this.throughput
-  description = "The throughput of the Cassandra keyspace"
-}
-
-output "cassandra_table_schema" {
-  value       = azurerm_cosmosdb_cassandra_table.this.schema
-  description = "The schema of the Cassandra table"
-}
 
 
 
@@ -869,27 +1212,9 @@ output "cassandra_table_schema" {
 =====
 ### Validation Blocks: Add validation blocks for critical variables to prevent misconfigurations.
 
-### Example for partition_key_name.:
-variable "partition_key_name" {
-  description = "The name of the partition key column"
-  type        = string
-  validation {
-    condition     = contains(var.columns[*].name, var.partition_key_name)
-    error_message = "Partition key name must match one of the defined column names."
-  }
-}
 
 
 
-### Example for variable partition_key_name.: 
-variable "partition_key_type" {
-  description = "The data type of the partition key column (e.g., 'ascii', 'text', 'int')"
-  type        = string
-  validation {
-    condition     = contains(["ascii", "text", "int", "uuid", "timestamp"], var.partition_key_type)
-    error_message = "Partition key type must be a valid Cassandra type (e.g., 'ascii', 'text', 'int')."
-  }
-}
 
 
 
