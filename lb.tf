@@ -60,7 +60,13 @@ variable "backup" {
 
 =====||====
 
-
+backup {
+    type                = var.backup.type
+    interval_in_minutes = var.backup.type == "Periodic" ? coalesce(var.backup.interval_in_minutes, 240) : null
+    retention_in_hours  = var.backup.type == "Periodic" ? coalesce(var.backup.retention_in_hours, 8) : null
+    storage_redundancy  = var.backup.type == "Periodic" ? coalesce(var.backup.storage_redundancy, "Geo") : null
+    tier                = var.backup.type == "Continuous" ? coalesce(var.backup.tier, "Continuous30Days") : null
+  }
 
 
 
