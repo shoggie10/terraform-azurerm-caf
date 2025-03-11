@@ -27,7 +27,36 @@ https://us05web.zoom.us/j/83646745761?pwd=hH7lX9woEuWRg5mPYuYbbbl3mU8kJq.1
 
 
 =================||
+variable "backup" {
+  type = object({
+    type                = string
+    tier                = optional(string)
+    interval_in_minutes = optional(number)
+    retention_in_hours  = optional(number)
+    storage_redundancy  = optional(string)
+  })
+  nullable    = false
+  default     = { type = "Periodic" }  # Defaulting to Periodic
 
+  description = <<DESCRIPTION
+  Configures the backup policy for this Cosmos DB account.
+
+  - type: "Continuous" or "Periodic" (default: Periodic)
+  - tier: Required for Continuous (either "Continuous7Days" or "Continuous30Days")
+  - interval_in_minutes, retention_in_hours, storage_redundancy: Required for Periodic
+
+  DESCRIPTION
+
+  validation {
+    condition     = var.backup.type == "Continuous" ? contains(["Continuous7Days", "Continuous30Days"], var.backup.tier) : true
+    error_message = "The 'tier' value must be 'Continuous7Days' or 'Continuous30Days' when type is 'Continuous'."
+  }
+
+  validation {
+    condition     = var.backup.type == "Periodic" ? contains(["Geo", "Zone", "Local"], var.backup.storage_redundancy) : true
+    error_message = "The 'storage_redundancy' value must be 'Geo', 'Zone' or 'Local' when type is 'Periodic'."
+  }
+}
 
 =====||====
 
