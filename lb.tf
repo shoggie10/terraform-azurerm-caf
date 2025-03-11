@@ -60,13 +60,77 @@ variable "backup" {
 
 =====||====
 
-backup {
-    type                = var.backup.type
-    interval_in_minutes = var.backup.type == "Periodic" ? coalesce(var.backup.interval_in_minutes, 240) : null
-    retention_in_hours  = var.backup.type == "Periodic" ? coalesce(var.backup.retention_in_hours, 8) : null
-    storage_redundancy  = var.backup.type == "Periodic" ? coalesce(var.backup.storage_redundancy, "Geo") : null
-    tier                = var.backup.type == "Continuous" ? coalesce(var.backup.tier, "Continuous30Days") : null
-  }
+Zscaler Proxy Configuration
+5.1 Overview of Zscaler Proxy
+Zscaler is a cloud-based security proxy that acts as an intermediary between Docker and external services, such as Docker Hub or private registries. It ensures secure web access by inspecting traffic, providing the following benefits:
+
+Content Filtering: Blocks potentially malicious Docker images or downloads.
+Authentication and Authorization: Enforces access control policies for users and Docker services.
+Caching & Performance Optimization: Reduces latency by caching frequently accessed images.
+Logging and Reporting: Tracks Docker activity for auditing and compliance, making it easier to monitor and manage security.
+5.2 Steps to Configure Zscaler Proxy for Docker
+Step 1: Get Zscaler Proxy Details
+Log in to your Zscaler Admin Portal at https://admin.zscaler.net.
+Navigate to Administration → Cloud Configuration.
+Locate the proxy hostname and port details, which typically follow these formats:
+proxy.zscaler.net:80 (for HTTP traffic)
+proxy.zscaler.net:443 (for secure HTTPS traffic)
+Step 2: Configure Docker to Use Zscaler Proxy
+Docker needs to be configured to route its requests through Zscaler by setting the appropriate environment variables.
+
+Open a terminal and run the following commands to set the proxy variables:
+
+bash
+Copy
+export HTTP_PROXY=http://proxy.zscaler.net:80
+export HTTPS_PROXY=http://proxy.zscaler.net:443
+export NO_PROXY=localhost,127.0.0.1
+Make these settings permanent by adding them to your shell profile:
+
+bash
+Copy
+echo "export HTTP_PROXY=http://proxy.zscaler.net:80" >> ~/.bashrc
+echo "export HTTPS_PROXY=http://proxy.zscaler.net:443" >> ~/.bashrc
+echo "export NO_PROXY=localhost,127.0.0.1" >> ~/.bashrc
+source ~/.bashrc
+Step 3: Update Docker Daemon Configuration
+Edit the Docker daemon.json file:
+
+bash
+Copy
+sudo nano /etc/docker/daemon.json
+Add the proxy configuration to the file:
+
+json
+Copy
+{
+  "proxies": {
+    "default": {
+      "httpProxy": "http://proxy.zscaler.net:80",
+      "httpsProxy": "http://proxy.zscaler.net:443",
+      "noProxy": ["localhost", "127.0.0.1"]
+    }
+  }
+}
+Save the file by pressing CTRL + X, then Y and Enter to confirm.
+
+Restart Docker to apply the changes:
+
+bash
+Copy
+sudo systemctl restart docker
+Step 4: Test Proxy Configuration
+Run a simple Docker pull command to verify that the proxy configuration is working:
+
+bash
+Copy
+docker pull hello-world
+If the pull command succeeds, it indicates that Zscaler is correctly routing the requests through the proxy.
+
+Step 5: Verify Logging in Zscaler Portal
+Go to the Zscaler Admin Portal.
+Navigate to Reporting → Web Insights.
+Filter logs to check for Docker registry access logs, ensuring that Docker image pulls and pushes are being logged and monitored correctly.
 
 
 
