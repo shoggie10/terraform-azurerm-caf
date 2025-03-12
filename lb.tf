@@ -20,41 +20,19 @@ output "lb" {
 }
 ====================||===========
 
-https://us05web.zoom.us/j/81608226813?pwd=Bwa81YCGCtdMbOoH23dqQu3QGV5aOd.1
+Error: checking for presence of existing Key "cdbwaynetechhubdev843060-encryption" (Key Vault "https://kv-0000-cosmosd-dev-760.vault.azure.net/"): keyvault.BaseClient#GetKey: Failure responding to request: StatusCode=403 -- Original Error: autorest/azure: Service returned an error. Status=403 Code="Forbidden" Message="Client address is not authorized and caller is not a trusted service.\r\nClient address: 165.225.37.25\r\nCaller: appid=04b07795-8ddb-461a-bbee-02f9e1bf7b46;oid=730ce96a-7db7-4204-9611-4851956b3076;iss=https://sts.windows.net/e7066c90-b459-44c5-91f1-3581f3d1f082/\r\nVault: kv-0000-cosmosd-dev-760;location=eastus" InnerError={"code":"ForbiddenByFirewall"}
+│ 
+│   with module.this.module.key_vault_key.azurerm_key_vault_key.this,
+│   on .terraform/modules/this.key_vault_key/main.tf line 1, in resource "azurerm_key_vault_key" "this":
+│    1: resource "azurerm_key_vault_key" "this" {
 
-
+Firewall is turned on and your client IP address is not authorized to access this key vault.
+ 
 
 =================||
-variable "backup" {
-  type = object({
-    type                = string
-    tier                = optional(string)
-    interval_in_minutes = optional(number)
-    retention_in_hours  = optional(number)
-    storage_redundancy  = optional(string)
-  })
-  nullable    = false
-  default     = { type = "Periodic" }  # Defaulting to Periodic
 
-  description = <<DESCRIPTION
-  Configures the backup policy for this Cosmos DB account.
 
-  - type: "Continuous" or "Periodic" (default: Periodic)
-  - tier: Required for Continuous (either "Continuous7Days" or "Continuous30Days")
-  - interval_in_minutes, retention_in_hours, storage_redundancy: Required for Periodic
 
-  DESCRIPTION
-
-  validation {
-    condition     = var.backup.type == "Continuous" ? contains(["Continuous7Days", "Continuous30Days"], var.backup.tier) : true
-    error_message = "The 'tier' value must be 'Continuous7Days' or 'Continuous30Days' when type is 'Continuous'."
-  }
-
-  validation {
-    condition     = var.backup.type == "Periodic" ? contains(["Geo", "Zone", "Local"], var.backup.storage_redundancy) : true
-    error_message = "The 'storage_redundancy' value must be 'Geo', 'Zone' or 'Local' when type is 'Periodic'."
-  }
-}
 
 =====||====
 
