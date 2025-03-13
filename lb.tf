@@ -157,76 +157,6 @@ output "lb" {
 
 #################
 # Create the Key Vault
-module "key_vault" {
-  source  = "app.terraform.io/xxxx/key-vault/azure"
-  version = "< 0.2.0"
-
-  application_name                = "cosmosdbcassandra"
-  enabled_for_template_deployment = true
-  resource_group_name             = var.resource_group_name
-
-  network_acls = {
-    bypass                       = length(var.private_endpoints) != 0 ? "None" : "AzureServices"
-    default_action               = length(var.private_endpoints) == 0 && length(var.ip_range_filter) == 0 && length(local.cmk.virtual_network_subnet_ids) == 0 ? "Allow" : "Deny"
-    ip_rules                     = var.ip_range_filter
-    virtual_network_subnet_ids   = local.cmk.virtual_network_subnet_ids
-  }
-
-  tags = var.tags
-}
-
-# Create the Cosmos DB account's managed identity
-resource "azurerm_user_assigned_identity" "cosmosdb_identity" {
-  name                = "${local.cosmosdb_account_name}-identity"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-}
-
-# Assign RBAC roles for the Key Vault
-module "key_vault_rbac" {
-  source  = "app.terraform.io/xxxx/common/azure"
-  resource_name = module.key_vault.display_name
-  resource_id   = module.key_vault.id
-
-  role_based_permissions = {
-    terraform = {
-      role_definition_id_or_name = "Key Vault Administrator"
-      principal_id               = data.azurerm_client_config.current.object_id
-    }
-
-    cosmosdb_account_managed_identity_read = {
-      role_definition_id_or_name = "Key Vault Reader"
-      principal_id               = azurerm_user_assigned_identity.cosmosdb_identity.principal_id
-    }
-
-    cosmosdb_account_managed_identity = {
-      role_definition_id_or_name = "Key Vault Crypto User"
-      principal_id               = azurerm_user_assigned_identity.cosmosdb_identity.principal_id
-    }
-  }
-}
-
-# RBAC role assignments to propagate
-resource "time_sleep" "wait_for_rbac" {
-  depends_on = [module.key_vault_rbac]
-
-  create_duration = "30s"
-}
-
-# Create the Key Vault Key
-module "key_vault_key" {
-  source  = "app.terraform.io/xxxx/key-vault-key/azure"
-  version = "< 0.2.0"
-
-  #depends_on = [time_sleep.wait_for_rbac]
-
-  key_vault_resource_id = module.key_vault.id
-  name                  = "${local.cosmosdb_account_name}-encryption"
-  type                  = "RSA"
-  size                  = 3072
-  opts                  = ["encrypt", "decrypt", "sign", "unwrapKey", "wrapKey"]
-  tags                  = var.tags
-}
 
 
 
@@ -402,7 +332,39 @@ PostgreSQL API Example
 
 
 =====
-### Validation Blocks: Add validation blocks for critical variables to prevent misconfigurations.
+Define the Chatbot’s Purpose and Scope:
+
+Objective: What is the chatbot's primary goal? For example, is it for customer service, lead generation, or something else?
+Audience: Who will interact with the chatbot (customers, internal staff, etc.)?
+Platform: Where will the chatbot be deployed (website, mobile app, messaging apps like Slack or Teams)?
+Choose the Right Tools and Technologies:
+
+Programming Languages: Popular choices include Python (using libraries like NLTK, spaCy, or TensorFlow), JavaScript (Node.js with frameworks like Botpress or Microsoft Bot Framework).
+Chatbot Platforms: You can use platforms like Dialogflow (Google), Microsoft Bot Framework, or Rasa for easier integration.
+AI and NLP: You might want to use pre-built NLP models like GPT-3, BERT, or other transformer models to handle language understanding.
+Design Conversation Flow:
+
+Create a flowchart of how the chatbot should respond to different user inputs. You can use tools like draw.io or Lucidchart to map out the dialogues.
+Determine if the chatbot should be rule-based (fixed responses) or AI-based (understanding varied inputs using machine learning).
+Set Up the Backend and Integration:
+
+Depending on the chatbot's use case, you might need to integrate it with databases, CRMs, APIs, or internal tools.
+You may need to use frameworks like Flask/Django (Python) or Express (Node.js) for setting up the backend.
+Train the Chatbot:
+
+For AI-based chatbots, you’ll need a dataset to train the model. This could include previous conversations, FAQs, or other relevant text data.
+If you use an NLP framework, you’ll also need to fine-tune the model for your specific domain.
+Testing and Iteration:
+
+Test the chatbot rigorously to ensure it handles different user inputs well.
+Implement continuous learning, allowing the chatbot to improve over time by incorporating user feedback and new data.
+Deploy and Monitor:
+
+Once you're satisfied with the chatbot’s performance, deploy it on your chosen platform (website, app, etc.).
+Set up monitoring and logging to track interactions, user satisfaction, and any issues that arise.
+User Feedback and Improvements:
+
+Regularly collect user feedback to improve the chatbot’s performance and ensure it meets users’ needs.
 
 
 
