@@ -20,8 +20,7 @@ output "lb" {
 }
 ====================||===========
 
-https://us05web.zoom.us/j/88439730658?pwd=FXihPLk91ZRGM5bA8okf4bVNU6D3lh.1
-
+Refactored Cosmosdb_account module to support the two APIs in AVM i.e sql, and mongodb databases. Other APIs not supported by AVM have a separate Cosmosdb_account  module for their configurations. CMK have been fully integrated into this module.
 
 
 =================||
