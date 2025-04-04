@@ -39,25 +39,7 @@ az devops user list --org $orgURL --query "members[].user.displayName" -o json |
 
 
 =================||
-Subject: Updates on Azure DevOps Permissions and Resource Management Process
 
-Dear Azure DevOps Users,
-
-While using Terraform to manage Azure DevOps, we observed state drift that led us to identify some permissions that were unintentionally left behind during the initial implementation of the Limited Project Administrator (LPA) groups. These permissions have now been corrected.
-
-Please note the following updates to the resource management process:
-
-Resource Creation and Deletion: All resource creation or deletion must now be done via a ServiceNow request (ServiceNow Azure DevOps section) or through direct updates to the Terraform configurations in the ADO SaaS repository (Terraform ADO repository).
-
-Permissions for LPAs and Other Groups: For detailed information about the permissions granted to LPAs and other groups within Azure DevOps, please refer to this document: LPA Permissions Overview.
-
-Access to ADO SaaS Repo for Direct Terraform Changes: If you need access to the ADO SaaS repo for direct changes to Terraform configurations, please review the following documentation: Access Request Documentation.
-
-We appreciate your attention to these updates, and thank you for your cooperation in ensuring proper resource management and access control.
-
-
-
-=====||====
 
 
 
