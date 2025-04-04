@@ -28,6 +28,14 @@ curl -u :<PAT> "https://dev.azure.com/{organization}/_apis/projects?api-version=
 ----
 Azure CLI: az devops project list --organization https://dev.azure.com/{organization}
 
+----
+az devops user list --org $orgURL --query "members[].user.displayName" -o table
+
+
+az devops user list --org $orgURL --query "members[].user.displayName" -o json |
+  ConvertFrom-Json |
+  Export-Csv -Path "users.csv" -NoTypeInformation
+
 
 
 =================||
