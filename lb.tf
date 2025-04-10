@@ -25,16 +25,6 @@ The key point here is that when dealing with CMKs, versionless resource IDs shou
 
 =================||
 
-I understand the suggestion to expose outputs for the key_vault_name and key_vault_key_name in the referenced modules. However, after careful consideration, I believe the current approach is necessary to meet the requirements for Customer Managed Keys (CMKs), particularly in relation to using versionless resource IDs.
-
-Here’s why I’m sticking with the current approach:
-
-Versionless Resource ID: The normalized_cmk_key_url needs to be versionless in order for the system to always use the latest version of the key, as expected by services like Cosmos DB. The key_vault_key_name is unique within the Key Vault, but to create a versionless resource ID (without a specific key version), I need to extract the necessary parts from the full key_vault_resource_id. This ensures that we can dynamically reference the current version of the key, which is critical for encryption and key management workflows.
-
-Direct Outputs: Exposing outputs for these values, as suggested, would not directly provide the versionless resource ID required. Instead, it would still leave us needing to reference the full resource ID and extract the relevant components manually, which is what the current approach addresses. While it’s a valid suggestion, I believe the current logic is the most straightforward and efficient way to generate the correct normalized_cmk_key_url in this scenario.
-
-For these reasons, I will continue with the current method of extracting the key_vault_name and key_vault_key_name from the full resource_id to ensure the URL is versionless and meets the CMK requirements.
-----
 
 
 
