@@ -25,10 +25,8 @@ output "lb" {
 
 =================||
 
-it may have been brought up before but there really should be outputs on the modules being referenced on 14 and 15 here that output the values we need without having to parse values on this side.
 
 ----
-This part is a bit complicated, normalized_cmk_key_url needs to be unique for every cmk generated. No outputs for these, I need versionless resources id for the key vault key here for this to work with the required format.
 
 
 
