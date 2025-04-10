@@ -15,3 +15,39 @@ module "keyvault_keys" {
 output "keyvault_keys" {
   value = module.keyvault_keys
 }
+===============||=========
+List of Users in ADO: GET https://vssps.dev.azure.com/{organization}/_apis/graph/users?api-version=6.0-preview.1
+
+GET https://vssps.dev.azure.com/{organization}/_apis/graph/users?api-version=6.0-preview.1
+----
+List of Projects in ADO: GET https://dev.azure.com/{organization}/_apis/projects?api-version=6.0
+curl -u :<PAT> "https://dev.azure.com/{organization}/_apis/projects?api-version=6.0"
+----
+Azure CLI: az devops project list --organization https://dev.azure.com/{organization}
+
+----
+az devops user list --org $orgURL --query "members[].user.displayName" -o table
+
+
+az devops user list --org $orgURL --query "members[].user.displayName" -o json |
+  ConvertFrom-Json |
+  Export-Csv -Path "users.csv" -NoTypeInformation
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+================||=================
