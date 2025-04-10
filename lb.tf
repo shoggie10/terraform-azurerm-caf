@@ -19,30 +19,16 @@ output "lb" {
   value = module.lb
 }
 ====================||===========
-List of Users in ADO: GET https://vssps.dev.azure.com/{organization}/_apis/graph/users?api-version=6.0-preview.1
 
-GET https://vssps.dev.azure.com/{organization}/_apis/graph/users?api-version=6.0-preview.1
-----
-List of Projects in ADO: GET https://dev.azure.com/{organization}/_apis/projects?api-version=6.0
-curl -u :<PAT> "https://dev.azure.com/{organization}/_apis/projects?api-version=6.0"
-----
-Azure CLI: az devops project list --organization https://dev.azure.com/{organization}
-
-----
-az devops user list --org $orgURL --query "members[].user.displayName" -o table
-
-
-az devops user list --org $orgURL --query "members[].user.displayName" -o json |
-  ConvertFrom-Json |
-  Export-Csv -Path "users.csv" -NoTypeInformation
 
 
 
 =================||
 
+it may have been brought up before but there really should be outputs on the modules being referenced on 14 and 15 here that output the values we need without having to parse values on this side.
 
-
-
+----
+This part is a bit complicated, normalized_cmk_key_url needs to be unique for every cmk generated. No outputs for these, I need versionless resources id for the key vault key here for this to work with the required format.
 
 
 
