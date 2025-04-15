@@ -19,8 +19,9 @@ output "lb" {
   value = module.lb
 }
 ====================||===========
-The key point here is that when dealing with CMKs, versionless resource IDs should be used to ensure that the most recent key version is used by the service (e.g., Cosmos DB). If you directly reference the Key Vault key name from the Key Vault Key module and use it in the context of generating the normalized_cmk_key_url, the URL would still work correctly as long as the key name is valid.
-
+Refactored the Cosmosdb_account module to include support for the SQL API and MongoDB API as part of the Azure Verified Module (AVM).
+For APIs not supported by AVM, including Gremlin, Table, Cassandra, and Postgresql APIs,  a separate Cosmosdb_account module has been created to manage their configurations.
+Customer Managed Key (CMK) integration has been fully implemented within this module.
 
 
 =================||
