@@ -19,10 +19,11 @@ output "lb" {
   value = module.lb
 }
 ====================||===========
-Refactored the Cosmosdb_account module to include support for the SQL API and MongoDB API as part of the Azure Verified Module (AVM).
-For APIs not supported by AVM, including Gremlin, Table, Cassandra, and Postgresql APIs,  a separate Cosmosdb_account module has been created to manage their configurations.
-Customer Managed Key (CMK) integration has been fully implemented within this module.
+Refactored the existing cosmosdb_account module to align with the Azure Verified Module (AVM), which currently supports only the SQL API and MongoDB API.
 
+To accommodate APIs not supported by AVM—including Gremlin, Table, Cassandra, and PostgreSQL—I have created a separate module named cosmosdb_account_common. This module provides dedicated configurations and management for these additional API databases.
+
+Customer Managed Key (CMK) integration and security enhancements have been fully implemented within both modules to maintain consistent compliance and security standards across all Cosmos DB implementations.
 
 =================||
 
