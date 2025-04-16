@@ -19,13 +19,10 @@ output "lb" {
   value = module.lb
 }
 ====================||===========
-I've been thinking about this as I see it across all the resources where we use CMK. I'm wondering if this should be set to just a random string instead of a human readable value.
-As configured, you can't provision multiple instances of this module against the same app id in the same environment. that would result in a collision in this key vault name and a failure of the second deployment.
-If we really need to denote what type of CMK this key vault is used for, we can do that in a tag by putting this value in its own tag on the key vault or the resource ID of whatever resource is being CMK-enabled in a tag on the key vault.
 
 
-There is an overall character limit of 24 characters on key vault names and many of them are eaten by our naming standard. whichever produces the more random output is better since the point is to avoid collisions.
-I want to say something like all characters supplied in this field after the first ~7 are discarded due to this length limit.
+
+
 =================||
 
 
