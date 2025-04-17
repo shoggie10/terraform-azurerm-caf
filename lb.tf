@@ -19,6 +19,11 @@ output "lb" {
   value = module.lb
 }
 ====================||===========
+locals {
+  tfModule          = "key-vault"                                                                                     ## This should be the service name please update without fail and do not remove these two definitions.
+  tfModule_extended = var.terraform_module != "" ? join(" ", [var.terraform_module, local.tfModule]) : local.tfModule ## This is to send multiple tags if the main module have submodule calls.
+  key_vault_name    = "kv-${var.tags.application_id}-${lower(substr(var.application_name, 0, 7))}-${var.tags.environment}-${random_integer.this.result}"
+}
 
 
 
