@@ -45,22 +45,7 @@ variable "database_settings" {
 
 
 =================||
-╷
-│ Error: Unsupported attribute
-│ 
-│   on ../main.tf line 16, in resource "azurerm_cosmosdb_postgresql_cluster" "this":
-│   16:   administrator_login_password    = var.random_password.cosmosdb_postgresql_passwords.result
-│ 
-│ Can't access attributes on a primitive-typed value (string).
-╵
-sxa7bu@K21FXFX20P examples % terraform apply --auto-approve
-╷
-│ Error: Reference to undeclared input variable
-│ 
-│   on ../main.tf line 16, in resource "azurerm_cosmosdb_postgresql_cluster" "this":
-│   16:   administrator_login_password    = var.random_password.cosmosdb_postgresql_passwords.result
-│ 
-│ An input variable with the name "random_password" has not been declared. This variable can be declared with a variable "random_password" {} block.
+
 
 
 
