@@ -45,7 +45,18 @@ variable "database_settings" {
 
 
 =================||
-
+│ Error: creating Server Groupsv 2 (Subscription: "b987518f-1b04-4491-915c-e21dabc7f2d3"
+│ Resource Group Name: "wayne-tech-hub"
+│ Server Groupsv 2 Name: "postgresql2"): performing Create: unexpected status 400 (400 Bad Request) with error: bad_request: Node properties must be sent when node count is higher than 0.
+│ 
+│   with module.this.azurerm_cosmosdb_postgresql_cluster.this,
+│   on ../main.tf line 11, in resource "azurerm_cosmosdb_postgresql_cluster" "this":
+│   11: resource "azurerm_cosmosdb_postgresql_cluster" "this" {
+│ 
+│ creating Server Groupsv 2 (Subscription: "b987518f-1b04-4491-915c-e21dabc7f2d3"
+│ Resource Group Name: "wayne-tech-hub"
+│ Server Groupsv 2 Name: "postgresql2"): performing Create: unexpected status 400 (400 Bad Request) with error: bad_request:
+│ Node properties must be sent when node count is higher than 0.
 
 
 
