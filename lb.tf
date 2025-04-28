@@ -20,28 +20,6 @@ output "lb" {
 }
 ====================||===========
 
-variable "database_settings" {
-  type = map(any)
-  default = {
-    "Cassandra" = {
-      kind         = "GlobalDocumentDB"
-      capabilities = ["EnableCassandra"]
-    }
-    "Gremlin" = {
-      kind         = "GlobalDocumentDB"
-      capabilities = ["EnableGremlin"]
-    }
-    "Table" = {
-      kind         = "GlobalDocumentDB"
-      capabilities = ["EnableTable"]
-    }
-    "PostgreSQL" = {
-      kind         = "GlobalDocumentDB"
-      capabilities = []
-    }
-  }
-}
-
 
 
 =================||
