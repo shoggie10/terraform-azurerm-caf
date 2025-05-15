@@ -19,31 +19,97 @@ output "lb" {
   value = module.lb
 }
 ====================||===========
-Updating the permissions to allow Repositories to be created directly in the ADO UI
-We have mechanisms in place to ensure required separation of duties and minimum voter requirements are always met to allow teams to create repositories without admin intervention
-Post creation of the repo, automation will remove overly permissive access given to the user that creates the repository.
-Post creation of the repo, automation will grant all appropriate repository level permissions to the Limited Project Administrators group to allow management.
- 
- 
-Updating customized permissions
-After reviewing permissions across our Azure DevOps projects, we found many were customized by project administrators before switching to the limited project administrator role. To ensure consistency, we will implement the following changes:
-YAML Pipeline Creation:
-Modification of the Terraform code in the Azure DevOps repository in GitLab
-Submission of a New ADO Pipeline request in Service Now
-Classic Release Pipeline and Deployment Group permissions
-Granted to the Limited Project Administrator group
-Terraform previously lacked visibility into classic pipeline resources, which was missed.
-Applies to only projects using this functionality
- 
- 
-Updating the Automatically Included Reviewers Policy
-Users requested a way to configure the project-level Automatically Included Reviewers policy. However, due to limitations, we cannot allow project users or administrators to manage these policies in the tool, as it would also grant the ability to modify or remove separation of duty and minimum reviewer policies. Therefore, these permissions need to be removed.
-This has been implemented via a change to the Azure DevOps Project Terraform module.
-Changes to project level review policies must now be submitted to the Azure DevOps repository in GitLab.
-Submit an A@W request to obtain access if needed
-Membership to an appropriate group in GitLab is also required for repository access
+When creating a new agent in **Microsoft Copilot Studio**, it's important to define the **name**, **description**, and **tone** to ensure the chatbot aligns with the **brand**, **purpose**, and **audience** it will serve. Here’s how you can approach these settings, referencing typical **Microsoft Copilot Studio** styles.
 
-i think we can just take that whole section out, or at least reduce it to a "Based on feedback, you can make them in the tool" kind of language
+---
+
+### **1. Agent Name**:
+
+The **agent name** should be clear, concise, and represent the bot's function. Since the bot will be focused on retrieving documents, links, content, and context from your organization and cloud engineering department, the name should reflect that purpose.
+
+**Examples**:
+
+* **EngageBot** (reflecting a conversational agent that engages with users to provide information)
+* **CloudAssist** (focused on helping with cloud-related information and tasks)
+* **CloudDocsBot** (focused on retrieving documents and relevant content)
+* **EngineeringHelpBot** (focused on serving the cloud engineering department)
+
+**Recommendation**: Go with something like **CloudAssist** or **EngineeringHelpBot**, based on the primary function of the bot.
+
+---
+
+### **2. Agent Description**:
+
+The **description** should explain what the bot does and its value to the user. It should clearly communicate the bot’s role and the services it provides.
+
+**Example**:
+"**CloudAssist** is a chatbot designed to assist users in retrieving relevant documents, content, links, and context from internal resources such as **SharePoint**, **Teams**, and cloud engineering databases. It helps with quick document access, answering questions, and providing the right resources to enhance productivity."
+
+**Recommendation**: Describe the bot’s capabilities in terms of accessing cloud engineering resources, retrieving documents, and aiding with general queries across **SharePoint**, **Teams**, and **cloud services**.
+
+---
+
+### **3. Agent Tone**:
+
+The **tone** should reflect the way your bot interacts with users. Since this is a **cloud engineering department** bot, you should opt for a tone that’s **professional**, **helpful**, and **efficient**, while still being conversational.
+
+**Example**:
+
+* **Tone**: Professional, Concise, and Supportive
+* **Tone description**: “The bot should respond in a clear, concise manner, using professional language suitable for engineers and technical users. It should be helpful but to the point, ensuring that users can quickly access the information they need without unnecessary jargon.”
+
+**Recommendation**: Choose **Professional**, **Concise**, and **Supportive** as the tone.
+
+---
+
+### **4. Other Parameters to Consider in Copilot Studio**:
+
+Microsoft Copilot Studio typically requires you to specify a few other things about your agent:
+
+#### **4.1. Agent Purpose**:
+
+* **Purpose**: To help users access cloud engineering resources, documents, and internal data stored in systems like **SharePoint** and **Teams**. It should streamline access to information and make knowledge retrieval as efficient as possible.
+
+#### **4.2. Keywords**:
+
+* **Keywords** help the agent understand the common phrases or topics it might be asked about. For your use case, some keywords could include:
+
+  * **Cloud engineering**
+  * **Document retrieval**
+  * **Teams files**
+  * **SharePoint access**
+  * **Knowledge base**
+  * **Cloud resources**
+
+---
+
+### **Example Configuration for Copilot Studio**:
+
+* **Agent Name**: **CloudAssist**
+* **Description**: “**CloudAssist** is a chatbot designed to assist users in retrieving relevant documents, content, links, and context from internal resources such as **SharePoint**, **Teams**, and cloud engineering databases. It helps with quick document access, answering questions, and providing the right resources to enhance productivity.”
+* **Tone**: Professional, Concise, Supportive
+* **Purpose**: Assist users in cloud engineering departments with retrieving relevant documents, content, and other resources.
+* **Keywords**: cloud engineering, document retrieval, SharePoint, Teams, cloud resources, knowledge base, cloud assist
+
+---
+
+### **5. Customization for Your Department**:
+
+Since the bot will serve your **cloud engineering department**, you might want to tailor it to fit the specific jargon or needs of the department. For example, you could:
+
+* Include terms or acronyms specific to your department (e.g., **CI/CD**, **Terraform**, **Azure**).
+* Focus more on **engineering documentation** like **design documents**, **deployment guides**, **service manuals**, etc.
+
+---
+
+### **Final Thoughts**:
+
+* **Agent Name**: Choose a name that reflects its role in **cloud engineering** (e.g., **CloudAssist**, **EngineeringHelpBot**).
+* **Description**: Describe the bot’s role in helping retrieve documents and resources from **SharePoint**, **Teams**, and internal systems.
+* **Tone**: Use a **professional**, **concise**, and **supportive** tone to align with your department’s culture and needs.
+
+Would you like to move forward with setting up this agent in **Copilot Studio** now, or do you need more detailed guidance on the setup process?
+
 =================||
 
 
