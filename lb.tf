@@ -111,8 +111,7 @@ Since the bot will serve your **cloud engineering department**, you might want t
 Would you like to move forward with setting up this agent in **Copilot Studio** now, or do you need more detailed guidance on the setup process?
 
 =================||
-
-
+You need to configure at least one channel (for example, Teams) due to recent DLP policy changes. Contact your admin with questions (svc_powerplatcoe@xxxx.onmicrosoft.com).
 
 =====||===
 
