@@ -25,43 +25,79 @@ module "keyvaults" {
 ===============================================================================================
 # main.tf
 -------
-data "azurerm_client_config" "current" {}
+provider "azurerm" {
+  #4.0+ version of AzureRM Provider requires a subscription ID  
+  subscription_id = "b987518f-1b04-4491-915c-e21dabc7f2d3" #"0b5a3199-58bb-40ef-bcce-76a53aa594c2"
 
-data "azurerm_resource_group" "this" {
-  name = var.resource_group_name
-}
+  #resource_provider_registrations = "none"
 
-resource "random_integer" "this" {
-  min = 100
-  max = 999
+  features {
+
+  }
 }
 
 locals {
-  # Data Factory name that incorporates a random integer
-  data_factory_name = "adf${var.application_name}${var.tags.environment}${random_integer.this.result}"
-  tfModule          = "data-factory"
-  tfModule_extended = var.terraform_module != "" 
-    ? join(" ", [var.terraform_module, local.tfModule]) 
-    : local.tfModule
+  tags = {
+    environment         = "dev"
+    application_id      = "0000"
+    asset_class         = "standard"
+    data_classification = "public"
+    managed_by          = "it_cloud"
+    requested_by        = "me@email.com"
+    cost_center         = "1234"
+    source_code         = "https://gitlab.com/company/test"
+    deployed_by         = "test-workspace"
+    application_role    = ""
+  }
 }
 
+
+data "azurerm_resource_group" "this" {
+  name = "wayne-tech-hub"
+}
+
+
+module "this" {
+  source = "../"
+
+
+  #data_factory_name                  = "adf-test-001"
+  application_name                    = "datafactory1"
+  resource_group_name                 = data.azurerm_resource_group.this.name
+  location                            = data.azurerm_resource_group.this.location
+  customer_managed_key_id             = module.key_vault_key.id
+
+  tags                                = local.tags
+
+
+  global_parameters = {
+    "testbool" = {
+      type  = "Bool"
+      value = true
+    }
+  }
+
+}
+
+
 # Azure Data Factory
+# Create Azure Data Factory
 resource "azurerm_data_factory" "this" {
   name                             = local.data_factory_name
   location                         = var.location
   resource_group_name              = var.resource_group_name
   managed_virtual_network_enabled  = var.managed_virtual_network_enabled
   public_network_enabled           = var.public_network_enabled
-  customer_managed_key_id          = module.key_vault_key.key_vault_key_id
-  customer_managed_key_identity_id = azurerm_user_assigned_identity.adf_identity.id # Referencing the user-assigned identity
+  customer_managed_key_id          = var.customer_managed_key_id  #   #local.normalized_cmk_key_url
+  customer_managed_key_identity_id = azurerm_user_assigned_identity.adf_identity.id
 
   tags = var.tags
 
   dynamic "github_configuration" {
     for_each = var.github_configuration != null ? [var.github_configuration] : []
     content {
-      git_url         = github_configuration.value.git_url
       account_name    = github_configuration.value.account_name
+      git_url         = github_configuration.value.git_url
       branch_name     = github_configuration.value.branch_name
       repository_name = github_configuration.value.repository_name
       root_folder     = github_configuration.value.root_folder
@@ -77,9 +113,29 @@ resource "azurerm_data_factory" "this" {
     }
   }
 
+  # identity {
+  #   type = "SystemAssigned"
+  # }
+
   identity {
-    type = "SystemAssigned"
+    type = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.adf_identity.id]
   }
+
+  lifecycle {
+
+    # precondition {
+    #   condition     = !(var.public_network_access_enabled && lookup(var.tags, "data_classification", "") != "public")
+    #   error_message = "Public network access can only be enabled if the data_classification tag is set to 'Public'."
+    # }
+
+    # precondition {
+    #   condition     = (var.public_network_access_enabled == true) || (length(var.virtual_network_rules) > 0 || length(var.ip_range_filter) > 0 || var.private_endpoints_enabled)  # (var.public_network_access_enabled == false)
+    #   error_message = "When the public network access is disabled, you must provide either virtual network rules, IP range filters, or enable private endpoint."
+    # }
+  }
+
+
 }
 
 # Optional Azure Integration Runtimes for Data Factory
@@ -96,6 +152,39 @@ resource "azurerm_data_factory_integration_runtime_azure" "this" {
   cleanup_enabled         = each.value.cleanup_enabled
   virtual_network_enabled = each.value.virtual_network_enabled
 }
+
+###
+# # UPDATE: Adding Access Policy for Azure Data Factory
+# resource "azurerm_key_vault_access_policy" "data_factory" {
+
+#   key_vault_id = azurerm_key_vault.example.id
+
+#   tenant_id = data.azurerm_client_config.current.tenant_id
+#   object_id = azurerm_data_factory.example.identity.0.principal_id
+
+#   secret_permissions = [
+#     "get",
+#     "list"
+#   ]
+# }
+
+
+# module "rbac" {
+#   source = "app.terraform.io/bokf/common/azure"
+
+#   for_each = var.role_assignments
+
+#   resource_id   = azurerm_data_factory.this.id
+#   resource_name = azurerm_data_factory
+
+#   role_based_permissions = {
+#     assignment = {
+#       role_definition_id_or_name = each.value.role_definition_id_or_name
+#       principal_id               = each.value.principal_id
+#     }
+#   }
+#   wait_for_rbac = false
+# }
 
 
 
@@ -499,8 +588,8 @@ customer-managed-key.tf
 
 # Create the Key Vault resource using the Key Vault module
 module "key_vault" {
-  source  = "app.terraform.io/xxxx/key-vault/azure"
-  version = "<0.2.0>"
+  source  = "app.terraform.io/bokf/key-vault/azure"
+  version = "<0.2.0"
 
   application_name                = "adf-cmk"  
   enabled_for_template_deployment = true
@@ -512,6 +601,7 @@ module "key_vault" {
     bypass = length(var.private_endpoints) != 0 ? "None" : "AzureServices"
     # Set to allow only if no private endpoints, IP Rules, or VNet rules exist.
     default_action             = length(var.private_endpoints) == 0 && length(var.ip_range_filter) == 0 && length(local.cmk.virtual_network_subnet_ids) == 0 ? "Allow" : "Deny"
+
     ip_rules                   = var.ip_range_filter
     virtual_network_subnet_ids = local.cmk.virtual_network_subnet_ids
   }
@@ -519,9 +609,16 @@ module "key_vault" {
   tags = var.tags
 }
 
+# Create a User Assigned Managed Identity required for Data Factory to use CMK
+resource "azurerm_user_assigned_identity" "adf_identity" {
+  name                = "${local.data_factory_name}-identity"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+}
+
 # Key Vault RBAC configuration to assign necessary permissions
 module "key_vault_rbac" {
-  source  = "app.terraform.io/xxxx/common/azure"
+  source  = "app.terraform.io/bokf/common/azure"
   resource_name = module.key_vault.display_name
   resource_id   = module.key_vault.id
 
@@ -543,10 +640,19 @@ module "key_vault_rbac" {
   }
 }
 
+# RBAC role assignments to propagate
+resource "time_sleep" "wait_for_rbac" {
+  depends_on = [module.key_vault_rbac]
+
+  create_duration = "30s"
+}
+
 # Create a Key Vault Key to use for Customer Managed Key (CMK) encryption in Azure Data Factory
 module "key_vault_key" {
-  source  = "app.terraform.io/xxxx/key-vault-key/azure"
-  version = "<0.2.0>"
+  source  = "app.terraform.io/bokf/key-vault-key/azure"
+  version = "<0.2.0"
+ 
+  depends_on = [time_sleep.wait_for_rbac]
 
   key_vault_resource_id = module.key_vault.id
   name                  = "${local.data_factory_name}-encryption"
@@ -556,64 +662,7 @@ module "key_vault_key" {
   tags                  = var.tags
 }
 
-# Create a User Assigned Managed Identity required for Data Factory to use CMK
-resource "azurerm_user_assigned_identity" "adf_identity" {
-  name                = "${local.data_factory_name}-identity"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-}
 
-# Create Azure Data Factory using the customer-managed key for encryption
-resource "azurerm_data_factory" "this" {
-  name                             = local.data_factory_name
-  location                         = var.location
-  resource_group_name              = var.resource_group_name
-  managed_virtual_network_enabled  = var.managed_virtual_network_enabled
-  public_network_enabled           = var.public_network_enabled
-  customer_managed_key_id          = module.key_vault_key.key_vault_key_id
-  customer_managed_key_identity_id = azurerm_user_assigned_identity.adf_identity.id
-
-  tags = var.tags
-
-  dynamic "github_configuration" {
-    for_each = var.github_configuration != null ? [var.github_configuration] : []
-    content {
-      git_url         = github_configuration.value.git_url
-      account_name    = github_configuration.value.account_name
-      branch_name     = github_configuration.value.branch_name
-      repository_name = github_configuration.value.repository_name
-      root_folder     = github_configuration.value.root_folder
-    }
-  }
-
-  dynamic "global_parameter" {
-    for_each = var.global_parameters
-    content {
-      name  = global_parameter.key
-      type  = global_parameter.value.type
-      value = global_parameter.value.value
-    }
-  }
-
-  identity {
-    type = "SystemAssigned"
-  }
-}
-
-# Optional Azure Integration Runtimes for Data Factory
-resource "azurerm_data_factory_integration_runtime_azure" "this" {
-  for_each = var.azure_integration_runtime
-
-  name                    = each.key
-  data_factory_id         = azurerm_data_factory.this.id
-  location                = var.location
-  description             = each.value.description
-  compute_type            = each.value.compute_type
-  core_count              = each.value.core_count
-  time_to_live_min        = each.value.time_to_live_min
-  cleanup_enabled         = each.value.cleanup_enabled
-  virtual_network_enabled = each.value.virtual_network_enabled
-}
 
 ----------------------------
 
