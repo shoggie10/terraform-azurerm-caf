@@ -328,6 +328,42 @@ PostgreSQL API Example
 
 
 =====
+Azure DevOps Guide for Cloud Operations Team
+Introduction
+Audience: Cloud Operations Team at BOKF
+Purpose:
+Azure DevOps Hierarchies & Configuration Domains
+Organization Level
+Scope: Applies across all projects in the ADO organization.
+•	Organization Settings
+o	Users & Access Levels: managed via Terraform; only specify users used in Automatically Included Reviewer policies.
+o	Groups: Project Collection Administrators (PCA), Collection Service Accounts.
+o	Process Templates: Default processes; modifications only by PCAs in UI.
+o	Agent Pools & Deployment Pools: Permissions locked at org level (no changes).
+Project Level
+Scope: Settings and resources scoped to each project.
+•	Project Definition
+•	Teams
+•	Area & Iteration Paths
+•	Delivery Plans
+•	Wiki
+Object Level
+1.	Boards & Backlogs
+o	Work-Item Hierarchy: Epics → Features → User Stories/Issues → Tasks → (Sub-Tasks)
+o	Queries
+o	Process Permissions
+2.	Repos & Branch Policies
+o	Repos: 
+o	Branch Policies:
+3.	Pipelines & CI/CD
+o	Service Connections:
+o	Environments:
+o	Variable Groups & Secure Files:
+o	Classic Pipelines:
+________________________________________
+3. Governance & Automation
+•	Terraform Integration
+•	Permission Compliance
 
 
 
