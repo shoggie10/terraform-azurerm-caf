@@ -328,11 +328,6 @@ PostgreSQL API Example
 
 
 =====
-if you wanna start cleaning up the ADO SaaS repo and getting state taken care of that would be super awesome.
- 
-we need to remove all repo and pipeline declarations from the project files then put in a huge set of deleted blocks so we can tell terraform to delete it from state but not destroy it. theres also a huge amount of permissions that might remove that we also need to delete from state so they are preserved.
- 
-
 
 
 
