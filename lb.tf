@@ -328,6 +328,59 @@ PostgreSQL API Example
 
 
 =====
+data "azuredevops_group" "CodeApprovers" {
+  name       = "xxxx.AzureDevOps.Templates CodeApprovers"
+  project_id = module.project_xxxx_AzureDevOps_Templates.id
+}
+
+data "azuredevops_group" "ManagerApprovers" {
+  name       = "xxxx.AzureDevOps.Templates ManagerApprovers"
+  project_id = module.project_xxxx_AzureDevOps_Templates.id
+}
+
+module "project_xxxx_AzureDevOps_Templates" {
+  source  = "app.terraform.io/xxxx/project/ado"
+  version = "<3.0.0"
+
+  project_name               = "xxxx.AzureDevOps.Templates"
+  project_work_item_template = "Basic"
+  repos = [
+    "AzureMigrationService",
+    "xxxx-templates",
+    "adHocDevopsApi",
+    "Build-Pipeline-5x-Example",
+    "Example-Pipeline-ConsoleApp"
+  ]
+  project_repo_reviewer_policies = {
+    "default1" = {
+      match_type    = "DefaultBranch"
+      message       = "Automatically added via branch policies configured via Terraform."
+      require_votes = true
+      reviewer_ids = [
+        data.azuredevops_group.CodeApprovers.origin_id
+      ]
+    }
+    "default2" = {
+      match_type    = "DefaultBranch"
+      message       = "Automatically added via branch policies configured via Terraform."
+      require_votes = true
+      reviewer_ids = [
+        data.azuredevops_group.ManagerApprovers.origin_id,
+      ]
+    }
+  }
+  pipelines = {
+    Build-Pipeline-6x-Example = {
+      associated_repository = "Build-Pipeline-5x-Example"
+      yaml_file_path        = "azure-build-pipeline.yml"
+    }
+    Example-Pipeline-ConsoleApp = {
+      associated_repository = "Example-Pipeline-ConsoleApp"
+    }
+  }
+  project_admins_enabled         = true
+  limited_project_admins_enabled = true
+}
 
 
 
