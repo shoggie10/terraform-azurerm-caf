@@ -328,6 +328,34 @@ PostgreSQL API Example
 
 
 =====
+# Git repos
+terraform state list 'azuredevops_git_repository.this[*]' \
+  | xargs -n1 terraform state rm
+
+# Build definitions (pipelines)
+terraform state list 'azuredevops_build_definition.this[*]' \
+  | xargs -n1 terraform state rm
+
+# Build folders
+terraform state list 'azuredevops_build_folder.this[*]' \
+  | xargs -n1 terraform state rm
+
+# Pipeline authorizations
+terraform state list 'azuredevops_pipeline_authorization.repository[*]' \
+  | xargs -n1 terraform state rm
+
+# Area-path perms
+terraform state rm azuredevops_area_permissions.limited_project_admin[""]
+
+# Build-folder perms
+terraform state rm azuredevops_build_folder_permissions.limited_project_admin[""]
+
+# Git perms (project-level)
+terraform state rm azuredevops_git_permissions.limited_project_admin[""]
+
+# Git perms (per-repo)
+terraform state list 'azuredevops_git_permissions.limited_project_admin_per_repo[*]' \
+  | xargs -n1 terraform state rm
 
 
 
