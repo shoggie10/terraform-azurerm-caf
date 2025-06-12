@@ -323,6 +323,34 @@ PostgreSQL API Example
 
 ---
 ### 
+=======
+terraform state list 'module.*.azuredevops_git_repository.this[*]' \
+  | xargs -n1 terraform state rm
+
+terraform state list 'module.*.azuredevops_branch_policy_minimum_reviewers.this[*]' \
+  | xargs -n1 terraform state rm
+
+terraform state list 'module.*.azuredevops_build_definition.this[*]' \
+  | xargs -n1 terraform state rm
+
+terraform state list 'module.*.azuredevops_build_folder.this[*]' \
+  | xargs -n1 terraform state rm
+
+terraform state list 'module.*.azuredevops_pipeline_authorization.repository[*]' \
+  | xargs -n1 terraform state rm
+
+terraform state list 'module.*.azuredevops_git_permissions.limited_project_admin_per_repo[*]' \
+  | xargs -n1 terraform state rm
+
+# And for the singleton permissions you can similarly glob:
+terraform state list 'module.*.azuredevops_area_permissions.limited_project_admin[""]' \
+  | xargs -n1 terraform state rm
+
+terraform state list 'module.*.azuredevops_build_folder_permissions.limited_project_admin[""]' \
+  | xargs -n1 terraform state rm
+
+terraform state list 'module.*.azuredevops_git_permissions.limited_project_admin[""]' \
+  | xargs -n1 terraform state rm
 
 
 
