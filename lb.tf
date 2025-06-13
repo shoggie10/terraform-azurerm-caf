@@ -324,66 +324,21 @@ PostgreSQL API Example
 ---
 ### 
 =======
-terraform state list 'module.*.azuredevops_git_repository.this[*]' \
-  | xargs -n1 terraform state rm
-
-terraform state list 'module.*.azuredevops_branch_policy_minimum_reviewers.this[*]' \
-  | xargs -n1 terraform state rm
-
-terraform state list 'module.*.azuredevops_build_definition.this[*]' \
-  | xargs -n1 terraform state rm
-
-terraform state list 'module.*.azuredevops_build_folder.this[*]' \
-  | xargs -n1 terraform state rm
-
-terraform state list 'module.*.azuredevops_pipeline_authorization.repository[*]' \
-  | xargs -n1 terraform state rm
-
-terraform state list 'module.*.azuredevops_git_permissions.limited_project_admin_per_repo[*]' \
-  | xargs -n1 terraform state rm
-
-# And for the singleton permissions you can similarly glob:
-terraform state list 'module.*.azuredevops_area_permissions.limited_project_admin[""]' \
-  | xargs -n1 terraform state rm
-
-terraform state list 'module.*.azuredevops_build_folder_permissions.limited_project_admin[""]' \
-  | xargs -n1 terraform state rm
-
-terraform state list 'module.*.azuredevops_git_permissions.limited_project_admin[""]' \
-  | xargs -n1 terraform state rm
-
+│ Error: Removed resource still exists
+│ 
+│   on .terraform/modules/project_WMS_OmniPlus/git-repository.tf line 2:
+│    2: resource "azuredevops_git_repository" "this" {
+│ 
+│ This statement declares that
+│ module.project_WMS_OmniPlus.azuredevops_git_repository.this was removed,
+│ but it is still declared in configuration.
+╵
+Operation failed: failed running terraform plan (exit 1)
 
 
 
 =====
-# Git repos
-terraform state list 'azuredevops_git_repository.this[*]' \
-  | xargs -n1 terraform state rm
 
-# Build definitions (pipelines)
-terraform state list 'azuredevops_build_definition.this[*]' \
-  | xargs -n1 terraform state rm
-
-# Build folders
-terraform state list 'azuredevops_build_folder.this[*]' \
-  | xargs -n1 terraform state rm
-
-# Pipeline authorizations
-terraform state list 'azuredevops_pipeline_authorization.repository[*]' \
-  | xargs -n1 terraform state rm
-
-# Area-path perms
-terraform state rm azuredevops_area_permissions.limited_project_admin[""]
-
-# Build-folder perms
-terraform state rm azuredevops_build_folder_permissions.limited_project_admin[""]
-
-# Git perms (project-level)
-terraform state rm azuredevops_git_permissions.limited_project_admin[""]
-
-# Git perms (per-repo)
-terraform state list 'azuredevops_git_permissions.limited_project_admin_per_repo[*]' \
-  | xargs -n1 terraform state rm
 
 
 
