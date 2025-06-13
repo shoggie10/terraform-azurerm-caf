@@ -324,6 +324,33 @@ PostgreSQL API Example
 ---
 ### 
 =======
+// cleanup_removed_blocks.tf
+// Tell Terraform: “Those resources have been deleted from config—forget them in state, don’t destroy them.”
+
+removed {
+  from = module.project_xxxx_AzureDevOps_Templates.azuredevops_git_repository.this
+  lifecycle { destroy = false }
+}
+
+removed {
+  from = module.project_xxxx_AzureDevOps_Templates.azuredevops_branch_policy_minimum_reviewers.this
+  lifecycle { destroy = false }
+}
+
+removed {
+  from = module.project_xxxx_AzureDevOps_Templates.azuredevops_build_definition.this
+  lifecycle { destroy = false }
+}
+
+removed {
+  from = module.project_xxxx_AzureDevOps_Templates.azuredevops_build_folder.this
+  lifecycle { destroy = false }
+}
+
+removed {
+  from = module.project_xxxx_AzureDevOps_Templates.azuredevops_pipeline_authorization.repository
+  lifecycle { destroy = false }
+}
 
 
 
