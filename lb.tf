@@ -324,16 +324,6 @@ PostgreSQL API Example
 ---
 ### 
 =======
-│ Error: Removed resource still exists
-│ 
-│   on .terraform/modules/project_WMS_OmniPlus/git-repository.tf line 2:
-│    2: resource "azuredevops_git_repository" "this" {
-│ 
-│ This statement declares that
-│ module.project_WMS_OmniPlus.azuredevops_git_repository.this was removed,
-│ but it is still declared in configuration.
-╵
-Operation failed: failed running terraform plan (exit 1)
 
 
 
