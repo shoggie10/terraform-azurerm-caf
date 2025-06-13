@@ -324,7 +324,39 @@ PostgreSQL API Example
 ---
 ### 
 =======
-
+╵
+╷
+│ Error: Reference to undeclared resource
+│ 
+│   on .terraform/modules/project_WMS_OmniPlus/globals.tf line 77, in locals:
+│   77:   repo_id_map = { for repo in azuredevops_git_repository.this : repo.name => repo.id }
+│ 
+│ A managed resource "azuredevops_git_repository" "this" has not been
+│ declared in module.project_WMS_OmniPlus.
+│ 
+│ Did you mean the data resource data.azuredevops_git_repository.this?
+╵
+╷
+│ Error: Reference to undeclared resource
+│ 
+│   on .terraform/modules/project_WMS_OmniPlus/limited-project-admin.tf line 87, in resource "azuredevops_git_permissions" "limited_project_admin_per_repo":
+│   87:   for_each = var.limited_project_admins_enabled ? azuredevops_git_repository.this : {}
+│ 
+│ A managed resource "azuredevops_git_repository" "this" has not been
+│ declared in module.project_WMS_OmniPlus.
+│ 
+│ Did you mean the data resource data.azuredevops_git_repository.this?
+╵
+╷
+│ Error: Reference to undeclared resource
+│ 
+│   on .terraform/modules/project_WMS_OmniPlus/pipeline.tf line 16, in resource "azuredevops_build_definition" "this":
+│   16:     repo_id             = each.value.associated_repository == azuredevops_project.this.name ? data.azuredevops_git_repository.this[each.value.associated_repository].id : azuredevops_git_repository.this[each.value.associated_repository].id
+│ 
+│ A managed resource "azuredevops_git_repository" "this" has not been
+│ declared in module.project_WMS_OmniPlus.
+│ 
+│ Did you mean the data resource data.azuredevops_git_repository.this?
 
 
 
