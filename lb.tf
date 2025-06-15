@@ -137,9 +137,112 @@ You need to configure at least one channel (for example, Teams) due to recent DL
 
 -----------------------------------------------------
 
-## 
+## bcotools
+module "project_BCOTools" {
+  source  = "app.terraform.io/xxxx/project/ado"
+  version = "<3.0.0"
+
+  project_name               = "BCOTools"
+  project_work_item_template = "Basic"
+  repos = ["FusionTools"]
+  pipelines = {
+    FusionTools = {
+      associated_repository = "FusionTools"
+    }
+  }
+
+  project_admins_enabled         = true
+  limited_project_admins_enabled = true
+
+  project_repo_reviewer_policies = {
+    "default_optional" = {
+      match_type    = "DefaultBranch"
+      message       = "Automatically added via branch policies configured via Terraform."
+      require_votes = true
+      reviewer_ids = [
+        module.tcarver.id
+      ]
+      path_filters = [
+        "*"
+      ]
+    }
+  }
+}
 
 
+=====
+edddddds
+module "project_EDS" {
+  source  = "app.terraform.io/xxxx/project/ado"
+  version = "<3.0.0"
+
+  project_name                   = "EDS"
+  project_description            = "EDS"
+  
+  #This was created with the v1 mechanism for creating wikis, we use the v2 mechanism now.
+  wiki_name                      = "EDS.wiki"
+  project_admins_enabled         = true
+  limited_project_admins_enabled = true
+  repos = [
+    "ADF",
+    "AzureSQLDB",
+    "Databricks",
+    "EXE",
+    "EXE_BackbaseNRT",
+    "EXE_BDW_DatabaseTransfer",
+    "EXE_BDW_DataStaging",
+    "EXE_BDW_FileToPrestage",
+    "EXE_BDW_IntradayDataTransfer",
+    "EXE_BDW_JobExecution",
+    "EXE_BDW_JobExecutionLogList",
+    "EXE_BDW_JobTaskExecuter",
+    "EXE_BDW_PostValidation",
+    "EXE_BDW_PreValidation",
+    "EXE_BlendNRT",
+    "EXE_DMF_Metadata_Utility",
+    "EXE_IMPACT",
+    "EXE_MSP",
+    "EXE_FastNet",
+    "Scripts",
+    "SQL",
+    "SSAS",
+    "SSIS",
+    "Web"
+  ]
+  pipelines = {
+    "ADF_EDS_BuildPipeline_Dev" = {
+      associated_repository = "ADF"
+      yaml_file_path        = "DevOps/BuildPipeline.yaml"
+      folder_path           = "\\ADF"
+    }
+    "ADF_EDS_BuildPipeline_Prod" = {
+      associated_repository = "ADF"
+      yaml_file_path        = "DevOps/BuildPipeline.yaml"
+      folder_path           = "\\ADF"
+    }
+    "ADF_EDS_BuildPipeline_Test" = {
+      associated_repository = "ADF"
+      yaml_file_path        = "DevOps/BuildPipeline.yaml"
+      folder_path           = "\\ADF"
+    }
+    "SQL_EDS_CodeScanPipeline_Dev" = {
+      associated_repository = "SQL"
+      yaml_file_path        = "DevOps/CodeScanPipeline.yml"
+      folder_path           = "\\SQL"
+    }
+  }
+  project_teams = [
+    "EDS Release Admins",
+    "EDS Code Reviewers",
+    "EDS Team",
+    "EDS Prod Release",
+    "EDS Test Release",
+    "DataLake Approvers",
+    "SBOD Approvers",
+    "BOLT Approvers",
+    "TreasuryInterface Approvers"
+  ]
+}
 
 
 
@@ -148,6 +251,119 @@ You need to configure at least one channel (for example, Teams) due to recent DL
 
 
 ================================||
+project_Templates
+data "azuredevops_group" "CodeApprovers" {
+  name       = "xxxx.AzureDevOps.Templates CodeApprovers"
+  project_id = module.project_xxxx_AzureDevOps_Templates.id
+}
+
+data "azuredevops_group" "ManagerApprovers" {
+  name       = "xxxx.AzureDevOps.Templates ManagerApprovers"
+  project_id = module.project_xxxx_AzureDevOps_Templates.id
+}
+
+module "project_xxxx_AzureDevOps_Templates" {
+  source  = "app.terraform.io/xxxx/project/ado"
+  version = "<3.0.0"
+
+  project_name               = "xxxx.AzureDevOps.Templates"
+  project_work_item_template = "Basic"
+  repos = [
+    "AzureMigrationService",
+    "xxxx-templates",
+    "adHocDevopsApi",
+    "Build-Pipeline-5x-Example",
+    "Example-Pipeline-ConsoleApp"
+  ]
+  project_repo_reviewer_policies = {
+    "default1" = {
+      match_type    = "DefaultBranch"
+      message       = "Automatically added via branch policies configured via Terraform."
+      require_votes = true
+      reviewer_ids = [
+        data.azuredevops_group.CodeApprovers.origin_id
+      ]
+    }
+    "default2" = {
+      match_type    = "DefaultBranch"
+      message       = "Automatically added via branch policies configured via Terraform."
+      require_votes = true
+      reviewer_ids = [
+        data.azuredevops_group.ManagerApprovers.origin_id,
+      ]
+    }
+  }
+  pipelines = {
+    Build-Pipeline-6x-Example = {
+      associated_repository = "Build-Pipeline-5x-Example"
+      yaml_file_path        = "azure-build-pipeline.yml"
+    }
+    Example-Pipeline-ConsoleApp = {
+      associated_repository = "Example-Pipeline-ConsoleApp"
+    }
+  }
+  project_admins_enabled         = true
+  limited_project_admins_enabled = true
+}
+
+======
+# salesforceplat
+module "project_Salesforce_Platform" {
+  source  = "app.terraform.io/xxxx/project/ado"
+  version = "<3.0.0"
+
+  project_name               = "SalesforcePlatform"
+  project_description        = "Projects for Salesforce Platform"
+  project_work_item_template = "Salesforce Platform-Agile"
+  repos = [
+    "CRMIntegration",
+    "DataTeamPractice",
+    "DBAmp",
+    "FSC",
+    "INCIntegrationSSIS",
+    "SF",
+    "TMG"
+  ]
+  pipelines = {
+    "CRMIntegration" = {
+      associated_repository = "CRMIntegration"
+      yaml_file_path        = "azure-pipelines.yml"
+      folder_path           = "\\"
+    }
+    "DBAmp" = {
+      associated_repository = "DBAmp"
+      yaml_file_path        = "azure-pipelines.yml"
+      folder_path           = "\\"
+    }
+    "FSC" = {
+      associated_repository = "FSC"
+      yaml_file_path        = "azure-pipelines.yml"
+      folder_path           = "\\"
+    }
+    "INCIntegrationSSIS" = {
+      associated_repository = "INCIntegrationSSIS"
+      yaml_file_path        = "azure-pipelines.yml"
+      folder_path           = "\\"
+    }
+    "SF" = {
+      associated_repository = "SF"
+      yaml_file_path        = "azure-pipelines.yml"
+      folder_path           = "\\"
+    }
+    # "SFDatabases" = {
+    #   associated_repository = "SFDatabases"
+    #   yaml_file_path        = "azure-pipelines.yml"
+    #   folder_path           = "\\"
+    # }
+    "TMG" = {
+      associated_repository = "TMG"
+      yaml_file_path        = "azure-pipelines.yml"
+      folder_path           = "\\"
+    }
+  }
+  project_admins_enabled         = true
+  limited_project_admins_enabled = true
+}
 
 
 
