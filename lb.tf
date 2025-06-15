@@ -138,7 +138,41 @@ You need to configure at least one channel (for example, Teams) due to recent DL
 -----------------------------------------------------
 
 ## 
+% terraform plan
+var.project_name
+  The name of the project
 
+  Enter a value: 
+
+╷
+│ Error: Reference to undeclared resource
+│ 
+│   on globals.tf line 77, in locals:
+│   77:   repo_id_map = { for repo in azuredevops_git_repository.this : repo.name => repo.id }
+│ 
+│ A managed resource "azuredevops_git_repository" "this" has not been declared in the root module.
+│ 
+│ Did you mean the data resource data.azuredevops_git_repository.this?
+╵
+╷
+│ Error: Reference to undeclared resource
+│ 
+│   on limited-project-admin.tf line 87, in resource "azuredevops_git_permissions" "limited_project_admin_per_repo":
+│   87:   for_each = var.limited_project_admins_enabled ? azuredevops_git_repository.this : {}
+│ 
+│ A managed resource "azuredevops_git_repository" "this" has not been declared in the root module.
+│ 
+│ Did you mean the data resource data.azuredevops_git_repository.this?
+╵
+╷
+│ Error: Reference to undeclared resource
+│ 
+│   on pipeline.tf line 16, in resource "azuredevops_build_definition" "this":
+│   16:     repo_id             = each.value.associated_repository == azuredevops_project.this.name ? data.azuredevops_git_repository.this[each.value.associated_repository].id : azuredevops_git_repository.this[each.value.associated_repository].id
+│ 
+│ A managed resource "azuredevops_git_repository" "this" has not been declared in the root module.
+│ 
+│ Did you mean the data resource data.azuredevops_git_repository.t
 
 =====
 
