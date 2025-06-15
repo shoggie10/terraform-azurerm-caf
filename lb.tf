@@ -123,14 +123,7 @@ You need to configure at least one channel (for example, Teams) due to recent DL
 
 =========
 
-erraform-ado-project % terraform plan
-╷
-│ Error: Invalid expression
-│ 
-│   on git-repository.tf line 28, in removed:
-│   28:   from = "azuredevops_git_repository.this"
-│ 
-│ A single static variable reference is required: only attribute access and indexing with constant keys. No calculations, function calls, template expressions, etc are allowed here.
+
 
 
 
