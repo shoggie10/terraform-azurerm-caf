@@ -154,34 +154,50 @@ You need to configure at least one channel (for example, Teams) due to recent DL
 
 ======
 # 
-terraform {
-  required_version = ">= 1.7.0"
-}
-
-# Remove all environment authorizations
-removed {
-  from = azuredevops_pipeline_authorization.environment
-  lifecycle { destroy = false }
-}
-
-# Remove all azurerm service-connection authorizations
-removed {
-  from = azuredevops_pipeline_authorization.service_connection_azurerm
-  lifecycle { destroy = false }
-}
-
-# Remove all nuget service-connection authorizations
-removed {
-  from = azuredevops_pipeline_authorization.service_connection_nuget
-  lifecycle { destroy = false }
-}
-
-# Remove all repository authorizations
-removed {
-  from = azuredevops_pipeline_authorization.repository
-  lifecycle { destroy = false }
-}
-
+Plan: 50 to add, 0 to change, 0 to destroy.
+╷
+│ Error: Invalid index
+│ 
+│   on .terraform/modules/project4/pipeline-authorization.tf line 7, in resource "azuredevops_pipeline_authorization" "environment":
+│    7:   pipeline_id = (each.value.all_pipelines == false) ? azuredevops_build_definition.this[each.value.pipeline_name].id : null
+│     ├────────────────
+│     │ azuredevops_build_definition.this is object with no attributes
+│     │ each.value.pipeline_name is "pipeline2"
+│ 
+│ The given key does not identify an element in this collection value.
+╵
+╷
+│ Error: Invalid index
+│ 
+│   on .terraform/modules/project4/pipeline-authorization.tf line 7, in resource "azuredevops_pipeline_authorization" "environment":
+│    7:   pipeline_id = (each.value.all_pipelines == false) ? azuredevops_build_definition.this[each.value.pipeline_name].id : null
+│     ├────────────────
+│     │ azuredevops_build_definition.this is object with no attributes
+│     │ each.value.pipeline_name is "pipeline1"
+│ 
+│ The given key does not identify an element in this collection value.
+╵
+╷
+│ Error: Invalid index
+│ 
+│   on .terraform/modules/project4/pipeline-authorization.tf line 25, in resource "azuredevops_pipeline_authorization" "service_connection_azurerm":
+│   25:   pipeline_id = azuredevops_build_definition.this[each.value.pipeline_name].id
+│     ├────────────────
+│     │ azuredevops_build_definition.this is object with no attributes
+│     │ each.value.pipeline_name is "pipeline1"
+│ 
+│ The given key does not identify an element in this collection value.
+╵
+╷
+│ Error: Invalid index
+│ 
+│   on .terraform/modules/project4/pipeline-authorization.tf line 34, in resource "azuredevops_pipeline_authorization" "service_connection_nuget":
+│   34:   pipeline_id = azuredevops_build_definition.this[each.value.pipeline_name].id
+│     ├────────────────
+│     │ azuredevops_build_definition.this is object with no attributes
+│     │ each.value.pipeline_name is "pipeline1"
+│ 
+│ The given key does not identify an element in this collection value.
 
 
 
