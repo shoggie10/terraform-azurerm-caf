@@ -154,6 +154,33 @@ You need to configure at least one channel (for example, Teams) due to recent DL
 
 ======
 # 
+terraform {
+  required_version = ">= 1.7.0"
+}
+
+# Remove all environment authorizations
+removed {
+  from = azuredevops_pipeline_authorization.environment
+  lifecycle { destroy = false }
+}
+
+# Remove all azurerm service-connection authorizations
+removed {
+  from = azuredevops_pipeline_authorization.service_connection_azurerm
+  lifecycle { destroy = false }
+}
+
+# Remove all nuget service-connection authorizations
+removed {
+  from = azuredevops_pipeline_authorization.service_connection_nuget
+  lifecycle { destroy = false }
+}
+
+# Remove all repository authorizations
+removed {
+  from = azuredevops_pipeline_authorization.repository
+  lifecycle { destroy = false }
+}
 
 
 
