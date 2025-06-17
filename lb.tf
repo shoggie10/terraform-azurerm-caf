@@ -142,36 +142,7 @@ You need to configure at least one channel (for example, Teams) due to recent DL
 
 
 =====
-% terraform plan
-╷
-│ Error: Invalid value for input variable
-│ 
-│   on main.tf line 156, in module "project4":
-│  156:   service_connections = {
-│  157:     azure-sc-1 = {
-│  158:       name                  = "MyServiceConnectionName"
-│  159:       type                  = "azurerm"
-│  160:       authentication_scheme = "ServicePrincipal"
-│  161:       authentication_data = {
-│  162:         username         = "00000003-0000-0000-c000-000000000016"
-│  163:         subscriptionId   = "00000003-0000-0000-c000-000000000017"
-│  164:         subscriptionName = "TheBatcave"
-│  165:       }
-│  166:       #authorized_pipeline_names = ["pipeline1"]
-│  167:     }
-│  168:     nuget-sc-1 = {
-│  169:       name                  = "MyServiceConnectionName3"
-│  170:       type                  = "nuget"
-│  171:       authentication_scheme = "apikey"
-│  172:       data = {
-│  173:         url = "https://myfeed.thingsman/feed-name"
-│  174:       }
-│  175:       #authorized_pipeline_names = ["pipeline1"]
-│  176:     }
-│  177:   }
-│ 
-│ The given value is not suitable for module.project4.var.service_connections declared at .terraform/modules/project4/variables.tf:114,1-31: element "nuget-sc-1": attribute
-│ "authorized_pipeline_names" is required.
+
 ╵
 
 
