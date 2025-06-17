@@ -142,8 +142,66 @@ You need to configure at least one channel (for example, Teams) due to recent DL
 
 
 =====
+Here’s a draft merge‐request description you can use. Just drop in your actual plan run URL in place of `<PLAN_RUN_URL>`:
 
-╵
+---
+
+## Refactor: Remove direct repo & pipeline management from parent module
+
+### Summary
+
+This PR refactors our Terraform parent-module to stop creating Azure DevOps repos and pipelines directly, and instead:
+
+* **Preserves** all existing repos/pipelines in state (no destroys) via `removed {}` blocks
+* **Replaces** resource blocks with data lookups for any existing objects
+* **Makes** `repos` and `pipelines` inputs optional (default to `[]` / `{}`)
+* **Updates** pipeline‐authorization and permission blocks to index into data sources
+* **Ensures** no destructive changes: **Plan shows 0 destroy**
+
+### Details of changes
+
+1. **variables.tf**
+
+   * Added defaults for `var.repos` and `var.pipelines` so they’re optional.
+2. **git-repository.tf**
+
+   * Commented-out/deleted `azuredevops_git_repository` resource.
+   * Added `removed { from = azuredevops_git_repository.this }` with `lifecycle { destroy = false }`.
+   * Introduced `data.azuredevops_git_repository.this` (for\_each over `var.repos`).
+3. **pipelines.tf**
+
+   * Commented-out/deleted `azuredevops_build_folder` & `azuredevops_build_definition` resources.
+   * Added `removed {}` blocks for both resource types.
+   * Introduced `data.azuredevops_build_definition.this` (for\_each over processed pipelines).
+4. **pipeline-authorization.tf**
+
+   * Swapped all references from `azuredevops_build_definition.this` → `data.azuredevops_build_definition.this`.
+   * Wrapped each `for_each` in a length-guard so blocks are skipped when no pipelines are provided.
+   * Added `removed {}` blocks for all `azuredevops_pipeline_authorization.*` resources.
+5. **limited-project-admin.tf**
+
+   * Added `removed {}` for `azuredevops_git_permissions.limited_project_admin_per_repo` (plus any other permission types as needed).
+6. **examples.tf**
+
+   * Removed `repos = […]` / `pipelines = {…}` from sample call (they now default to empty).
+   * Bumped `required_version = ">= 1.7.0"` to support `removed {}` in HCL.
+7. **Other files** (`branch-policies.tf`, `groups.tf`, `environments.tf`, `main.tf`) remain functionally unchanged.
+
+### Why this matters
+
+* **No repos or pipelines** will be destroyed by Terraform—existing ADO objects remain intact.
+* We retain full ability to look up and manage authorizations via data sources.
+* Downstream modules and examples continue to work with zero friction.
+
+---
+
+**Plan run:**
+[View zero-destroy plan in Terraform Cloud →](PLAN_RUN_URL)
+
+---
+
+Let me know if you’d like any tweaks!
+
 
 
 
@@ -151,9 +209,52 @@ You need to configure at least one channel (for example, Teams) due to recent DL
 
 ================================||
 
+Here’s a clean and professional **Merge Request (MR) description** that summarizes your cleanup work, aligns with your colleagues’ goals, and explains the rationale:
+
+---
+
+## 🔧 Merge Request: Cleanup of Repo, Pipeline, and Permission Resources from ADO Terraform Project
+
+### ✅ Summary
+
+This merge request removes all Terraform-managed **Git repositories**, **pipelines**, and their associated **permissions** from the project module in accordance with our team’s SaaS state decoupling strategy.
+
+---
+
+### 🧹 Changes Included
+
+* Removed all `azuredevops_git_repository` resource blocks
+* Removed all `azuredevops_build_definition` pipeline resources
+* Removed associated `azuredevops_git_permissions` and `azuredevops_build_definition_permissions` tied to the deleted repos and pipelines
+* Removed related variables (`repos`, `pipelines`, etc.) and their usages in `for_each` expressions
+* Identified all removed resources to be handled with `terraform state rm` to ensure:
+
+  * Resources are no longer managed by Terraform
+  * No actual infrastructure is destroyed in Azure DevOps
+
+---
+
+### 📌 Next Steps
+
+* Run `terraform state rm` for all removed resources (see cleanup script or plan doc)
+* Confirm that no unintended resource deletions occur
+* Ensure any future management of these ADO resources is tracked externally (e.g., manually or by another tool)
+
+---
+
+### 🛑 Important Notes
+
+* This MR **does not destroy** any Azure DevOps resources
+* It simply **untracks them from Terraform state**
+* This is part of our move toward **more granular state management and reduced Terraform blast radius**
+
+---
+
+Let me know if you’d like a shell script or documentation snippet included in the MR for the state removal commands.
 
 
 ======
+
 
 
 
