@@ -273,9 +273,10 @@ This merge request removes all Terraform-managed **Git repositories**, **pipelin
 =======================================
 ======================================
 # 
+A: I would expect this to be done in the SaaS repo to impact state there and not specified in the module
+I finding it a bit difficult to think of the best way to implement the cleanup process for the repos and pipelines before I follow this path here. I am not sure of how you picture the workflow from parent module (here) to the root module (SaaS repo) but I think the best path to do the clean up is first to untrack the relevant repos and pipelines and associated resources here and then work on cleaning up individuals repo and pipeline in the SaaS repo. The SaaS repo module is the one calling the parent module here. What do you think?
 
-
-
+B: does this work run-over-run or will it only work once and then throw and error? thats my major concern. if this is idempotent it works for me.
 
 =================================
 ==================||=========
