@@ -274,7 +274,12 @@ This merge request removes all Terraform-managed **Git repositories**, **pipelin
 ======================================
 # 
 
-B: 
+│ Error: No group found matching specified filter (displayName eq 'bokf-gbl-aadg-ADO-*-Contributors')
+│ 
+│   with data.azuread_group.group_access["Contributors"],
+│   on globals.tf line 98, in data "azuread_group" "group_access":
+│   98:   display_name = each.value
+│ 
 
 =================================
 ==================||=========
