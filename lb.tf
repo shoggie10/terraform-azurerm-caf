@@ -443,11 +443,11 @@ var
 
 
 =====
-
-
-
-
-
+Inspired: Mr. A always keeps commitments and is very consistent between his words and actions. He has gained the trust of others by being open, truthful, and authentic. He has received praise for being positive and energetic, along with assisting others with their efforts.
+Ambitious: Mr. A is always willing to take on new work and learn something new. No matter what his experience is with the task assigned, he will tackle it with enthusiasm and eagerness to learn.
+Collaborative: Mr. A has partnered with Steven, Mike, Elijah, and LOB partners during this quarter. He listens to understand others' points of view and provides recommendations accordingly. People enjoy working with Sogo and can count on him to collaborate effectively.
+Tenacious: Mr. A doesn't let hurdles stop his progression forward. He reaches out at the appropriate time to escalate and keeps me up to date on items he's working on. He is results driven and loves to learn which is a great strength to have in our space.
+feedback 1: Sogo continues to learn the environment, one way he did that this quarter was the Docker documentation he created. He was able to document and learn new information. He has volunteered to complete any documentation as he sees it as a learning opportunity and way to increase his knowleddge of our environment. Mr.A is also very mindful of his communication and has acknowledged that the more people talk to him, the better they understand him. So as he begins to work with new people, he is mindful to speak slower and ensure understanding.
 
 ╵=============================||=================================================
 
