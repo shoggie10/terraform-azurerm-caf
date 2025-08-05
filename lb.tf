@@ -372,7 +372,259 @@ resource "azurerm_monitor_diagnostic_setting" "aks_diagnostics" {
 
 
 ===========||===================
+resource "azurerm_monitor_metric_alert" "containers_killed" {
+  auto_mitigate       = false
+  description         = "This alert monitors number of containers killed due to out of memory(OOM) error. Check insights here: https://portal.azure.com/#resource/subscriptions/xxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxxx/resourceGroups/da-aks-rg-prd/providers/Microsoft.ContainerService/managedClusters/aks-cluster-name/infrainsights?feature.citracealert=OOM%20Killed%20Containers"
+  name                = "Containers getting OOM killed for aks-cluster-name CI-6"
+  resource_group_name = var.resource_group_name
+  scopes = var.scopes
 
+  window_size = "PT1M"
+  criteria {
+    aggregation            = "Average"
+    metric_name            = "oomKilledContainerCount"
+    metric_namespace       = "Insights.Container/pods"
+    operator               = "GreaterThan"
+    skip_metric_validation = true
+    threshold              = 0
+    dimension {
+      name     = "kubernetes namespace"
+      operator = "Include"
+      values   = ["*"]
+    }
+    dimension {
+      name     = "controllerName"
+      operator = "Include"
+      values   = ["*"]
+    }
+  }
+  depends_on = [
+    azurerm_kubernetes_cluster.aks,
+  ]
+}
+
+
+resource "azurerm_monitor_metric_alert" "cpu_usage" {
+  auto_mitigate       = false
+  description         = "This alert monitors container CPU usage. It uses the threshold defined in the config map."
+  name                = "Container CPU usage violates the configured threshold for aks-cluster-name CI-19"
+  resource_group_name = var.resource_group_name
+  scopes              = var.scopes 
+  criteria {
+    metric_namespace       = "Insights.Container/containers"
+    metric_name            = "cpuThresholdViolated"
+    aggregation            = "Average"
+    operator               = "GreaterThan"
+    skip_metric_validation = true
+    threshold              = 0
+    dimension {
+      name     = "controllerName"
+      operator = "Include"
+      values   = ["*"]
+    }
+    dimension {
+      name     = "kubernetes namespace"
+      operator = "Include"
+      values   = ["*"]
+    }
+  }
+  depends_on = [
+    azurerm_kubernetes_cluster.this,
+  ]
+}
+
+resource "azurerm_monitor_metric_alert" "memory_usage" {
+  auto_mitigate       = false
+  description         = "This alert monitors container working set memory usage. It uses the threshold defined in the config map."
+  name                = "Container working set memory usage violates the configured threshold for aks-cluster-name CI-20"
+  resource_group_name = var.resource_group_name
+  scopes              = var.scopes
+  criteria {
+    metric_namespace       = "Insights.Container/containers"
+    metric_name            = "memoryWorkingSetThresholdViolated"
+    aggregation            = "Average"
+    operator               = "GreaterThan"
+    skip_metric_validation = true
+    threshold              = 0
+    dimension {
+      name     = "controllerName"
+      operator = "Include"
+      values   = ["*"]
+    }
+    dimension {
+      name     = "kubernetes namespace"
+      operator = "Include"
+      values   = ["*"]
+    }
+  }
+  depends_on = [
+    azurerm_kubernetes_cluster.this,
+  ]
+}
+
+resource "azurerm_monitor_metric_alert" "memory_utilization" {
+  auto_mitigate       = false
+  description         = "Node working set memory utilization across the cluster."
+  name                = "Node working set memory utilization high for aks-cluster-name CI-2"
+  resource_group_name = var.resource_group_name
+  scopes              = var.scopes
+  criteria {
+    metric_namespace       = "Insights.Container/nodes"
+    metric_name            = "memoryWorkingSetPercentage"
+    aggregation            = "Average"
+    operator               = "GreaterThan"
+    skip_metric_validation = true
+    threshold              = 80
+    dimension {
+      name     = "host"
+      operator = "Include"
+      values   = ["*"]
+    }
+  }
+  depends_on = [
+    azurerm_kubernetes_cluster.this,
+  ]
+}
+
+resource "azurerm_monitor_metric_alert" "node_monitoring" {
+  auto_mitigate       = false
+  description         = "Node status monitoring."
+  name                = "Nodes in not ready status for aks-cluster-name CI-3"
+  resource_group_name = var.resource_group_name
+  scopes              = var.scopes
+  criteria {
+    metric_namespace       = "Insights.Container/nodes"
+    metric_name            = "nodesCount"
+    aggregation            = "Average"
+    operator               = "GreaterThan"
+    skip_metric_validation = true
+    threshold              = 0
+    dimension {
+      name     = "status"
+      operator = "Include"
+      values   = ["NotReady"]
+    }
+  }
+  depends_on = [
+    azurerm_kubernetes_cluster.this,
+  ]
+}
+
+resource "azurerm_monitor_metric_alert" "pod_monitoring" {
+  auto_mitigate       = false
+  description         = "Pod status monitoring."
+  name                = "Pods in failed state for aks-cluster-name CI-4"
+  resource_group_name = var.resource_group_name
+  scopes              = var.scopes
+  criteria {
+    metric_namespace       = "Insights.Container/pods"
+    metric_name            = "podCount"
+    aggregation            = "Average"
+    operator               = "GreaterThan"
+    skip_metric_validation = true
+    threshold              = 0
+    dimension {
+      name     = "phase"
+      operator = "Include" # options Include, Exclude, Startwith
+      values   = ["Failed"]
+    }
+  }
+  depends_on = [
+    azurerm_kubernetes_cluster.this,
+  ]
+}
+
+resource "azurerm_monitor_metric_alert" "ready_pods" {
+  auto_mitigate       = false
+  description         = "This alert monitors pods in the ready state."
+  name                = "Pods not in ready state for aks-cluster-name CI-8"
+  resource_group_name = var.resource_group_name
+  scopes              = var.scopes
+  criteria {
+    metric_namespace       = "Insights.Container/pods"
+    metric_name            = "PodReadyPercentage"
+    aggregation            = "Average"
+    operator               = "LessThan"
+    skip_metric_validation = true
+    threshold              = 80
+    dimension {
+      name     = "controllerName"
+      operator = "Include"
+      values   = ["*"]
+    }
+    dimension {
+      name     = "kubernetes namespace"
+      operator = "Include"
+      values   = ["*"]
+    }
+  }
+  depends_on = [
+    azurerm_kubernetes_cluster.this,
+  ]
+}
+
+resource "azurerm_monitor_metric_alert" "restarting_containers" {
+  auto_mitigate       = false
+  description         = "This alert monitors number of containers restarting across the cluster."
+  name                = "Restarting container count for aks-cluster-name CI-7"
+  resource_group_name = var.resource_group_name
+  scopes              = var.scopes
+  window_size         = "PT1M"
+  criteria {
+    metric_namespace       = "Insights.Container/pods"
+    metric_name            = "restartingContainerCount"
+    aggregation            = "Average"
+    operator               = "GreaterThan"
+    skip_metric_validation = true
+    threshold              = 0
+    dimension {
+      name     = "kubernetes namespace"
+      operator = "Include"
+      values   = ["*"]
+    }
+    dimension {
+      name     = "controllerName"
+      operator = "Include"
+      values   = ["*"]
+    }
+  }
+  depends_on = [
+    azurerm_kubernetes_cluster.this,
+  ]
+}
+
+resource "azurerm_monitor_metric_alert" "jobs_completed" {
+  auto_mitigate       = false
+  description         = "This alert monitors completed jobs (more than 6 hours ago)."
+  name                = "Jobs completed more than 6 hours ago for aks-cluster-name CI-11"
+  resource_group_name = var.resource_group_name
+  scopes              = var.scopes
+  window_size         = "PT1M"
+  criteria {
+    metric_namespace       = "Insights.Container/pods"
+    metric_name            = "completedJobsCount"
+    aggregation            = "Average"
+    operator               = "GreaterThan"
+    skip_metric_validation = true
+    threshold              = 0
+    dimension {
+      name     = "controllerName"
+      operator = "Include"
+      values   = ["*"]
+    }
+    dimension {
+      name     = "kubernetes namespace"
+      operator = "Include"
+      values   = ["*"]
+    }
+  }
+  depends_on = [
+    azurerm_kubernetes_cluster.this,
+  ]
+}
+
+
+#####
 
 
 
