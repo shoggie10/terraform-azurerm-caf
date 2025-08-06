@@ -25,19 +25,6 @@ module "keyvaults" {
 ===============================================================================================
 # main.tf
 -------
-As we approach our mid-year check-ins, I wanted to share a few important updates and expectations to help you prepare.
- 
-Per HR guidance, these check-ins are an opportunity to:
-Reflect on your experience so far this year
-Celebrate your accomplishments
-Identify areas where additional support may be helpful
- 
-What I need from you:
-Please ensure that each of your goals and core competencies in SuccessFactors is updated with:
-A brief summary of your progress
-At least one specific example of how you’ve met or demonstrated each goal or competency
- 
-This input is essential for a meaningful discussion and will help us focus on your growth and development.
 
 
 
