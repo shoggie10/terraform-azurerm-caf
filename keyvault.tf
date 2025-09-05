@@ -28,7 +28,7 @@ https://meet.google.com/uwx-qges-hvn
 
 # locals.tf
 ------------
-https://us06web.zoom.us/j/89092190385?pwd=ylOK5gyQKB5v8tSOrfid6LJvF1FWA2.1
+https://us06web.zoom.us/j/89034129594?pwd=7scYUgfWltFUBuHdovosATU43wKnDm.1
 
 
 
