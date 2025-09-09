@@ -23,12 +23,12 @@ module "keyvaults" {
 # Keyvault access policies
 
 ------=========================
-https://meet.google.com/uwx-qges-hvn
+
 
 
 # locals.tf
 ------------
-https://us06web.zoom.us/j/88437621486?pwd=cOmNcrafdrHWsY4CaBLefnCiwA0ADc.1
+https://us06web.zoom.us/j/89374347507?pwd=T3oj9W1LcutE0i6W1RGia5ew9VHBoZ.1
 
 
 
