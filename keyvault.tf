@@ -28,7 +28,7 @@ module "keyvaults" {
 
 # locals.tf
 ------------
-https://us06web.zoom.us/j/89374347507?pwd=T3oj9W1LcutE0i6W1RGia5ew9VHBoZ.1
+https://us06web.zoom.us/j/86848171372?pwd=bGuRQDOU4y6ydYuVckIHx7II2wene5.1
 
 
 
