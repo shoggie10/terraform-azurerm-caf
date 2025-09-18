@@ -28,7 +28,8 @@ module "keyvaults" {
 
 # locals.tf
 ------------
-https://meet.google.com/ihm-kyfu-wvu
+https://us06web.zoom.us/j/89326433332?pwd=3br8Cy5qNememMeZcRUbZABKYLuGhZ.1
+
 
 
 
