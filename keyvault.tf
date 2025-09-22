@@ -23,8 +23,8 @@ module "keyvaults" {
 # Keyvault access policies
 
 ------=========================
-
-
+eShopOnWeb:    https://github.com/MicrosoftLearning/eShopOnWeb/blob/main/.ado/eshoponweb-cd-aci.yml
+================================================||=====================
 
 # locals.tf
 ------------
