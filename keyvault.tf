@@ -1102,6 +1102,130 @@ jobs:
 ======================================|\=======================================================
 azure-pipelines-direct-final.yml
 ========||=====
+# azure-pipelines.yml
+# Demonstrates direct invocation of universal DevSecOps templates with explicit values supplied.
+
+trigger:
+  branches:
+    include: ['main']
+pr:
+  branches:
+    include: ['*']
+
+variables:
+  BuildConfiguration: 'Release'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+# -------- Path A: Deployment wrapper with environment approvals --------
+- stage: Security_Scans
+  displayName: 'Security Scans with Approvals'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  jobs:
+  - template: devsecops-deployment-stage.yaml
+    parameters:
+      stageName: 'Security_Scans'
+      environmentName: 'Security-Checks'         # <-- set up environment approvals in ADO
+      resourceName: ''
+
+      # Build/project info
+      displayName: 'App'
+      projectName: 'SampleProject'
+      notificationStageDisplay: 'Build, Test, Scan & Analyze'
+
+      # Build settings
+      dotnetSdkVersion: '8.0.x'
+      buildConfiguration: 'Release'
+      projectsPattern: '**/*.csproj'
+
+      # SonarQube integration
+      sonarQubeConnection: 'SonarQubeServer'
+      sonarQubeProject: 'sample-app-project'
+
+      # Secret scanning
+      enableSecretScanning: true
+      secretScanningTool: gitleaks
+
+      # Dependency scanning choice
+      dependencyScanner: owasp
+      enableOwaspDependencyCheck: true
+      owaspFailOnCvss: '7'
+      owaspEnableRetired: true
+      owaspEnableExperimental: true
+
+      # Xray scanning (off by default)
+      enableJFrogScan: false
+      xrayConnection: ''
+
+      # Tests & coverage
+      runUnitTests: true
+      runIntegrationTests: false
+      runCodeCoverage: true
+      generateTestReports: true
+
+      # Notifications
+      enableTeams: false
+      teamsWebhookUrl: ''
+      enableSlack: false
+      slackWebhookUrl: ''
+      emailRecipients: ''
+      notificationType: both
+
+# -------- Path B: Normal stage using job template --------
+- stage: Build_Test_Scan_Analyze
+  displayName: 'Build, Test, Scan & Analyze'
+  condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')   # run on non-main branches
+  jobs:
+  - template: devsecops-job.universal.yaml
+    parameters:
+    # ---------- Job naming / display ----------
+      jobName: 'DevSecOps'
+      displayName: 'App'
+      projectName: 'SampleProject'
+      notificationStageDisplay: 'Build, Test, Scan & Analyze'
+
+    # ---------- Build / restore ----------
+      dotnetSdkVersion: '8.0.x'
+      buildConfiguration: 'Debug'
+      projectsPattern: '**/*.csproj'
+
+    # Optional NuGet auth
+      nugetServiceConnection: 'nugetServerConnection'
+
+    # ---------- SonarQube ----------
+      sonarQubeConnection: 'SonarQubeServer'
+      sonarQubeProject: 'sample-app-project'
+      #sonarExtraProperties: ''   # Multiline sonar.* properties if needed
+
+    # ---------- Secrets scanning (GitLeaks) ----------
+      enableSecretScanning: true
+      secretScanningTool: gitleaks
+
+    # ---------- Dependency scanning (OWASP / Xray / Advanced) ---------
+      #enableOwaspDependencyCheck: true
+
+    # Advanced dependency scanner (optional product)
+      #enableAdvancedDepScan: false
+
+    # Xray
+      dependencyScanner: xray
+      enableJFrogScan: true
+      xrayConnection: 'MyXrayServiceConnection'
+
+    # ---------- Tests & coverage ----------
+      runUnitTests: true
+      runIntegrationTests: true
+      runCodeCoverage: true
+
+    # ---------- Notifications ---------
+      enableTeams: true
+      teamsWebhookUrl: '$(teamsWebhook)'
+      enableSlack: false
+      slackWebhookUrl: ''
+      emailRecipients: 'alerts@example.com'
+      notificationType: both
 
 
 =====================||========
