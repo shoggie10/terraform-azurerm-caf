@@ -175,60 +175,103 @@ azure-p
 
 
 ========================|\========================
-parameters:
-- name: buildAgentPoolName
-  default: ''
-- name: artifactName
-  default: 'Package'
-- name: targetDeployRepo  # Ex: nuget-lib-snapshots-local
-  default: ''
-- name: packageRepositoryName  # SystemID
-  default: ''
-- name: packageName # Name of Package/application being created
-  default: ''
-- name: packageType  # Ex: nupkg, zip
-  default: ''
-- name: enableDebugging
-  default: false
+azure-pipelines-jfrog-full.yaml
+-------------------
+# Azure Pipelines (JFrog) - Full Parameter Passing
+# Calls your build-docker-image-job.jfrog-template.yaml and supplies ALL template parameters directly.
 
-steps:
-  # Download the build artifact. Files are downloaded to $(Pipeline.Workspace) by default
-  - task: DownloadPipelineArtifact@2 
-    displayName: Download Pipeline Artifacts
-    inputs:
-      source: 'current'
-      artifact: '${{ parameters.artifactName }}'
-      path: '$(Pipeline.Workspace)/${{ parameters.artifactName }}' 
-#      patterns: '**/*.zip'
+trigger:
+- main
+- master
+- releases/*
 
-  - task: JFrogGenericArtifacts@1
-    displayName: Push Packages to Jfrog Artifactory
-    inputs:
-      command: 'Upload'
-      connection: "jfrog-artifactory-production-azdoci"
-      specSource: 'taskConfiguration'
-      fileSpec: |
-        {
-            "files": [
-                {
-                    "pattern": "$(Pipeline.Workspace)/${{ parameters.artifactName }}/${{ parameters.packageName }}.$(computedTag).${{ parameters.packageType }}",
-                    "target": "${{ parameters.targetDeployRepo }}/${{ parameters.packageRepositoryName }}/${{ parameters.packageName }}/$(computedTag)/"
-                }
-            ]
-        }
-      collectBuildInfo: true
-      buildName: '$(Build.DefinitionName)'
-      buildNumber: '$(Build.BuildNumber)'
-      failNoOp: true
+variables:
+  buildConfiguration: 'Release'
 
-  - task: JFrogPublishBuildInfo@1
-    displayName: Publish Artifactory Build Info
-    condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/heads/releases/'), eq(variables['Build.SourceBranchName'], 'main'), eq(variables['Build.SourceBranchName'], 'master')))
-    inputs:
-      artifactoryConnection: "jfrog-artifactory-production-azdoci"
-      buildName: "$(Build.DefinitionName)"
-      buildNumber: "$(Build.BuildNumber)"
+stages:
+- stage: BuildAndPush_JFrog
+  displayName: "Build & Push to JFrog Artifactory"
+  jobs:
+    - template: build-docker-image-job.jfrog-template.yaml
+      parameters:
+        # ---- Job metadata ----
+        jobName: Build_Push_JFrog_Job
+        jobDisplayName: "Build & Push Docker Image (Enterprise JFrog)"
 
+        # ---- Artifact inputs ----
+        artifactName: "drop"
+
+        # ---- Docker build inputs ----
+        dockerfilePath: "src/MyApp/Dockerfile"
+        workingDirectory: "src/MyApp"
+        imageName: "myapp"
+
+        # For JFrog: split registry pieces
+        containerRegistry: "jfrog.acme.org"        # Your JFrog Docker registry host
+        imageRepositoryName: "docker-local"        # Target repo/key in Artifactory (e.g., docker-local)
+        imageTags: |
+          $(Build.BuildNumber)
+          latest
+
+        # ---- Connections ----
+        serviceConnection: "JFrog-Service-Conn"    # JFrog service connection (ADO)
+
+        # ---- Debug / Security ----
+        enableDebugging: true
+        trivyTemplateFilePath: "pipelines/build/azure-devops/junit.tpl"
+
+        # ---- Architecture options ----
+        enableMultiArch: true                      # Set to true to build/push a multi-arch manifest via buildx
+        targetPlatforms: "linux/amd64,linux/arm64" # Modify as needed (e.g., linux/arm64 only)
+
+
+===========||============
+azure-pipelines-acr-full.yaml
+-------------------
+# Azure Pipelines (ACR) - Full Parameter Passing
+# Calls your build-docker-image-job.acr-template.yaml and supplies ALL template parameters directly.
+
+trigger:
+- main
+- master
+- releases/*
+
+# Optional variables block if you prefer central control (edit or remove as you like)
+variables:
+  buildConfiguration: 'Release'
+
+stages:
+- stage: BuildAndPush_ACR
+  displayName: "Build & Push to Azure Container Registry"
+  jobs:
+    - template: build-docker-image-job.acr-template.yaml
+      parameters:
+        # ---- Job metadata ----
+        jobName: Build_Push_ACR_Job
+        jobDisplayName: "Build & Push Docker Image (ACR)"
+
+        # ---- Artifact inputs ----
+        artifactName: "drop"                     # The name of the pipeline artifact to download
+
+        # ---- Docker build inputs ----
+        dockerfilePath: "src/MyApp/Dockerfile"   # Path to your Dockerfile (repo-relative)
+        workingDirectory: "src/MyApp"            # Build context directory
+        imageName: "myapp"                       # Repo/image name (no registry)
+        imageRepository: "myregistry.azurecr.io" # Registry DNS (e.g., <name>.azurecr.io)
+        imageTags: |                             # One tag per line
+          $(Build.BuildNumber)
+          latest
+
+        # ---- Registry / connections ----
+        containerRegistryService: "ACR-Service-Conn"  # Azure DevOps service connection to ACR
+
+        # ---- Debug / Security ----
+        enableDebugging: false
+        trivyTemplateFilePath: "pipelines/build/azure-devops/junit.tpl"
+
+        # ---- Architecture options ----
+        enableMultiArch: false                    # false = simple Docker@2 build; true = buildx
+        targetPlatforms: "linux/amd64,linux/arm64" # Only used when enableMultiArch: true
 
 
 
