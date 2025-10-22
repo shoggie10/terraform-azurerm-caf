@@ -42,10 +42,28 @@ eShopOnWeb:    https://github.com/MicrosoftLearning/eShopOnWeb/blob/main/.ado/es
 # Runs ACR and/or JFrog stages based on branch conditions or toggle variables.
 # Passes ALL applicable parameters directly to templates.
 
+# - containers/build/azure-devops/templates/buildpushDockerImageTemplate.yml - buildAgentPoolName
+### Pipeline template to build & push container to Jfrog or ACR Artifactory
+
+# Build number format, where Major and Minor are pipeline variables defined
+name: "$(Major).$(Minor).$(Rev:r)"
+
 trigger:
 - main
 - master
 - releases/*
+
+# Pipeline Templates Reference, DO NOT MODIFY
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: azure-devops/Enterprise-Templates
+    ref: 'refs/tags/vx.x'
+    endpoint: PipelinesProd
+
+pool:
+  name: 'ubuntu-latest'
 
 variables:
   runAcr: 'true'     # set to 'false' to skip ACR stage
@@ -60,6 +78,10 @@ stages:
   displayName: "Build & Push to Azure Container Registry"
   condition: or(eq(variables['runAcr'], 'true'), or(eq(variables['Build.SourceBranchName'], 'main'), eq(variables['Build.SourceBranchName'], 'master')))
   jobs:
+  - job: Build_And_Push_ACR
+    displayName: "Build & Push to Azure Container Registry Job"
+    pool: '$(buildAgentPoolName)'
+    steps:
     - template: build-docker-image-job.acr-template.yaml
       parameters:
         jobName: Build_Push_ACR_Job
@@ -86,6 +108,10 @@ stages:
   condition: or(eq(variables['runJfrog'], 'true'), startsWith(variables['Build.SourceBranch'], 'refs/heads/releases/'))
   dependsOn: []
   jobs:
+  - job: Build_And_Push_ACR
+    displayName: "Build & Push to Azure Container Registry Job"
+    pool: '$(buildAgentPoolName)'
+    steps:
     - template: build-docker-image-job.jfrog-template.yaml
       parameters:
         jobName: Build_Push_JFrog_Job
@@ -105,6 +131,14 @@ stages:
         enableMultiArch: true
         targetPlatforms: "linux/amd64,linux/arm64"
 
+- stage: Manual_Approval
+  displayName: "Manual Approval"
+  dependsOn: BuildPushContainerImage
+  condition: eq(dependencies.BuildPushContainerImage.outputs['Build_Container_Job.scanVariables.TrivyScanResults'], '1')
+  jobs:
+  - template:  containers/build/azure-devops/templates/manualInterventionJobTemplate.yml@templates   # Template reference
+    parameters:
+      DevOpsEnv: 'XXXXXX_DEV'
 
 
 
@@ -180,10 +214,29 @@ azure-pipelines-jfrog-full.yaml
 # Azure Pipelines (JFrog) - Full Parameter Passing
 # Calls your build-docker-image-job.jfrog-template.yaml and supplies ALL template parameters directly.
 
+
+# - containers/build/azure-devops/templates/buildpushDockerImageTemplate.yml - buildAgentPoolName
+### Pipeline template to build & push container to Jfrog Artifactory
+
+# Build number format, where Major and Minor are pipeline variables defined
+name: "$(Major).$(Minor).$(Rev:r)"
+
 trigger:
 - main
 - master
 - releases/*
+
+# Pipeline Templates Reference, DO NOT MODIFY
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: azure-devops/Enterprise-Templates
+    ref: 'refs/tags/vx.x'
+    endpoint: PipelinesProd
+
+pool:
+  name: 'ubuntu-latest'
 
 variables:
   buildConfiguration: 'Release'
@@ -192,19 +245,23 @@ stages:
 - stage: BuildAndPush_JFrog
   displayName: "Build & Push to JFrog Artifactory"
   jobs:
-    - template: build-docker-image-job.jfrog-template.yaml
+  - job: Build_And_Push_ACR
+    displayName: "Build & Push to Azure Container Registry Job"
+    pool: '$(buildAgentPoolName)'
+    steps:
+    - template: build-docker-image-job.jfrog-template.yaml@templates   # Template reference
       parameters:
         # ---- Job metadata ----
         jobName: Build_Push_JFrog_Job
         jobDisplayName: "Build & Push Docker Image (Enterprise JFrog)"
 
         # ---- Artifact inputs ----
-        artifactName: "drop"
+        artifactName: "drop"   # Pipeline artifact containing build output/  # The name of the pipeline artifact to download
 
         # ---- Docker build inputs ----
+        imageName: "myapp"                       # Repo/image name (no registry)
         dockerfilePath: "src/MyApp/Dockerfile"
         workingDirectory: "src/MyApp"
-        imageName: "myapp"
 
         # For JFrog: split registry pieces
         containerRegistry: "jfrog.acme.org"        # Your JFrog Docker registry host
@@ -225,16 +282,43 @@ stages:
         targetPlatforms: "linux/amd64,linux/arm64" # Modify as needed (e.g., linux/arm64 only)
 
 
+- stage: Manual_Approval
+  displayName: "Manual Approval"
+  dependsOn: BuildPushContainerImage
+  condition: eq(dependencies.BuildPushContainerImage.outputs['Build_Container_Job.scanVariables.TrivyScanResults'], '1')
+  jobs:
+  - template:  containers/build/azure-devops/templates/manualInterventionJobTemplate.yml@templates   # Template reference
+    parameters:
+      DevOpsEnv: 'XXXXXX_DEV'
+
 ===========||============
 azure-pipelines-acr-full.yaml
 -------------------
 # Azure Pipelines (ACR) - Full Parameter Passing
 # Calls your build-docker-image-job.acr-template.yaml and supplies ALL template parameters directly.
 
+# - containers/build/azure-devops/templates/buildpushDockerImageTemplate.yml - buildAgentPoolName
+### Pipeline template to build & push container to Jfrog Artifactory
+
+# Build number format, where Major and Minor are pipeline variables defined
+name: "$(Major).$(Minor).$(Rev:r)"
+
 trigger:
 - main
 - master
 - releases/*
+
+# Pipeline Templates Reference, DO NOT MODIFY
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: azure-devops/Enterprise-Templates
+    ref: 'refs/tags/vx.x'
+    endpoint: PipelinesProd
+
+pool:
+  name: 'ubuntu-latest'
 
 # Optional variables block if you prefer central control (edit or remove as you like)
 variables:
@@ -244,19 +328,23 @@ stages:
 - stage: BuildAndPush_ACR
   displayName: "Build & Push to Azure Container Registry"
   jobs:
-    - template: build-docker-image-job.acr-template.yaml
+  - job: Build_And_Push_ACR
+    displayName: "Build & Push to Azure Container Registry Job"
+    pool: '$(buildAgentPoolName)'
+    steps:
+    - template: build-docker-image-job.acr-template.yaml@templates   # Template reference
       parameters:
         # ---- Job metadata ----
         jobName: Build_Push_ACR_Job
         jobDisplayName: "Build & Push Docker Image (ACR)"
 
         # ---- Artifact inputs ----
-        artifactName: "drop"                     # The name of the pipeline artifact to download
+        artifactName: "drop"                  # Pipeline artifact containing build output/  # The name of the pipeline artifact to download
 
         # ---- Docker build inputs ----
-        dockerfilePath: "src/MyApp/Dockerfile"   # Path to your Dockerfile (repo-relative)
+        imageName: "myapp"                       # Repo/image name (no registry) to be created
+        dockerfilePath: "src/MyApp/Dockerfile"   # Path to your Dockerfile (repo-relative) # Full path where the Dockerfile lives
         workingDirectory: "src/MyApp"            # Build context directory
-        imageName: "myapp"                       # Repo/image name (no registry)
         imageRepository: "myregistry.azurecr.io" # Registry DNS (e.g., <name>.azurecr.io)
         imageTags: |                             # One tag per line
           $(Build.BuildNumber)
@@ -272,6 +360,15 @@ stages:
         # ---- Architecture options ----
         enableMultiArch: false                    # false = simple Docker@2 build; true = buildx
         targetPlatforms: "linux/amd64,linux/arm64" # Only used when enableMultiArch: true
+
+- stage: Manual_Approval
+  displayName: "Manual Approval"
+  dependsOn: BuildPushContainerImage
+  condition: eq(dependencies.BuildPushContainerImage.outputs['Build_Container_Job.scanVariables.TrivyScanResults'], '1')
+  jobs:
+  - template:  containers/build/azure-devops/templates/manualInterventionJobTemplate.yml@templates   # Template reference
+    parameters:
+      DevOpsEnv: 'XXXXXX_DEV'
 
 
 
