@@ -112,7 +112,22 @@ stages:
 
 build-d
 ===========||=========
-
+- stage: BuildPushContainerImage
+  displayName: Build, Scan & Push Image to Jfrog Artifactory
+  dependsOn: Build_Project
+  jobs:
+  - job: Build_Container_Job
+    displayName: Build Container Image
+    pool: '$(buildAgentPoolName)'
+    steps:
+    - template: containers/build/azure-devops/templates/buildpushContainerImageTemplate.yml@templates   # Template reference
+      parameters:
+        artifactName: '$(buildArtifactName)' # Pipeline artifact containing build output
+        imageName: '$(imageName)' # Name of image to be created
+        imageRepositoryName: '$(imageRepositoryName)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/src/xxxxx.DevOpsWeb' # Full path where the Dockerfile lives
+        trivyTemplateFilePath: '$(System.DefaultWorkingDirectory)/Build/junit.tpl'
+        serviceConnection: 'jfrog-artifactory-prod'
 
 
 
