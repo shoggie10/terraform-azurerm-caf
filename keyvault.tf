@@ -31,7 +31,30 @@ eShopOnWeb:    https://github.com/MicrosoftLearning/eShopOnWeb/blob/main/.ado/es
 
 
 ====||=====
+steps:
+  - checkout: self
+    persistCredentials: true
 
+  - task: Bash@3
+    displayName: "Create Git Tag"
+    inputs:
+      targetType: "inline"
+      script: |
+        echo Setting User Email: $(Build.RequestedForEmail)
+        git config user.email "$(Build.RequestedForEmail)"
+
+        echo Setting User Name: $(Build.RequestedFor)
+        git config user.name "$(Build.RequestedFor)"
+
+        if [ $(git tag -l "$(Build.BuildNumber)") ]; then
+            echo "git tag $(Build.BuildNumber) already exists."
+        else
+            echo "Creating git tag $(Build.BuildNumber)."
+            git tag -a '$(Build.BuildNumber)' -m "Automatically tagged by pipeline"
+
+            echo "Pushing tag to remote"
+            git push --tags
+        fi
 
 
 ========================|\========================
