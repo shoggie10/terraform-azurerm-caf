@@ -58,6 +58,48 @@ steps:
 
 
 ========================|\========================
+steps:
+  - checkout: self
+    persistCredentials: true
+
+  # Optional: only tag on main and only when the build succeeded
+  - ${{ if and(eq(variables['Build.SourceBranchName'], 'main'), succeeded()) }}:
+    - bash: |
+        set -euo pipefail
+
+        # --- Read version from package.json with Node (cross-platform, no jq required) ---
+        VERSION=$(node -p "require('./package.json').version")
+        if [ -z "$VERSION" ]; then
+          echo "Could not read 'version' from package.json"; exit 1
+        fi
+        TAG="v${VERSION}"
+
+        echo "Resolved package.json version: $VERSION"
+        echo "Tag to create: $TAG"
+
+        # --- Configure tagger identity (shows nicely in history) ---
+        echo "Setting User Email: $(Build.RequestedForEmail)"
+        git config user.email "$(Build.RequestedForEmail)"
+
+        echo "Setting User Name: $(Build.RequestedFor)"
+        git config user.name "$(Build.RequestedFor)"
+
+        # Make sure we see remote tags
+        git fetch --tags --force
+
+        # --- Create tag if it doesn't exist ---
+        if git rev-parse "$TAG" >/dev/null 2>&1; then
+          echo "Tag '$TAG' already exists. Nothing to do."
+          exit 0
+        fi
+
+        echo "Creating annotated tag '$TAG'..."
+        git tag -a "$TAG" -m "Release $TAG (from build $(Build.BuildNumber))"
+
+        echo "Pushing tag '$TAG' to origin..."
+        git push origin "$TAG"
+      displayName: "Tag repo with package.json version"
+      workingDirectory: "$(Build.SourcesDirectory)"
 
 ========================|\========================
 ### azure-pipelines-acr-jfrog.yaml
