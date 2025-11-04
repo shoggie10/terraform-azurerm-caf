@@ -151,7 +151,176 @@ build-d
 
 
 
-======================================||=======================================================
+======================================||===============================================================
+===============================
+# azure-pipelines.yaml — Main orchestrator calling your templates
+# Last updated: 2025-11-03
+#
+# How to use:
+# 1) Update `resources.repositories[0].name` to your real <Project>/<Repo> that stores the templates.
+# 2) Make sure the template paths after `@templates` match your repo folders.
+# 3) If using Microsoft-hosted agents, replace `pool: { name: ... }` with:
+#       pool: { vmImage: 'ubuntu-latest' }
+# 4) Replace service connection names with yours.
+
+name: "$(Major).$(Minor).$(Rev:r)"
+
+trigger:
+  branches:
+    include:
+      - main
+      - master
+      - develop
+      - releases/*
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+
+resources:
+  repositories:
+    - repository: templates                      # alias used by @templates
+      type: git
+      name: DevSecOps/azure-devops-templates     # TODO: <Project>/<Repo> for your shared templates
+      ref: refs/heads/main
+      # endpoint: My-Service-Connection          # uncomment if templates repo is in another org
+
+# Global variables (used in name/versioning, etc.)
+variables:
+  Major: 1
+  Minor: 0
+
+# Parameters passed to job/step templates
+parameters:
+  - name: buildAgentPoolName
+    type: string
+    default: "XXXXX-DE"                           # TODO: your self-hosted pool
+  - name: containerRegistryService
+    type: string
+    default: "ACR-Service-Connection"             # TODO: your ACR service connection
+  - name: imageRepository
+    type: string
+    default: "myregistry.azurecr.io"              # TODO: your ACR login server (no scheme)
+  - name: imageName
+    type: string
+    default: "myapp"                              # TODO: your image name
+  - name: dockerfilePath
+    type: string
+    default: "src/MyApp/Dockerfile"               # TODO: path to your Dockerfile
+  - name: workingDirectory
+    type: string
+    default: "src/MyApp"
+  - name: xrayConnection
+    type: string
+    default: "JFrog-Xray-Service-Connection"      # TODO: your JFrog Xray connection
+  - name: distributionConnection
+    type: string
+    default: "JFrog-Distribution-Service-Connection" # TODO: your Distribution connection
+  - name: enableMultiArch
+    type: boolean
+    default: false
+  - name: targetPlatforms
+    type: string
+    default: "linux/amd64,linux/arm64"
+
+stages:
+  # =============================
+  # Stage 1 — Build & Push Image
+  # =============================
+  - stage: BuildAndPush_ACR
+    displayName: "Build & Push to ACR"
+    jobs:
+      - job: Build_Container_ACR
+        displayName: "Build Container Image"
+        pool:
+          name: ${{ parameters.buildAgentPoolName }}
+        steps:
+          - checkout: self
+
+          # Build & push to ACR using your shared job template
+          - template: containers/build/azure-devops/templates/build-docker-image-job.acr-template.yaml@templates
+            parameters:
+              jobName: BuildAndPush_ACR
+              jobDisplayName: "Build & Push Docker Image to ACR"
+
+              # Docker build inputs
+              imageName: ${{ parameters.imageName }}
+              dockerfilePath: ${{ parameters.dockerfilePath }}
+              workingDirectory: ${{ parameters.workingDirectory }}
+              imageRepository: ${{ parameters.imageRepository }}
+              imageTags: |
+                $(Build.BuildNumber)
+                latest
+
+              # Registry / connection
+              containerRegistryService: ${{ parameters.containerRegistryService }}
+
+              # Optional flags
+              enableDebugging: false
+              enableMultiArch: ${{ parameters.enableMultiArch }}
+              targetPlatforms: ${{ parameters.targetPlatforms }}
+
+              # (Optional) Trivy template path if your template supports it
+              trivyTemplateFilePath: "pipelines/build/azure-devops/junit.tpl"
+
+  # ======================================
+  # Stage 2 — Xray Scans & Distribution
+  # ======================================
+  - stage: Security_and_Distribution
+    displayName: "Xray Build Scan, Audit & Distribution"
+    dependsOn: BuildAndPush_ACR
+    condition: succeeded()
+    jobs:
+      - job: Xray_and_Distribute
+        displayName: "Run Xray Scan/Audit and Distribute Artifact"
+        pool:
+          name: ${{ parameters.buildAgentPoolName }}
+        steps:
+          # 1) Xray Build Scan (scopes to the current build)
+          - template: templates/steps/jfrog-xray-buildscan.steps.yml@templates
+            parameters:
+              xrayConnection: ${{ parameters.xrayConnection }}
+              allowFailBuild: true
+              showVulnerabilities: false
+
+          # 2) Xray Audit (e.g., watches, licenses, policies across repos)
+          - template: templates/steps/jfrog-xray-audit.steps.yml@templates
+            parameters:
+              xrayConnection: ${{ parameters.xrayConnection }}
+              watchesSource: "watches"                 # 'watches' | 'project' | 'repoPath'
+              watches: "critical-watch,license-watch"
+              licenses: true
+              allowFailBuild: true
+
+          # 3) JFrog Distribution (Release Bundle)
+          - template: templates/steps/jfrog-distribution.steps.yml@templates
+            parameters:
+              distributionServiceConnection: ${{ parameters.distributionConnection }}
+              releaseBundleName: "$(Build.DefinitionName)"
+              releaseBundleVersion: "$(Build.BuildNumber)"
+              signReleaseBundle: true
+              dryRun: false
+
+  # ===========================
+  # Stage 3 — Manual Approval
+  # ===========================
+  - stage: Manual_Approval
+    displayName: "Manual Approval / Validation"
+    dependsOn: Security_and_Distribution
+    condition: succeeded()
+    jobs:
+      - job: Manual_Validation
+        displayName: "Manual Validation"
+        pool:
+          name: ${{ parameters.buildAgentPoolName }}
+        steps:
+          - template: containers/build/azure-devops/templates/manualInterventionJobTemplate.yml@templates
+            parameters:
+              DevOpsEnv: "XXXXXX_DEV"                  # TODO: adjust to your environment name
+
+
 ======================================|\=======================================================
 azure-p
 ========||=====
