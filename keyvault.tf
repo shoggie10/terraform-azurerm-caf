@@ -23,10 +23,10 @@ module "keyvaults" {
 # Keyvault access policies
 
 ------=========================
-eShopOnWeb:    https://github.com/MicrosoftLearning/eShopOnWeb/blob/main/.ado/eshoponweb-cd-aci.yml
+
 ================================================||=====================
 
-# build-te
+
 ------------
 
 
@@ -42,7 +42,7 @@ eShopOnWeb:    https://github.com/MicrosoftLearning/eShopOnWeb/blob/main/.ado/es
 
 
 
-# build-d
+
 ----------
 
 
@@ -51,7 +51,7 @@ eShopOnWeb:    https://github.com/MicrosoftLearning/eShopOnWeb/blob/main/.ado/es
 
 
 
-# build-d
+
 -----------
 =====================||===================
 
@@ -65,7 +65,7 @@ eShopOnWeb:    https://github.com/MicrosoftLearning/eShopOnWeb/blob/main/.ado/es
 
 
 
-build-d
+
 ===========||=========
 
 
@@ -97,9 +97,9 @@ build-d
 
 
 ======================================|\=======================================================
-azure-p
+
 ========||=====
-# azure-p
+
 
 
 
@@ -113,7 +113,7 @@ azure-p
 
 
 ========================|\========================
-azure-pipelines-jfrog-full.yaml
+
 -------------------
 
 
